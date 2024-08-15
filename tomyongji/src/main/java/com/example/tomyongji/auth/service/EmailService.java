@@ -1,5 +1,6 @@
 package com.example.tomyongji.auth.service;
 
+import com.example.tomyongji.auth.dto.VerifyDto;
 import com.example.tomyongji.auth.entity.EmailVerification;
 import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import jakarta.mail.MessagingException;
@@ -74,9 +75,9 @@ public class EmailService {
         return number;
     }
 
-    public boolean verifyCode(String email, String code) {
-        return emailVerificationRepository.findById(email)
-                .map(verification -> verification.getVerificationCode().equals(code))
+    public boolean verifyCode(VerifyDto verifyDto) {
+        return emailVerificationRepository.findById(verifyDto.getEmail())
+                .map(verification -> verification.getVerificationCode().equals(verifyDto.getCode()))
                 .orElse(false);
     }
 }

@@ -1,6 +1,7 @@
 package com.example.tomyongji.auth.controller;
 
 import com.example.tomyongji.auth.dto.EmailDto;
+import com.example.tomyongji.auth.dto.VerifyDto;
 import com.example.tomyongji.auth.service.EmailService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,8 @@ public class EmailController {
 
     @ResponseBody
     @PostMapping("/verifyCode")
-    public String verifyCode(@RequestParam String email, @RequestParam String code) {
-        boolean isVerified = emailService.verifyCode(email, code);
+    public String verifyCode(@RequestBody VerifyDto verifyDto) {
+        boolean isVerified = emailService.verifyCode(verifyDto);
         if (isVerified) {
             return "인증 성공";
         } else {

@@ -37,7 +37,7 @@ public class UserRequsetDto {
     private String password;
     @NotBlank(message="계정 타입은 필수 입력값입니다")
     @Pattern(regexp = "^(STU|ADMIN|PRESIDENT)$", message = "계정 타입은 STU, ADMIN,PRESIDENT 중 하나여야 합니다.")
-    private String Role;
+    private String role;
 
 
 }

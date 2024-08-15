@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeMap;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -22,8 +23,10 @@ public class UserController {
     private final ModelMapper modelMapper;
 
     @PostMapping("/signup")
-    public ResponseEntity<Long> addUser(@Validated @RequestBody UserRequsetDto dto){
-        User entity = modelMapper.map(dto, User.class);
+    public ResponseEntity<Long> addUser(@Valid @RequestBody UserRequsetDto dto){
+        TypeMap<UserRequsetDto, User> typeMap = modelMapper.createTypeMap(UserRequsetDto.class, User.class)
+                .addMappings(mapper -> mapper.skip(User::setId));
+        User entity = typeMap.map(dto);
         Long id = userService.join(entity);
         return ResponseEntity.status(HttpStatus.OK).body(id);
     }

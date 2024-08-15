@@ -40,5 +40,9 @@ public class UserController {
         JwtToken token = this.userService.login(request);
         return token;
     }
+    @PostMapping("/test")
+    public String test() {
+        return "success";
+    }
 //    @GetMapping("/api/users/role")
 }

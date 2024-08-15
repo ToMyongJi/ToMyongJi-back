@@ -8,13 +8,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.security.Key;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -26,24 +28,24 @@ public class JwtProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
     public JwtToken generateToken(Authentication authentication) {
-        // 권한 가져오기
-//        String authorities = authentication.getAuthorities().stream()
-//                .map(GrantedAuthority::getAuthority)
-//                .collect(Collectors.joining(","));
+        // 사용자 엔티티에서 권한을 가져옴 (단일 권한의 경우)
+        String role = authentication.getAuthorities().stream()
+                .findFirst() // 첫 번째 권한만 선택
+                .map(GrantedAuthority::getAuthority)
+                .orElse(""); // 권한이 없을 경우 빈 문자열
 
         long now = (new Date()).getTime();
-
-        // Access Token 생성
         Date accessTokenExpiresIn = new Date(now + JwtConstant.ACCESS_TOKEN_EXPIRE_TIME);
+
         String accessToken = Jwts.builder()
                 .setSubject(authentication.getName())
+                .claim("auth", role) // 권한을 단일 문자열로 저장
                 .setExpiration(accessTokenExpiresIn)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
-        // Refresh Token 생성
         String refreshToken = Jwts.builder()
-                .setExpiration(new Date(now + 86400000))
+                .setExpiration(new Date(now + JwtConstant.REFRESH_TOKEN_EXPIRE_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
@@ -54,19 +56,22 @@ public class JwtProvider {
                 .build();
     }
 
-    public Authentication getAuthentication(String accessToken){
+    public Authentication getAuthentication(String accessToken) {
         Claims claims = parseClaims(accessToken);
-//        if(claims.get("auth") == null){
-//            throw new RuntimeException("권한 정보가 없는 토큰입니다.");
-//        }
-//
-//        Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get("auth").toString().split(","))
-//                .map(SimpleGrantedAuthority::new)
-//                .toList();
+        String role = claims.get("auth", String.class);
 
-        UserDetails principal = new User(claims.getSubject(),"",new ArrayList<>());
-        return new UsernamePasswordAuthenticationToken(principal,"",new ArrayList<>());
+        if (role == null) {
+            throw new RuntimeException("권한 정보가 없는 토큰입니다.");
+        }
+
+        Collection<? extends GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role)); // ROLE_ 접두사 추가
+
+        UserDetails principal = new User(claims.getSubject(), "", authorities);
+        return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
+
+
+
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()

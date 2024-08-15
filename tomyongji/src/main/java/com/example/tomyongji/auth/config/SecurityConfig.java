@@ -39,13 +39,17 @@ public class SecurityConfig {
                 // Form Login 비활성화
                 .formLogin(formLogin -> formLogin.disable())
                 // JWT를 사용하기 때문에 세션을 사용하지 않음
+
                 .sessionManagement(sessionManagementConfigurer -> sessionManagementConfigurer
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         // 해당 API에 대해서는 모든 요청을 허가
-                        .requestMatchers("/api/users/login", "/api/users/sign-up", "/swagger-ui/**", "/v3/api-docs/**","/api/foods").permitAll()
+                        .requestMatchers("api/users/login","api/users/signup").permitAll()
+                        // USER 권한이 있어야 요청할 수 있음
+                        .requestMatchers("/api/users/test").hasRole("ADMIN")
                         // 이 밖에 모든 요청에 대해서 인증을 필요로 한다는 설정
                         .anyRequest().authenticated())
+//                        .anyRequest().permitAll())
                 // JWT 인증을 위하여 직접 구현한 필터를 UsernamePasswordAuthenticationFilter 전에 실행
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class

@@ -1,7 +1,9 @@
 package com.example.tomyongji.auth.controller;
 
+import com.example.tomyongji.auth.dto.LoginRequestDto;
 import com.example.tomyongji.auth.dto.UserRequsetDto;
 import com.example.tomyongji.auth.entity.User;
+import com.example.tomyongji.auth.jwt.JwtToken;
 import com.example.tomyongji.auth.service.EmailService;
 import com.example.tomyongji.auth.service.UserService;
 import jakarta.validation.Valid;
@@ -11,7 +13,6 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeMap;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -34,7 +35,10 @@ public class UserController {
     public ResponseEntity<Boolean> checkUserIdDuplicate(@PathVariable String userId){
         return ResponseEntity.ok(userService.checkUserIdDuplicate(userId));
     }
-
-
+    @PostMapping("/login")
+    public JwtToken getMemberProfile(@Valid @RequestBody LoginRequestDto request) {
+        JwtToken token = this.userService.login(request);
+        return token;
+    }
 //    @GetMapping("/api/users/role")
 }

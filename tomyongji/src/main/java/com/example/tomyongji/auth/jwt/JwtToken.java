@@ -1,4 +1,4 @@
-package com.example.tomyongji.auth.dto;
+package com.example.tomyongji.auth.jwt;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -18,6 +18,8 @@ import java.util.List;
 @Builder
 public class UserRequsetDto {
 
+    @NotBlank(message="사용자 아이디는 필수 입력값입니다")
+    private String userId;
     @NotBlank(message="이름은 필수 입력값입니다")
     private String name;
     @NotBlank(message="학번은 필수 입력값입니다")
@@ -35,7 +37,7 @@ public class UserRequsetDto {
     private String password;
     @NotBlank(message="계정 타입은 필수 입력값입니다")
     @Pattern(regexp = "^(STU|ADMIN|PRESIDENT)$", message = "계정 타입은 STU, ADMIN,PRESIDENT 중 하나여야 합니다.")
-    private String Role;
+    private String role;
 
 
 }

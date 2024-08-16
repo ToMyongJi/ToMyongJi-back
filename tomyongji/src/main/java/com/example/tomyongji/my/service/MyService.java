@@ -42,7 +42,6 @@ public class MyService {
         MyDto myDto = new MyDto();
         myDto.setName(user.getName());
         myDto.setStudentNum(user.getStudentNum());
-        myDto.setMajor(user.getMajor());
         myDto.setStudentClubName(user.getStudentClub().getStudentClubName());
 
         return myDto;

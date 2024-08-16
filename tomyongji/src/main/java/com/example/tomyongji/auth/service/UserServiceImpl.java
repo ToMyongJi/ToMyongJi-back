@@ -34,7 +34,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder encoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtProvider jwtProvider;
-    private final ModelMapper modelMapper;
 
     @Override
     public Long join(User user) {
@@ -66,5 +65,11 @@ public class UserServiceImpl implements UserService {
         // JwtToken 생성
         JwtToken jwtToken = jwtProvider.generateToken(authentication);
         return jwtToken;
+    }
+
+    @Override
+    public String findUserIdByEmail(String email) {
+        return this.userRepository.findByEmail(email).map(User::getUserId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
     }
 }

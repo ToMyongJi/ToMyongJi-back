@@ -10,4 +10,6 @@ public interface UserService {
     Boolean checkUserIdDuplicate(String userId);
 
     JwtToken login(LoginRequestDto request);
+
+    String findUserIdByEmail(String email);
 }

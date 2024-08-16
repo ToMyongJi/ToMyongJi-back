@@ -26,8 +26,6 @@ public class UserRequsetDto {
     private String studentNum;
     @NotBlank(message="학부는 필수 입력값입니다")
     private String college;
-    @NotBlank(message="전공은 필수 입력값입니다")
-    private String major;
     @NotBlank(message="이메일은 필수 입력값입니다")
     @Email(message = "이메일 형식에 맞지 않습니다.")
     private String email;

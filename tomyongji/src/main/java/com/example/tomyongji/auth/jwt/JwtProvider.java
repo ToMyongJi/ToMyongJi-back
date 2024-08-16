@@ -16,7 +16,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.security.Key;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -27,7 +26,7 @@ public class JwtProvider {
         byte [] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
-    public JwtToken generateToken(Authentication authentication) {
+    public JwtToken generateToken(Authentication authentication, Long id) {
         // 사용자 엔티티에서 권한을 가져옴 (단일 권한의 경우)
         String role = authentication.getAuthorities().stream()
                 .findFirst() // 첫 번째 권한만 선택
@@ -40,6 +39,7 @@ public class JwtProvider {
         String accessToken = Jwts.builder()
                 .setSubject(authentication.getName())
                 .claim("auth", role) // 권한을 단일 문자열로 저장
+                .claim("id", id)
                 .setExpiration(accessTokenExpiresIn)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();

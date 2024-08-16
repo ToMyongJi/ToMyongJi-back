@@ -1,5 +1,7 @@
 package com.example.tomyongji.receipt.service;
 
+import com.example.tomyongji.auth.entity.User;
+import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
 import com.example.tomyongji.receipt.entity.Receipt;
 import com.example.tomyongji.receipt.entity.StudentClub;
@@ -17,19 +19,22 @@ public class ReceiptService {
 
     private final ReceiptRepository receiptRepository;
     private final StudentClubRepository studentClubRepository;
+    private final UserRepository userRepository;
 
     @Autowired
     public ReceiptService(ReceiptRepository receiptRepository,
-        StudentClubRepository studentClubRepository) {
+        StudentClubRepository studentClubRepository, UserRepository userRepository) {
         this.receiptRepository = receiptRepository;
         this.studentClubRepository = studentClubRepository;
+        this.userRepository = userRepository;
     }
 
-    public ReceiptDto createReceipt(ReceiptDto receiptDto, Long clubId) {
-        Optional<StudentClub> studentClub = studentClubRepository.findById(clubId);
-        if (studentClub.isEmpty()) {
-            throw new RuntimeException("학생회를 찾을 수 없습니다.");
+    public ReceiptDto createReceipt(ReceiptDto receiptDto, Long id) {
+        Optional<User> user = userRepository.findById(id);
+        if (user.isEmpty()) {
+            throw new RuntimeException("유저를 찾을 수 없습니다.");
         }
+        StudentClub studentClub = user.get().getStudentClub();
 
         if (receiptDto.getDate() == null) {
             receiptDto.setDate(new Date());
@@ -48,7 +53,7 @@ public class ReceiptService {
         }
 
         Receipt receipt = convertToReceipt(receiptDto);
-        receipt.setStudentClub(studentClub.get());
+        receipt.setStudentClub(studentClub);
 
         // 시분초를 0으로 설정하여 저장
         Calendar calendar = Calendar.getInstance();

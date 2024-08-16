@@ -29,8 +29,6 @@ public class User {
     private String studentNum;
     @NotBlank(message="학부는 필수 입력값입니다")
     private String college;
-    @NotBlank(message="전공은 필수 입력값입니다")
-    private String major;
     @NotBlank(message="이메일은 필수 입력값입니다")
     private String email;
     @NotBlank(message="비밀번호는 필수 입력값입니다")

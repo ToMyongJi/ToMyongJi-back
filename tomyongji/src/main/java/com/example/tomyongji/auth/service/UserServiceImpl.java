@@ -61,9 +61,8 @@ public class UserServiceImpl implements UserService {
 
         // 인증된 사용자 정보 가져오기
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
         // JwtToken 생성
-        JwtToken jwtToken = jwtProvider.generateToken(authentication);
+        JwtToken jwtToken = jwtProvider.generateToken(authentication, this.userRepository.findByUserId(dto.getUserId()).get().getId());
         return jwtToken;
     }
 

@@ -10,4 +10,6 @@ public interface MemberInfoRepository extends JpaRepository<MemberInfo, Long> {
     MemberInfo findByStudentNum(String studentNum);
 
     List<MemberInfo> findByStudentClub(StudentClub studentClub);
+
+    Boolean existsByStudentNum(String studentNum);
 }

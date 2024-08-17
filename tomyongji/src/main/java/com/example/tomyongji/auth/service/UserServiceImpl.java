@@ -1,12 +1,18 @@
 package com.example.tomyongji.auth.service;
 
 
+import com.example.tomyongji.admin.entity.MemberInfo;
+import com.example.tomyongji.admin.entity.PresidentInfo;
+import com.example.tomyongji.admin.repository.MemberInfoRepository;
+import com.example.tomyongji.admin.repository.PresidentInfoRepository;
 import com.example.tomyongji.auth.dto.CustomUserInfoDto;
 import com.example.tomyongji.auth.dto.LoginRequestDto;
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.jwt.JwtProvider;
 import com.example.tomyongji.auth.jwt.JwtToken;
 import com.example.tomyongji.auth.repository.UserRepository;
+import com.example.tomyongji.receipt.entity.StudentClub;
+import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +37,9 @@ import java.util.Random;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final MemberInfoRepository memberInfoRepository;
+    private final PresidentInfoRepository presidentInfoRepository;
+    private final StudentClubRepository studentClubRepository;
     private final PasswordEncoder encoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtProvider jwtProvider;
@@ -71,4 +80,54 @@ public class UserServiceImpl implements UserService {
         return this.userRepository.findByEmail(email).map(User::getUserId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
     }
+
+//    @Override
+//    public Boolean verifyClub(Long clubId, Long userId) {
+//        User user = this.userRepository.findById(userId).get();
+//        String role =  user.getRole();
+//        if(role.equals("PRESIDENT")){
+//            long presidentInfoId= this.studentClubRepository.findById(clubId).get().getPresidentInfo().getId();
+//            return this.presidentInfoRepository.findById(presidentInfoId).get().getStudentNum().equals(user.getStudentNum());
+//        }
+//        if(role.equals("STU")){
+//           return this.memberInfoRepository.findByStudentNum(user.getStudentNum()).getStudentClub().getId().equals(clubId);
+//        }
+//        return null;
+//    }
+@Override
+public Boolean verifyClub(Long clubId, Long userId) {
+    Optional<User> optionalUser = this.userRepository.findById(userId);
+    if (!optionalUser.isPresent()) {
+        return false; // 사용자 정보를 찾을 수 없는 경우
+    }
+    User user = optionalUser.get();
+    String role = user.getRole();
+
+    Optional<StudentClub> optionalStudentClub = this.studentClubRepository.findById(clubId);
+    if (!optionalStudentClub.isPresent()) {
+        return false; // 학생회 정보를 찾을 수 없는 경우
+    }
+    StudentClub studentClub = optionalStudentClub.get();
+
+    if (role.equals("PRESIDENT")) {
+        Optional<PresidentInfo> optionalPresidentInfo = this.presidentInfoRepository.findById(studentClub.getPresidentInfo().getId());
+        if (!optionalPresidentInfo.isPresent()) {
+            return false; // 회장 정보가 없는 경우
+        }
+        PresidentInfo presidentInfo = optionalPresidentInfo.get();
+        return presidentInfo.getStudentNum().equals(user.getStudentNum());
+    }
+
+    if (role.equals("STU")) {
+        Optional<MemberInfo> optionalMemberInfo = Optional.ofNullable(this.memberInfoRepository.findByStudentNum(user.getStudentNum()));
+        if (!optionalMemberInfo.isPresent()) {
+            return false; // 회원 정보가 없는 경우
+        }
+        MemberInfo memberInfo = optionalMemberInfo.get();
+        return memberInfo.getStudentClub().getId().equals(clubId);
+    }
+
+    return false; // 역할이 "PRESIDENT"나 "STU"가 아닌 경우
+}
+
 }

@@ -12,4 +12,6 @@ public interface UserService {
     JwtToken login(LoginRequestDto request);
 
     String findUserIdByEmail(String email);
+
+    Boolean verifyClub(Long clubId, Long userId);
 }

@@ -37,11 +37,6 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-      - name: Decode and create application.properties
-        run: |
-          mkdir -p ./src/main/resources
-          echo "${{ secrets.APPLICATION_PROPERTIES_BASE64 }}" | base64 --decode > ./src/main/resources/application.properties
-
       - name: Docker build & push to prod
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}

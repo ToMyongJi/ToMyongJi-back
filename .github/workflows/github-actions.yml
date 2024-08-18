@@ -65,12 +65,7 @@ jobs:
           spring.mail.auth-code-expiration-millis=1800000
           EOF
         shell: bash
-        
-      - name: Create application.properties
-        run: |
-          mkdir -p ./src/main/resources
-          echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./src/main/resources/application.properties
-
+      
       - name: Docker build & push to prod
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}

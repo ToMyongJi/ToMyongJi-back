@@ -12,6 +12,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CollegeService {
+
     private final CollegeRepository collegeRepository;
 
     public List<College> getAllCollege() {

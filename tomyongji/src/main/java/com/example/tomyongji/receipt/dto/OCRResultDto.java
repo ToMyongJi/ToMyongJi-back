@@ -7,6 +7,7 @@ import lombok.Data;
 
 @Data
 public class OCRResultDto {
+
     @JsonDeserialize(using = CustomDateDeserializer.class)
     Date date;
     String content;

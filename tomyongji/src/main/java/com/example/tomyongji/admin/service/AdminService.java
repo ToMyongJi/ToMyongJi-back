@@ -46,14 +46,22 @@ public class AdminService {
         if (studentClub.isEmpty()) {
             throw new RuntimeException("학생회를 찾을 수 없습니다.");
         }
+
         PresidentInfo presidentInfo = new PresidentInfo();
+        // DTO에서 값을 가져와 설정
+        presidentInfo.setStudentNum(presidentDto.getStudentNum());
+        presidentInfo.setName(presidentDto.getName());
 
-        presidentInfo.setStudentNum(presidentInfo.getStudentNum());
-        presidentInfo.setName(presidentInfo.getName());
+        // StudentClub 객체를 가져와서 PresidentInfo와의 관계 설정
+        StudentClub studentClubEntity = studentClub.get();
+        presidentInfo.setStudentClub(studentClubEntity);
+        studentClubEntity.setPresidentInfo(presidentInfo);
 
-        presidentInfo.setStudentClub(studentClub.get());
-        return  presidentInfoRepository.save(presidentInfo);
+        // 양방향 관계가 설정된 상태에서 StudentClub과 PresidentInfo를 저장
+        studentClubRepository.save(studentClubEntity);  // StudentClub을 먼저 저장
+        return presidentInfoRepository.save(presidentInfo);  // PresidentInfo를 저장
     }
+
     @Transactional
     public PresidentInfo updatePresident(Long clubId, PresidentDto presidentDto) {
         Optional<StudentClub> studentClub = studentClubRepository.findById(clubId);
@@ -78,9 +86,13 @@ public class AdminService {
         presidentInfo.setStudentNum(presidentDto.getStudentNum());
         presidentInfo.setName(presidentDto.getName());
 
+        StudentClub studentClubEntity = studentClub.get();
         presidentInfo.setStudentClub(studentClub.get());
+        studentClubEntity.setPresidentInfo(presidentInfo);
 
+        studentClubRepository.save(studentClubEntity);
         presidentInfoRepository.save(presidentInfo);
+
         user.setRole("STU");
         userRepository.save(user);
 

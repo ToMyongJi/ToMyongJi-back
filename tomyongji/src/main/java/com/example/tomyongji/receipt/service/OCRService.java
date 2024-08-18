@@ -76,7 +76,8 @@ public class OCRService {
         return parseOCRResult(response.toString());
     }
 
-    private void writeMultiPart(OutputStream out, String jsonMessage, MultipartFile file, String boundary) throws IOException {
+    private void writeMultiPart(OutputStream out, String jsonMessage, MultipartFile file,
+        String boundary) throws IOException {
         StringBuilder sb = new StringBuilder();
         sb.append("--").append(boundary).append("\r\n");
         sb.append("Content-Disposition:form-data; name=\"message\"\r\n\r\n");
@@ -89,7 +90,8 @@ public class OCRService {
         if (!file.isEmpty()) {
             out.write(("--" + boundary + "\r\n").getBytes("UTF-8"));
             StringBuilder fileString = new StringBuilder();
-            fileString.append("Content-Disposition:form-data; name=\"file\"; filename=\"").append(file.getOriginalFilename()).append("\"\r\n");
+            fileString.append("Content-Disposition:form-data; name=\"file\"; filename=\"")
+                .append(file.getOriginalFilename()).append("\"\r\n");
             fileString.append("Content-Type: application/octet-stream\r\n\r\n");
             out.write(fileString.toString().getBytes("UTF-8"));
             out.flush();

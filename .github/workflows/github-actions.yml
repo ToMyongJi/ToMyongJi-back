@@ -41,7 +41,7 @@ jobs:
         run: |
           mkdir -p ./src/main/resources
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./src/main/resources/application.properties
-        shell: bash
+        shell: bash 
       
       - name: Docker build & push to prod
         run: |

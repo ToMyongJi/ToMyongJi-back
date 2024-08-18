@@ -38,7 +38,7 @@ jobs:
           contains(github.ref, 'main') 
         run: |
           cd ./tomyongji/src/main/resources 
-          touch .tomyongji/src/main/resources/application.properties
+          touch ./tomyongji/src/main/resources/application.properties
           echo "${{ secrets.TOMYONGJI }}" > ./tomyongji/src/main/resources/application.properties
         shell: bash
 

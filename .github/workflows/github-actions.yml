@@ -37,9 +37,9 @@ jobs:
         if: |
           contains(github.ref, 'main') 
         run: |
-          cd ./src/main/resources 
-          touch ./application.properties
-          echo "${{ secrets.TOMYONGJI }}" > ./application.properties
+          cd ./tomyongji/src/main/resources 
+          touch .tomyongji/application.properties
+          echo "${{ secrets.TOMYONGJI }}" > ./tomyongji/application.properties
         shell: bash
 
       # gradle build

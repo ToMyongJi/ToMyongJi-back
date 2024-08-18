@@ -35,12 +35,12 @@ jobs:
         run: chmod +x tomyongji/gradlew
 
       - name: Build with Gradle
-        run: tomyongji/gradlew build -x test
+        run: ./gradlew build -x test
 
       - name: Create directories and application.properties
         run: |
-          mkdir -p tomyongji/src/main/resources
-          echo "${{ secrets.TOMYONGJI }}" > tomyongji/src/main/resources/application.properties
+          mkdir -p ./src/main/resources
+          echo "${{ secrets.TOMYONGJI }}" > ./src/main/resources/application.properties
         shell: bash
 
       - name: Docker build & push to prod

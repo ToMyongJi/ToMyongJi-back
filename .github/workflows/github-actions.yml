@@ -37,11 +37,10 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-      - name: Set environment variables
-        env:
-          APPLICATION_PROPERTIES: ${{ secrets.APPLICATION_PROPERTIES }}
+      - name: Decode and create application.properties
         run: |
-          echo "${APPLICATION_PROPERTIES}" > ./src/main/resources/application.properties
+          mkdir -p ./src/main/resources
+          echo "${{ secrets.APPLICATION_PROPERTIES_BASE64 }}" | base64 --decode > ./src/main/resources/application.properties
 
       - name: Docker build & push to prod
         run: |

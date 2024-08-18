@@ -43,7 +43,7 @@ jobs:
           cd ./src/main/resources
 
           # Create the application.properties file with the desired content
-          cat <<EOF > ./src/main/resources/application.properties
+          cat <<EOF > ./application.properties
           spring.datasource.url=${{ secrets.DB_URL }}
           spring.datasource.username=${{ secrets.DB_USERNAME }}
           spring.datasource.password=${{ secrets.DB_PASSWORD }}

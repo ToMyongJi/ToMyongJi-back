@@ -43,7 +43,7 @@ public class MyService {
         myDto.setName(user.getName());
         myDto.setStudentNum(user.getStudentNum());
         myDto.setCollege(user.getCollege());
-        myDto.setStudentClubName(user.getStudentClub().getStudentClubName());
+        myDto.setStudentClubId(user.getStudentClub().getId());
 
         return myDto;
     }

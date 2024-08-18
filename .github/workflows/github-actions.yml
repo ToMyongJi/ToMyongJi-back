@@ -37,12 +37,12 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-      - name: Create and Update application.properties
+      - name: Set environment variables
+        env:
+          APPLICATION_PROPERTIES: ${{ secrets.APPLICATION_PROPERTIES }}
         run: |
-          mkdir -p ./src/main/resources
-          echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./src/main/resources/application.properties
-        shell: bash 
-      
+          echo "${APPLICATION_PROPERTIES}" > ./src/main/resources/application.properties
+
       - name: Docker build & push to prod
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
@@ -66,4 +66,3 @@ jobs:
           cd ./src/main/resources
           cat application.properties
         shell: bash
-

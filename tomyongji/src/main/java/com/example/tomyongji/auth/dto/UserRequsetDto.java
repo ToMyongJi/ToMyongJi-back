@@ -4,6 +4,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +27,8 @@ public class UserRequsetDto {
     private String studentNum;
     @NotBlank(message="학부는 필수 입력값입니다")
     private String college;
+    @NotNull(message="학생회Id는 필수 입력값입니다")
+    private long studentClubId;
     @NotBlank(message="이메일은 필수 입력값입니다")
     @Email(message = "이메일 형식에 맞지 않습니다.")
     private String email;

@@ -83,3 +83,10 @@ jobs:
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/tomyongji
             sudo docker run -d -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/tomyongji
             sudo docker image prune -f
+
+      - name: Verify File Creation and Content
+        run: |
+          cd ./src/main/resources
+          cat application.properties
+        shell: bash
+

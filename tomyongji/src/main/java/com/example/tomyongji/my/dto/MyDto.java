@@ -8,6 +8,6 @@ public class MyDto {
     private String name;
     private String studentNum;
     private String college;
-    private String studentClubName;
+    private long studentClubId;
 
 }

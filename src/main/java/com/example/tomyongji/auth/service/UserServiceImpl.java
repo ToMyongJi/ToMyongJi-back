@@ -95,13 +95,8 @@ public class UserServiceImpl implements UserService {
 //        return null;
 //    }
 @Override
-public Boolean verifyClub(Long clubId, Long userId) {
-    Optional<User> optionalUser = this.userRepository.findById(userId);
-    if (!optionalUser.isPresent()) {
-        return false; // 사용자 정보를 찾을 수 없는 경우
-    }
-    User user = optionalUser.get();
-    String role = user.getRole();
+public Boolean verifyClub(Long clubId, String studentNum) {
+
 
     Optional<StudentClub> optionalStudentClub = this.studentClubRepository.findById(clubId);
     if (!optionalStudentClub.isPresent()) {
@@ -109,23 +104,21 @@ public Boolean verifyClub(Long clubId, Long userId) {
     }
     StudentClub studentClub = optionalStudentClub.get();
 
-    if (role.equals("PRESIDENT")) {
-        Optional<PresidentInfo> optionalPresidentInfo = this.presidentInfoRepository.findById(studentClub.getPresidentInfo().getId());
+        Optional<PresidentInfo> optionalPresidentInfo = Optional.ofNullable(this.presidentInfoRepository.findByStudentNum(studentNum));
         if (!optionalPresidentInfo.isPresent()) {
-            return false; // 회장 정보가 없는 경우
+            Optional<MemberInfo> optionalMemberInfo = Optional.ofNullable(this.memberInfoRepository.findByStudentNum(studentNum));
+            if (!optionalMemberInfo.isPresent()) {
+                return false; // 회원 정보가 없는 경우
+            }else{
+                if(optionalMemberInfo.get().getStudentClub().getId().equals(clubId)){
+                    return true;
+                }
+            }
+        }else{
+            if(optionalPresidentInfo.get().getStudentClub().getId().equals(clubId)){
+                return true;
+            }
         }
-        PresidentInfo presidentInfo = optionalPresidentInfo.get();
-        return presidentInfo.getStudentNum().equals(user.getStudentNum());
-    }
-
-    if (role.equals("STU")) {
-        Optional<MemberInfo> optionalMemberInfo = Optional.ofNullable(this.memberInfoRepository.findByStudentNum(user.getStudentNum()));
-        if (!optionalMemberInfo.isPresent()) {
-            return false; // 회원 정보가 없는 경우
-        }
-        MemberInfo memberInfo = optionalMemberInfo.get();
-        return memberInfo.getStudentClub().getId().equals(clubId);
-    }
 
     return false; // 역할이 "PRESIDENT"나 "STU"가 아닌 경우
 }

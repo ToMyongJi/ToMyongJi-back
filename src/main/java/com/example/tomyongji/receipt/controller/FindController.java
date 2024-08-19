@@ -23,7 +23,6 @@ public class FindController {
 
     private final StudentClubService studentClubService;
     private final CollegeService collegeService;
-
     @Operation(summary = "모든 학생회 조회 api", description = "모든 학생회를 조회할때 사용합니다.")
     @GetMapping("api/club")
     public ResponseEntity<List<StudentClub>> getAllStudentClub() {

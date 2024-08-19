@@ -57,5 +57,5 @@ jobs:
 
       - name: Verify File Creation and Content
         run: |
-          sudo docker exec -it $(sudo docker ps -q) bash -c "cat /path/to/your/application.properties"
+          sudo docker exec -it $(sudo docker ps -q) bash -c "cat ./application.properties"
         shell: bash

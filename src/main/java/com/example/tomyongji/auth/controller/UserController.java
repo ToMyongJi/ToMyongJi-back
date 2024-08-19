@@ -65,14 +65,14 @@ public class UserController {
         return "success";
     }
 //    @GetMapping("/api/users/role")
-@Operation(summary = "아이디 찾기 API", description = "이메일을 넣으면 ID를 찾아줍니다.")
-@PostMapping("/find-id")
+    @Operation(summary = "아이디 찾기 API", description = "이메일을 넣으면 ID를 찾아줍니다.")
+    @PostMapping("/find-id")
     public ResponseEntity<String> findUserIdByEmail(@RequestBody FindIdRequestDto findIdRequest){
         return ResponseEntity.ok(userService.findUserIdByEmail(findIdRequest.getEmail()));
     }
     @Operation(summary = "소속 인증 API", description = "사용자 id와 학생회 id를 넣으면  소속인증을 합니다.")
-    @GetMapping("/clubVerify/{clubId}/{userId}")
-    public ResponseEntity<Boolean> VerifyClub(@PathVariable Long clubId, @PathVariable Long userId) {
-        return ResponseEntity.ok(userService.verifyClub(clubId, userId));
+    @GetMapping("/clubVerify/{clubId}/{studentNum}")
+    public ResponseEntity<Boolean> VerifyClub(@PathVariable Long clubId, @PathVariable String studentNum) {
+        return ResponseEntity.ok(userService.verifyClub(clubId, studentNum));
     }
 }

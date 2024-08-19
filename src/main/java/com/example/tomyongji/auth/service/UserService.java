@@ -13,5 +13,5 @@ public interface UserService {
 
     String findUserIdByEmail(String email);
 
-    Boolean verifyClub(Long clubId, Long userId);
+    Boolean verifyClub(Long clubId, String studentNum);
 }

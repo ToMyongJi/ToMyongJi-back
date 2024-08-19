@@ -70,4 +70,9 @@ public class UserController {
     public ResponseEntity<String> findUserIdByEmail(@RequestBody FindIdRequestDto findIdRequest){
         return ResponseEntity.ok(userService.findUserIdByEmail(findIdRequest.getEmail()));
     }
+    @Operation(summary = "소속 인증 API", description = "사용자 id와 학생회 id를 넣으면  소속인증을 합니다.")
+    @GetMapping("/clubVerify/{clubId}/{userId}")
+    public ResponseEntity<Boolean> VerifyClub(@PathVariable Long clubId, @PathVariable Long userId) {
+        return ResponseEntity.ok(userService.verifyClub(clubId, userId));
+    }
 }

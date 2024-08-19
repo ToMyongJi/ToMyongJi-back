@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  app:
+    image: eeeseohyun/tomyongji
+    container_name: tomyongji_app
+    ports:
+      - "8080:8080"  # 컨테이너의 8080 포트를 호스트의 8080 포트와 연결
+    networks:
+      - app_network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"     # HTTP 포트
+      - "443:443"   # HTTPS 포트
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf  # Nginx 설정 파일
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

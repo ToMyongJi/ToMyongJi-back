@@ -7,7 +7,7 @@ on:
 
 permissions: 
   contents: read
-   
+
 jobs:
   CI-CD:
     runs-on: ubuntu-latest
@@ -39,26 +39,23 @@ jobs:
 
       - name: Docker build & push to prod
         run: |
-          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/tomyongji
-
-          docker push ${{ secrets.DOCKER_USERNAME }}/tomyongji
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/tomyongji:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/tomyongji:latest
 
       - name: Deploy to prod
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v0.1.0
         with:
           host: ${{ secrets.HOST_PROD }}
           username: ubuntu
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
             sudo docker ps
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/tomyongji
-            sudo docker run -d -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/tomyongji
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/tomyongji:latest
+            sudo docker run -d --rm -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/tomyongji:latest
             sudo docker image prune -f
 
       - name: Verify File Creation and Content
         run: |
-          cd ./src/main/resources
-          cat application.properties
+          sudo docker exec -it $(sudo docker ps -q) bash -c "cat /path/to/your/application.properties"
         shell: bash

@@ -6,6 +6,3 @@ COPY ${JAR_FILE} tomyongji.jar
 
 ENTRYPOINT ["java","-jar","-Dspring.profiles.active=prod", "tomyongji.jar"]
 
-COPY keystore.p12 /etc/ssl/
-COPY ${JAR_FILE} app.jar
-EXPOSE 8443

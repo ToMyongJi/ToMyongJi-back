@@ -4,7 +4,9 @@ import com.example.tomyongji.admin.dto.MemberDto;
 import com.example.tomyongji.admin.entity.MemberInfo;
 import com.example.tomyongji.admin.repository.MemberInfoRepository;
 import com.example.tomyongji.admin.service.AdminService;
+import com.example.tomyongji.auth.entity.EmailVerification;
 import com.example.tomyongji.auth.entity.User;
+import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.my.dto.MyDto;
 import com.example.tomyongji.receipt.entity.StudentClub;
@@ -22,14 +24,17 @@ public class MyService {
     private final StudentClubRepository studentClubRepository;
     private final AdminService adminService;
     private final MemberInfoRepository memberInfoRepository;
+    private final EmailVerificationRepository emailVerificationRepository;
 
     @Autowired
     public MyService(UserRepository userRepository, StudentClubRepository studentClubRepository,
-        AdminService adminService, MemberInfoRepository memberInfoRepository) {
+        AdminService adminService, MemberInfoRepository memberInfoRepository,
+        EmailVerificationRepository emailVerificationRepository) {
         this.userRepository = userRepository;
         this.studentClubRepository = studentClubRepository;
         this.adminService = adminService;
         this.memberInfoRepository = memberInfoRepository;
+        this.emailVerificationRepository = emailVerificationRepository;
     }
 
     public MyDto getMyInfo(Long id) {
@@ -93,6 +98,8 @@ public class MyService {
         }
         MemberInfo memberInfo = memberInfoRepository.findByStudentNum(user.get().getStudentNum());
         memberInfoRepository.delete(memberInfo);
+        EmailVerification emailVerification = emailVerificationRepository.findByEmail(user.get().getEmail());
+        emailVerificationRepository.delete(emailVerification);
         userRepository.delete(user.get());
     }
 }

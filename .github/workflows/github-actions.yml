@@ -44,7 +44,7 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/tomyongji:latest
 
       - name: Deploy to prod
-        uses: appleboy/ssh-action@v0.1.0
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST_PROD }}
           username: ubuntu

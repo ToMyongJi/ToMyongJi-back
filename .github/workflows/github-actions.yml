@@ -35,7 +35,7 @@ jobs:
       # 환경별 yml 파일 생성(1) - application.yml
       - name: make application.properties
         if: |
-          contains(github.ref, 'main') 
+          contains(github.ref, 'main')
         run: |
           cd ./tomyongji/src/main/resources 
           touch .tomyongji/application.properties
@@ -51,7 +51,7 @@ jobs:
         if: contains(github.ref, 'main')
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker build -f Dockerfile-dev -t ${{ secrets.DOCKER_USERNAME }}/tomyongji
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/tomyongji
           docker push ${{ secrets.DOCKER_USERNAME }}/tomyongji
 
       ## deploy to production
@@ -67,5 +67,5 @@ jobs:
           script: |
             sudo docker ps
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/tomyongji
-            sudo docker run -d -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/tomyongji
+            sudo docker run -d -p 8443:8443 ${{ secrets.DOCKER_USERNAME }}/tomyongji
             sudo docker image prune -f

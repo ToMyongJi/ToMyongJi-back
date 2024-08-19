@@ -5,6 +5,7 @@ import com.example.tomyongji.admin.entity.MemberInfo;
 import com.example.tomyongji.admin.repository.MemberInfoRepository;
 import com.example.tomyongji.admin.service.AdminService;
 import com.example.tomyongji.auth.entity.User;
+import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.my.dto.MyDto;
 import com.example.tomyongji.receipt.entity.StudentClub;
@@ -22,14 +23,17 @@ public class MyService {
     private final StudentClubRepository studentClubRepository;
     private final AdminService adminService;
     private final MemberInfoRepository memberInfoRepository;
+    private final EmailVerificationRepository emailVerificationRepository;
 
     @Autowired
     public MyService(UserRepository userRepository, StudentClubRepository studentClubRepository,
-        AdminService adminService, MemberInfoRepository memberInfoRepository) {
+                     AdminService adminService, MemberInfoRepository memberInfoRepository,
+                     EmailVerificationRepository emailVerificationRepository) {
         this.userRepository = userRepository;
         this.studentClubRepository = studentClubRepository;
         this.adminService = adminService;
         this.memberInfoRepository = memberInfoRepository;
+        this.emailVerificationRepository = emailVerificationRepository;
     }
 
     public MyDto getMyInfo(Long id) {
@@ -48,15 +52,15 @@ public class MyService {
         return myDto;
     }
 
-    public void updateMyInfo(Long id, String studentNum) {
-        Optional<User> userById = userRepository.findById(id);
-        if (userById.isEmpty()) {
-            throw new RuntimeException("사용자를 찾을 수 없습니다.");
-        }
-        User user = userById.get();
-        user.setStudentNum(studentNum);
-        userRepository.save(user);
-    }
+//    public void updateMyInfo(Long id, String studentNum) {
+//        Optional<User> userById = userRepository.findById(id);
+//        if (userById.isEmpty()) {
+//            throw new RuntimeException("사용자를 찾을 수 없습니다.");
+//        }
+//        User user = userById.get();
+//        user.setStudentNum(studentNum);
+//        userRepository.save(user);
+//    }
 
     public List<MemberDto> getMembers(Long id) {
         Optional<User> user = userRepository.findById(id);
@@ -86,13 +90,19 @@ public class MyService {
     }
 
     public void deleteMember(Long deleteId) {
-        //MemberInfo와 User에서 삭제
-        Optional<User> user = userRepository.findById(deleteId);
-        if (user.isEmpty()) {
-            throw new RuntimeException("유저를 찾을 수 없습니다.");
+        Optional<MemberInfo> memberInfo = memberInfoRepository.findById(deleteId);
+        if (memberInfo.isEmpty()) {
+            throw new RuntimeException("소속 부원을 찾을 수 없습니다.");
         }
-        MemberInfo memberInfo = memberInfoRepository.findByStudentNum(user.get().getStudentNum());
-        memberInfoRepository.delete(memberInfo);
-        userRepository.delete(user.get());
+        //멤버 등록을 해도 유저가 없을 수 있음
+        Optional<User> user = Optional.ofNullable(
+                userRepository.findByStudentNum(memberInfo.get().getStudentNum()));
+        //유저가 있다면 유저의 메일과 유저를 삭제
+        if (user.isPresent()) {
+            emailVerificationRepository.deleteByEmail(user.get().getEmail());
+            userRepository.delete(user.get());
+        }
+        //등록된 멤버 정보도 삭제
+        memberInfoRepository.deleteById(deleteId);
     }
 }

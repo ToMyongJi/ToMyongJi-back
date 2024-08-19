@@ -36,11 +36,11 @@ public class MyController {
         return ResponseEntity.status(HttpStatus.OK).body(myDto);
     }
 
-    @Operation(summary = "내 정보 수정 api", description = "유저 아이디와 학번으로 유저의 학번을 변경합니다.")
-    @PostMapping("/{id}")
-    public void updateMyInfo(@PathVariable Long id, @RequestParam String studentNum) {
-        myService.updateMyInfo(id, studentNum);
-    }
+//    @Operation(summary = "내 정보 수정 api", description = "유저 아이디와 학번으로 유저의 학번을 변경합니다.")
+//    @PostMapping("/{id}")
+//    public void updateMyInfo(@PathVariable Long id, @RequestParam String studentNum) {
+//        myService.updateMyInfo(id, studentNum);
+//    }
 
     @Operation(summary = "소속 부원 조회 api", description = "회장이 소속 부원들을 조회합니다.")
     @GetMapping("members/{id}") //자신의 아이디로 자기가 속한 학생회 조회

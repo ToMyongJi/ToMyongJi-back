@@ -40,7 +40,9 @@ jobs:
       - name: Docker build & push to prod
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker build -f Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/tomyongji .
+
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/tomyongji
+
           docker push ${{ secrets.DOCKER_USERNAME }}/tomyongji
 
       - name: Deploy to prod
@@ -52,7 +54,7 @@ jobs:
           script: |
             sudo docker ps
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/tomyongji
-            sudo docker run -d -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/tomyongji
+            sudo docker run -d -p 8443:8443 ${{ secrets.DOCKER_USERNAME }}/tomyongji
             sudo docker image prune -f
 
       - name: Verify File Creation and Content

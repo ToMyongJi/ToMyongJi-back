@@ -51,6 +51,7 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
             sudo docker ps
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/second-eyes-nginx
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/tomyongji:latest
             sudo docker run -d --rm -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/tomyongji:latest
             sudo docker image prune -f

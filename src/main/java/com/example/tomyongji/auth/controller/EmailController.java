@@ -1,5 +1,6 @@
 package com.example.tomyongji.auth.controller;
 
+import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.auth.dto.EmailDto;
 import com.example.tomyongji.auth.dto.VerifyDto;
 import com.example.tomyongji.auth.service.EmailService;
@@ -28,12 +29,10 @@ public class EmailController {
     @Operation(summary = "이메일 인증코드 확인 api", description = "사용자가 적은 인증코드를 비교합니다")
     @ResponseBody
     @PostMapping("/verifyCode")
-    public String verifyCode(@RequestBody VerifyDto verifyDto) {
+    public ApiResponse<Boolean> verifyCode(@RequestBody VerifyDto verifyDto) {
         boolean isVerified = emailService.verifyCode(verifyDto);
-        if (isVerified) {
-            return "인증 성공";
-        } else {
-            return "인증 실패";
+        if (isVerified) {return new ApiResponse<>(200,"이메일 인증이 성공적으로 이루어졌습니다",isVerified);}
+        else {return new ApiResponse<>(401,"이메일 인증이 실패했습니다.",isVerified);
         }
     }
 }

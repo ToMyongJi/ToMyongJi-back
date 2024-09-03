@@ -7,6 +7,7 @@ import com.example.tomyongji.admin.repository.MemberInfoRepository;
 import com.example.tomyongji.admin.repository.PresidentInfoRepository;
 import com.example.tomyongji.auth.dto.CustomUserInfoDto;
 import com.example.tomyongji.auth.dto.LoginRequestDto;
+import com.example.tomyongji.auth.dto.UserRequsetDto;
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.jwt.JwtProvider;
 import com.example.tomyongji.auth.jwt.JwtToken;
@@ -122,5 +123,25 @@ public Boolean verifyClub(Long clubId, String studentNum) {
 
     return false; // 역할이 "PRESIDENT"나 "STU"가 아닌 경우
 }
+
+    @Override
+    public User createUser(UserRequsetDto dto) {
+        System.out.println(dto.getStudentClubId());
+        StudentClub studentClub = studentClubRepository.findById(dto.getStudentClubId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid student club ID"));
+
+        User user = User.builder()
+                .userId(dto.getUserId())
+                .name(dto.getName())
+                .studentNum(dto.getStudentNum())
+                .college(dto.getCollege())
+                .email(dto.getEmail())
+                .password(dto.getPassword())
+                .role(dto.getRole())
+                .studentClub(studentClub) // StudentClub 객체 설정
+                .build();
+
+        return user;
+    }
 
 }

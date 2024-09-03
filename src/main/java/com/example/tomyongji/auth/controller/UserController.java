@@ -8,8 +8,11 @@ import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.jwt.JwtToken;
 import com.example.tomyongji.auth.service.EmailService;
 import com.example.tomyongji.auth.service.UserService;
+import com.example.tomyongji.receipt.entity.StudentClub;
+import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,16 +31,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 @RequestMapping("api/users")
 public class UserController {
     private final UserService userService;
-    private final ModelMapper modelMapper;
+
     @Operation(summary = "회원가입 api", description = "사용자가 회원가입하면, 유효성검사후 회원가입합니다.")
     @PostMapping("/signup")
     public ApiResponse<Long> addUser(@Valid @RequestBody UserRequsetDto dto){
-        TypeMap<UserRequsetDto, User> typeMap = modelMapper.getTypeMap(UserRequsetDto.class, User.class);
-        if (typeMap == null) {
-            typeMap = modelMapper.createTypeMap(UserRequsetDto.class, User.class)
-                    .addMappings(mapper -> mapper.skip(User::setId));
-        }
-        User entity = typeMap.map(dto);
+        System.out.println(dto.getStudentClubId());
+        User entity = userService.createUser(dto);
         Long id = userService.join(entity);
         return new ApiResponse<>(200,"회원가입에 성공하셨습니다.",id);
     }
@@ -60,6 +59,7 @@ public class UserController {
         String id = userService.findUserIdByEmail(findIdRequest.getEmail());
         return new ApiResponse<>(200,"ID를 성공적으로 반환합니다.",id);
     }
+
     @Operation(summary = "소속 인증 API", description = "사용자 id와 학생회 id를 넣으면  소속인증을 합니다.")
     @GetMapping("/clubVerify/{clubId}/{studentNum}")
     public ApiResponse<Boolean> VerifyClub(@PathVariable Long clubId, @PathVariable String studentNum) {

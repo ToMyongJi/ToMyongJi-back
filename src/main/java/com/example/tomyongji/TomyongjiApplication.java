@@ -12,4 +12,5 @@ public class TomyongjiApplication {
 		SpringApplication.run(TomyongjiApplication.class, args);
 	}
 
+
 }

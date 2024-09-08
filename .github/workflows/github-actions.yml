@@ -45,6 +45,7 @@ jobs:
       - name: Verify File Creation and Content
         run: |
           cd ./src/main/resources
+          ls -l
           cat application.properties
         shell: bash
 

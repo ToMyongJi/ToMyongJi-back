@@ -37,6 +37,17 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
+      - name: Create application.properties
+        run: |
+          cd ./src/main/resources
+          echo "${{ secrets.APPLICATION }}" > ./src/main/resources/application.properties
+
+      - name: Verify File Creation and Content
+        run: |
+          cd ./src/main/resources
+          cat application.properties
+        shell: bash
+
       - name: Docker build & push to prod
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -55,10 +66,3 @@ jobs:
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/tomyongji:latest
             sudo docker run -d --rm -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/tomyongji:latest
             sudo docker image prune -f
-
-      - name: Verify File Creation and Content
-        run: |
-          cd ./src/main/resources
-          cat application.properties
-        shell: bash
-

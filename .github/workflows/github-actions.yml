@@ -77,7 +77,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.PRIVATE_KEY }}
           source: ./nginx/conf.d/nginx.conf
-          target: /home/ubuntu/app/
+          target: /home/ubuntu/
           
       - name: Deploy to prod
         uses: appleboy/ssh-action@master

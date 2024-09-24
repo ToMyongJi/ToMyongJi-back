@@ -42,12 +42,10 @@ jobs:
           mkdir -p ./src/main/resources
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./src/main/resources/application.properties
 
-      - name: Verify File Creation and Content
+      - name: Check application.properties contents
         run: |
-          cd ./src/main/resources
-          ls -l
-          cat application.properties
-        shell: bash
+          echo "${{ secrets.APPLICATION_PROPERTIES }}"
+
 
       - name: Docker build & push to prod
         run: |

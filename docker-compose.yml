@@ -10,10 +10,7 @@ services:
       - app_network  # 여기서 'app_network'로 변경
 
   nginx:
-    build:
-      context:  .
-      dockerfile: Dockerfile
-    image: eeeseohyun/nginx:latest
+    image: nginx:latest
     container_name: tomyongji-nginx
     ports:
       - "80:80"     # HTTP 포트

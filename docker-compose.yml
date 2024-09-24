@@ -13,7 +13,7 @@ services:
     build:
       context:  .
       dockerfile: Dockerfile
-    image: nginx:latest
+    image: eeeseohyun/nginx:latest
     container_name: tomyongji-nginx
     ports:
       - "80:80"     # HTTP 포트

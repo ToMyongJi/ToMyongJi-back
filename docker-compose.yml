@@ -17,6 +17,7 @@ services:
       - "443:443"   # HTTPS 포트
     volumes:
       - ./nginx/conf.d/nginx.conf:/etc/nginx/conf.d/default.conf
+      - /etc/letsencrypt:/etc/letsencrypt
     networks:
       - app_network  # 여기서 'app_network'로 변경
 

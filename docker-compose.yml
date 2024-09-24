@@ -16,17 +16,10 @@ services:
       - "80:80"     # HTTP 포트
       - "443:443"   # HTTPS 포트
     volumes:
-      - test1:./nginx/conf.d/nginx.conf:/etc/nginx/conf.d/default.conf
-      - test2:/etc/letsencrypt:/etc/letsencrypt
+      - ./nginx/conf.d/nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
       - app_network  # 여기서 'app_network'로 변경
 
 networks:
   app_network:  # 사용자 정의 네트워크 정의
     driver: bridge
-
-volumes:
-  test1:
-    external: true
-  test2:
-    external: true

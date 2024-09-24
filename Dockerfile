@@ -6,3 +6,4 @@ COPY ${JAR_FILE} tomyongji.jar
 
 ENTRYPOINT ["java","-jar","-Dspring.profiles.active=prod", "tomyongji.jar"]
 
+

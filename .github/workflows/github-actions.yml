@@ -45,10 +45,6 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-      - name: Build Nginx image
-        run: |
-          docker build -f Dockerfile.nginx -t ${{ secrets.DOCKER_USERNAME }}/nginx:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/nginx:latest
 
       - name: Docker build & push to prod
         run: |

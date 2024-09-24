@@ -87,7 +87,7 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
             cd /home/ubuntu/app
-            sudo docker-compose down  # 기존 컨테이너 중지 및 제거
+            sudo docker-compose stop  # 기존 컨테이너 중지 및 제거
             sudo docker-compose pull
             sudo docker-compose up -d
             sudo docker image prune -f

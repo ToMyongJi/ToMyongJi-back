@@ -3,6 +3,8 @@ version: '3.8'
 services:
   app:
     image: eeeseohyun/tomyongji
+    environment:
+      - PORT=8080
     container_name: tomyongji_app
     ports:
       - "8080:8080"  # 컨테이너의 8080 포트를 호스트의 8080 포트와 연결

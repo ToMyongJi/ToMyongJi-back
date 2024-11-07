@@ -1,4 +1,4 @@
-package com.example.tomyongji.receipt.error;
+package com.example.tomyongji.validation;
 
 import lombok.Data;
 

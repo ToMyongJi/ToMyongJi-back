@@ -1,5 +1,6 @@
 package com.example.tomyongji.receipt.controller;
 
+import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
 import com.example.tomyongji.receipt.entity.Receipt;
 import com.example.tomyongji.receipt.service.ReceiptService;
@@ -36,51 +37,48 @@ public class ReceiptController {
 
     @Operation(summary = "영수증 작성 api", description = "유저 아이디를 통해 특정 학생회의 영수증을 작성합니다.")
     @PostMapping("/{id}") //특정 학생회의 영수증 작성
-    public ResponseEntity<ReceiptDto> createReceipt(@RequestBody ReceiptDto receiptDto, @PathVariable Long id) {
+    public ApiResponse<ReceiptDto> createReceipt(@RequestBody ReceiptDto receiptDto, @PathVariable Long id) {
         ReceiptDto createdReceipt = receiptService.createReceipt(receiptDto, id);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdReceipt); //201 created
+        return new ApiResponse<>(201, "영수증을 성공적으로 작성했습니다.", createdReceipt); //201 created
     }
 
     @Operation(summary = "모든 영수증 조회 api", description = "모든 영수증을 조회합니다.")
-
     @GetMapping //모든 영수증 조회
-    public ResponseEntity<List<Receipt>> getAllReceipts() {
-        List<Receipt> receipts = receiptService.getAllReceipts();
-        return ResponseEntity.status(HttpStatus.OK).body(receipts); // 200 OK
+    public ApiResponse<List<ReceiptDto>> getAllReceipts() {
+        List<ReceiptDto> receipts = receiptService.getAllReceipts();
+        return new ApiResponse<>(200, "모든 영수증을 성공적으로 조회했습니다.", receipts); // 200 OK
     }
 
 
     @Operation(summary = "특정 학생회 영수증 조회 api", description = "학생회 아이디를 통해 특정 학생회의 영수증을 조회합니다.")
     @GetMapping("/club/{clubId}") //특정 학생회 영수증 조회
-    public ResponseEntity<List<Receipt>> getReceiptsByClub(@PathVariable Long clubId) {
-        List<Receipt> receipts = receiptService.getReceiptsByClub(clubId);
-        return ResponseEntity.status(HttpStatus.OK).body(receipts); // 200 OK
+    public ApiResponse<List<ReceiptDto>> getReceiptsByClub(@PathVariable Long clubId) {
+        List<ReceiptDto> receipts = receiptService.getReceiptsByClub(clubId);
+        return new ApiResponse<>(200, "해당 학생회의 영수증들을 성공적으로 조회했습니다.", receipts); // 200 OK
     }
 
 
     @Operation(summary = "특정 영수증 조회 api", description = "영수증 아이디를 통해 특정 영수증을 조회합니다.")
-
     @GetMapping("/{id}") //특정 영수증 조회
-    public ResponseEntity<Receipt> getReceiptById(@PathVariable Long id) {
-        Receipt receipt = receiptService.getReceiptById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(receipt);
+    public ApiResponse<ReceiptDto> getReceiptById(@PathVariable Long id) {
+        ReceiptDto receipt = receiptService.getReceiptById(id);
+        return new ApiResponse<>(200, "영수증을 성공적으로 조회했습니다.", receipt);
     }
 
 
     @Operation(summary = "영수증 삭제 api", description = "영수증 아이디를 통해 특정 영수증을 삭제합니다.")
-
     @DeleteMapping("/{id}") //특정 영수증 삭제
-    public void deleteReceipt(@PathVariable Long id) {
-        receiptService.deleteReceipt(id);
+    public ApiResponse<ReceiptDto> deleteReceipt(@PathVariable Long id) {
+        ReceiptDto receipt = receiptService.deleteReceipt(id);
+        return new ApiResponse<>(200, "영수증을 성공적으로 삭제했습니다.", receipt);
     }
 
 
     @Operation(summary = "영수증 수정 api", description = "영수증 아이디를 통해 특정 영수증을 수정합니다.")
-
     @PatchMapping("/{id}") //특정 영수증 수정
-    public ResponseEntity<ReceiptDto> updateReceipt(@PathVariable Long id, @RequestBody ReceiptDto receiptDto) {
+    public ApiResponse<ReceiptDto> updateReceipt(@PathVariable Long id, @RequestBody ReceiptDto receiptDto) {
         ReceiptDto updatedReceipt = receiptService.updateReceipt(id, receiptDto);
-        return ResponseEntity.status(HttpStatus.OK).body(updatedReceipt);
+        return new ApiResponse<>(200, "영수증을 성공적으로 수정했습니다.", updatedReceipt);
     }
 }
 

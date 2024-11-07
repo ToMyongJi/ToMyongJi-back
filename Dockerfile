@@ -6,5 +6,4 @@ COPY ${JAR_FILE} tomyongji.jar
 
 ENTRYPOINT ["java","-jar","-Dspring.profiles.active=prod", "tomyongji.jar"]
 
-FROM nginx
-COPY ./nginx/conf.d/nginx.conf /etc/nginx/conf.d
+

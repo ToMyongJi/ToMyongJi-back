@@ -1,4 +1,4 @@
-package com.example.tomyongji.receipt.service;
+ipackage com.example.tomyongji.receipt.service;
 
 import com.example.tomyongji.receipt.dto.OCRResultDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
@@ -19,13 +19,24 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+=======
+>>>>>>> acb5ce5b4ae3f7a44deee0237649a5be9392bd02
+
 @Service
 public class OCRService {
 
-    @Value("${ocr.apiUrl}")
-    private String apiURL;
-    @Value("${secretKey}")
+    @Value("${ocr.apiUrl]")
+    private String apiURL ;
+    @Value("${ocr.secretKey]")
     private String secretKey;
+
     private final ReceiptService receiptService;
 
     public OCRService(ReceiptService receiptService) {

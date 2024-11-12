@@ -78,7 +78,8 @@ jobs:
           source: ./nginx/conf.d/nginx.conf
           target: /home/ubuntu/
           
-      - name: Deploy to prod
+    
+      - name: Deploy to prod 
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST_PROD }}
@@ -86,7 +87,9 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
             cd /home/ubuntu/
-            sudo docker-compose stop  # 기존 컨테이너 중지 및 제거
-            sudo docker-compose pull  # 변경된 이미지를 가져옵니다.
-            sudo docker-compose up -d  # 서비스 시작
-            sudo docker image prune -f  # 사용하지 않는 이미지 제거
+            sudo docker-compose down --volumes --remove-orphans  # 기존 컨테이너, 볼륨, 사용되지 않는 네트워크 제거
+            sudo docker-compose pull  # 변경된 이미지를 가져옴
+            sudo docker-compose up -d  # 컨테이너를 백그라운드에서 실행
+            sudo docker system prune -af  # 사용하지 않는 Docker 객체(이미지, 컨테이너, 볼륨, 네트워크) 제거
+            sudo docker volume prune -f  # 사용하지 않는 볼륨 제거
+

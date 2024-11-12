@@ -1,5 +1,6 @@
 package com.example.tomyongji.admin.controller;
 
+import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.admin.dto.MemberDto;
 import com.example.tomyongji.admin.dto.PresidentDto;
 import com.example.tomyongji.admin.entity.MemberInfo;
@@ -33,44 +34,45 @@ public class AdminController {
 
     @Operation(summary = "학생회장 조회 api", description = "학생회 아이디를 통해 특정 학생회의 회장을 조회합니다.")
     @GetMapping("/president/{clubId}")
-    public ResponseEntity<User> getPresident(@PathVariable Long clubId) {
+    public ApiResponse<PresidentDto> getPresident(@PathVariable Long clubId) {
         User user = adminService.getPresident(clubId);
-        return ResponseEntity.status(HttpStatus.OK).body(user);
+        PresidentDto presidentDto = User.convertToPresidentDto(user);
+        return new ApiResponse<>(200, "학생회장 조회에 성공했습니다.", presidentDto);
     }
 
     @Operation(summary = "학생회장 저장 api", description = "학생회 아이디와 학번, 이름을 통해 특정 학생회의 회장 정보를 저장합니다.")
     @PostMapping("/president/{clubId}")
-    public ResponseEntity<PresidentInfo> savePresident(@PathVariable Long clubId, @RequestBody PresidentDto presidentDto) {
-        PresidentInfo presidentInfo = adminService.savePresident(clubId, presidentDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(presidentInfo);
+    public ApiResponse<PresidentDto> savePresident(@PathVariable Long clubId, @RequestBody PresidentDto presidentDto) {
+        adminService.savePresident(clubId, presidentDto);
+        return new ApiResponse<>(201, "학생회장 저장에 성공했습니다.", presidentDto);
     }
 
     @Operation(summary = "학생회장 수정 api", description = "학생회 아이디와 학번, 이름을 통해 특정 학생회의 회장 정보를 수정합니다.")
     @PatchMapping("/president/{clubId}")
-    public ResponseEntity<PresidentInfo> updatePresident(@PathVariable Long clubId, @RequestBody PresidentDto presidentDto) {
-        PresidentInfo presidentInfo = adminService.updatePresident(clubId, presidentDto);
-        return ResponseEntity.status(HttpStatus.OK).body(presidentInfo);
+    public ApiResponse<PresidentDto> updatePresident(@PathVariable Long clubId, @RequestBody PresidentDto presidentDto) {
+        adminService.updatePresident(clubId, presidentDto);
+        return new ApiResponse<>(200, "학생회장 수정에 성공했습니다.", presidentDto);
     }
 
     @Operation(summary = "소속 부원 조회 api", description = "학생회 아이디로 소속 부원을 조회합니다.")
     @GetMapping("/member/{clubId}")
-    public ResponseEntity<List<User>> getMembers(@PathVariable Long clubId) {
-        List<User> users =  adminService.getMembers(clubId);
-        return ResponseEntity.status(HttpStatus.OK).body(users);
+    public ApiResponse<List<MemberDto>> getMembers(@PathVariable Long clubId) {
+        List<MemberDto> users =  adminService.getMembers(clubId);
+        return new ApiResponse<>(200, "소속 부원 조회에 성공했습니다.", users);
     }
 
     @Operation(summary = "소속 부원 저장 api", description = "학생회 아이디로 소속 부원 정보를 저장합니다.")
     @PostMapping("/member/{clubId}")
-    public ResponseEntity<MemberInfo> saveMember(@PathVariable Long clubId, @RequestBody MemberDto memberDto) {
-        MemberInfo memberInfo = adminService.saveMember(clubId, memberDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(memberInfo);
+    public ApiResponse<MemberDto> saveMember(@PathVariable Long clubId, @RequestBody MemberDto memberDto) {
+        adminService.saveMember(clubId, memberDto);
+        return new ApiResponse<>(201, "소속 부원 저장에 성공했습니다.", memberDto);
     }
 
     @Operation(summary = "소속 부원 삭제 api", description = "소속 부원 아이디로 소속 부원을 삭제합니다.")
     @DeleteMapping("/member/{id}")
-    public ResponseEntity<MemberInfo> deleteMember(@PathVariable Long id) {
-        MemberInfo memberInfo = adminService.deleteMember(id);
-        return ResponseEntity.status(HttpStatus.OK).body(memberInfo);
+    public ApiResponse<MemberDto> deleteMember(@PathVariable Long id) {
+        MemberDto memberDto = adminService.deleteMember(id);
+        return new ApiResponse<>(200, "소속 부원 삭제에 성공했습니다.", memberDto);
     }
 
 

@@ -16,4 +16,8 @@ public class ApiResponse<T> {
         this.data = data;
     }
 
+    public ApiResponse(int statusCode, String statusMessage) {
+        this.statusCode = statusCode;
+        this.statusMessage = statusMessage;
+    }
 }

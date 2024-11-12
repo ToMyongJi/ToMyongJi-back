@@ -1,9 +1,15 @@
 package com.example.tomyongji.receipt.controller;
 
+import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.receipt.dto.OCRResultDto;
+import com.example.tomyongji.receipt.dto.ReceiptDto;
 import com.example.tomyongji.receipt.service.OCRService;
+import com.example.tomyongji.receipt.service.ReceiptService;
+import com.example.tomyongji.validation.CustomException;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -21,15 +27,16 @@ public class OCRController {
         this.ocrService = ocrService;
     }
 
-    @PostMapping("/upload")
-    public ResponseEntity<OCRResultDto> uploadImageAndExtractText(@RequestPart("file") MultipartFile file) {
-        try {
-            OCRResultDto result = ocrService.processImage(file);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(null);
-        }
+    @Operation(summary = "영수증 업로드 api", description = "유저 아이디를 통해 특정 학생회의 영수증을 ocr 스캔을 통해 업로드합니다.")
+    @PostMapping("/upload/{id}")
+    public ApiResponse<OCRResultDto> uploadImageAndExtractText(@RequestPart("file") MultipartFile file, @PathVariable Long id) {
+        OCRResultDto result = ocrService.processImage(file, id);
+        ocrService.uploadOcrReceipt(result, id);
+        return new ApiResponse<>(200, "영수증을 성공적으로 업로드했습니다.", result);
+
     }
 }
+
+
 
 

@@ -12,6 +12,4 @@ public class PresidentDto {
     private String name;
 
 
-
-
 }

@@ -1,5 +1,8 @@
 package com.example.tomyongji.auth.entity;
 
+import com.example.tomyongji.admin.dto.MemberDto;
+import com.example.tomyongji.admin.dto.PresidentDto;
+import com.example.tomyongji.admin.entity.MemberInfo;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
@@ -43,4 +46,18 @@ public class User {
     @ManyToOne
     @JsonBackReference
     private StudentClub studentClub;
+
+    public static PresidentDto convertToPresidentDto(User user) {
+        PresidentDto presidentDto = new PresidentDto();
+        presidentDto.setStudentNum(user.getStudentNum());
+        presidentDto.setName(user.getName());
+        return presidentDto;
+    }
+
+    public static MemberDto convertToMemebrDto(User user) {
+        MemberDto memberDto = new MemberDto();
+        memberDto.setStudentNum(user.getStudentNum());
+        memberDto.setName(user.getName());
+        return memberDto;
+    }
 }

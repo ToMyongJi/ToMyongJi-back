@@ -1,4 +1,4 @@
-ipackage com.example.tomyongji.receipt.service;
+package com.example.tomyongji.receipt.service;
 
 import com.example.tomyongji.receipt.dto.OCRResultDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;

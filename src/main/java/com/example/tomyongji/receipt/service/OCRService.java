@@ -13,17 +13,22 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
+
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class OCRService {
 
-    private final String apiURL = "YOUR_API_URL";
-    private final String secretKey = "YOUR_SECRET_KEY";
+    @Value("${ocr.apiUrl]")
+    private String apiURL ;
+    @Value("${ocr.secretKey]")
+    private String secretKey;
 
     public OCRResultDto processImage(MultipartFile file)
         throws IOException, ParseException, JSONException {

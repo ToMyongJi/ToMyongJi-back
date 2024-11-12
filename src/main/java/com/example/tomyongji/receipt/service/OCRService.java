@@ -26,8 +26,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-=======
->>>>>>> acb5ce5b4ae3f7a44deee0237649a5be9392bd02
+
 
 @Service
 public class OCRService {

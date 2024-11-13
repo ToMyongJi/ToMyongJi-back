@@ -43,6 +43,7 @@ public class CollegeService {
     private CollegeDto convertToCollegeDto(College college) {
         CollegeDto collegeDto = new CollegeDto();
         collegeDto.setName(college.getCollegeName());
+        collegeDto.setId(college.getId());
         return collegeDto;
     }
 

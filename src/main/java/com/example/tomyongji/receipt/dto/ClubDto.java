@@ -10,8 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ClubDto {
-
     private long studentClubId;
     private String studentClubName;
-
 }

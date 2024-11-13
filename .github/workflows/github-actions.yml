@@ -86,6 +86,12 @@ jobs:
           username: ubuntu
           key: ${{ secrets.PRIVATE_KEY }}
           script: |
+            sudo fallocate -l 1G /swapfile
+            sudo chmod 600 /swapfile
+            sudo mkswap /swapfile
+            sudo swapon /swapfile
+            echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+            
             cd /home/ubuntu/
             sudo docker-compose pull  # 변경된 이미지를 가져옴
             sudo docker-compose up -d  # 컨테이너를 백그라운드에서 실행

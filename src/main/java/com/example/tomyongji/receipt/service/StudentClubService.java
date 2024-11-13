@@ -27,6 +27,7 @@ public class StudentClubService {
     private ClubDto convertToClubDto(StudentClub studentClub) {
         ClubDto clubDto = new ClubDto();
         clubDto.setName(studentClub.getStudentClubName());
+        clubDto.setId(studentClub.getId());
         return clubDto;
     }
     private List<ClubDto> clubDtoList(List<StudentClub> studentClubs) {

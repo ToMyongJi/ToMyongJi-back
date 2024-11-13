@@ -115,6 +115,7 @@ public class MyService {
         MemberDto memberDto = new MemberDto();
         memberDto.setStudentNum(memberInfo.getStudentNum());
         memberDto.setName(memberInfo.getName());
+        memberDto.setMemberId(memberInfo.getId());
         return memberDto;
     }
 }

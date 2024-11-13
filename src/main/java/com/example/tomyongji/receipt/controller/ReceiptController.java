@@ -39,7 +39,7 @@ public class ReceiptController {
     @PostMapping("/{id}") //특정 학생회의 영수증 작성
     public ApiResponse<ReceiptDto> createReceipt(@RequestBody ReceiptDto receiptDto, @PathVariable Long id) {
         ReceiptDto createdReceipt = receiptService.createReceipt(receiptDto, id);
-        return new ApiResponse<>(201, "영수증을 성공적으로 작성했습니다.", createdReceipt); //201 created
+        return new ApiResponse<>(200, "영수증을 성공적으로 작성했습니다.", createdReceipt); //201 created
     }
 
     @Operation(summary = "모든 영수증 조회 api", description = "모든 영수증을 조회합니다.")

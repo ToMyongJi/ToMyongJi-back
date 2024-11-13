@@ -13,6 +13,7 @@ import com.example.tomyongji.admin.repository.PresidentInfoRepository;
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
+import com.example.tomyongji.my.dto.MemberRequestDto;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.validation.CustomException;
@@ -124,7 +125,7 @@ public class AdminService {
         return convertToMemberDtoList(users);
     }
 
-    public void saveMember(Long clubId, MemberDto memberDto) {
+    public void saveMember(Long clubId, MemberRequestDto memberDto) {
         if (memberInfoRepository.existsByStudentNum(memberDto.getStudentNum())) {
             throw new CustomException(EXISTING_USER, 400);  // 중복 학번 예외 처리
         }
@@ -158,7 +159,7 @@ public class AdminService {
         return memberDto;
     }
 
-    private void convertToInfo(MemberInfo memberInfo, MemberDto memberDto) {
+    private void convertToInfo(MemberInfo memberInfo, MemberRequestDto memberDto) {
         memberInfo.setStudentNum(memberDto.getStudentNum());
         memberInfo.setName(memberDto.getName());
     }

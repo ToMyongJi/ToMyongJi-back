@@ -2,6 +2,7 @@ package com.example.tomyongji.my.controller;
 
 import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.admin.dto.MemberDto;
+import com.example.tomyongji.my.dto.MemberRequestDto;
 import com.example.tomyongji.my.dto.MyDto;
 import com.example.tomyongji.my.service.MyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,9 +49,9 @@ public class MyController {
 
     @Operation(summary = "소속 부원 추가 api", description = "회장이 소속 부원 정보를 추가합니다.")
     @PostMapping("members/{id}") //자신의 아이디로 자기가 속한 학생회 조회
-    public ApiResponse<MemberDto> saveMember(@PathVariable Long id, @RequestBody MemberDto memberDto) {
-        MemberDto memberDtoForSave =  myService.saveMember(id, memberDto);
-        return new ApiResponse<>(201, "소속 부원 정보 저장에 성공했습니다.", memberDtoForSave);
+    public ApiResponse<MemberDto> saveMember(@PathVariable Long id, @RequestBody MemberRequestDto memberDto) {
+        myService.saveMember(id, memberDto);
+        return new ApiResponse<>(201, "소속 부원 정보 저장에 성공했습니다.");
     }
 
     @Operation(summary = "소속 부원 삭제 api", description = "회장이 소속 부원과 그 정보를 삭제합니다.")

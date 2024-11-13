@@ -10,6 +10,7 @@ import com.example.tomyongji.admin.service.AdminService;
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
+import com.example.tomyongji.my.dto.MemberRequestDto;
 import com.example.tomyongji.my.dto.MyDto;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
@@ -80,14 +81,13 @@ public class MyService {
         return memberDtos;
     }
 
-    public MemberDto saveMember(Long id, MemberDto memberDto) {
+    public void saveMember(Long id, MemberRequestDto memberDto) {
         Optional<User> user = userRepository.findById(id);
         if (user.isEmpty()) {
             throw new CustomException(NOT_FOUND_USER, 400);
         }
         StudentClub studentClub = studentClubRepository.findByUsers(user.get());
         adminService.saveMember(studentClub.getId(), memberDto);
-        return memberDto;
     }
 
     public MemberDto deleteMember(Long deleteId) {

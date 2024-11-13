@@ -7,6 +7,7 @@ import com.example.tomyongji.admin.entity.MemberInfo;
 import com.example.tomyongji.admin.entity.PresidentInfo;
 import com.example.tomyongji.admin.service.AdminService;
 import com.example.tomyongji.auth.entity.User;
+import com.example.tomyongji.my.dto.MemberRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,9 +64,9 @@ public class AdminController {
 
     @Operation(summary = "소속 부원 저장 api", description = "학생회 아이디로 소속 부원 정보를 저장합니다.")
     @PostMapping("/member/{clubId}")
-    public ApiResponse<MemberDto> saveMember(@PathVariable Long clubId, @RequestBody MemberDto memberDto) {
+    public ApiResponse<MemberDto> saveMember(@PathVariable Long clubId, @RequestBody MemberRequestDto memberDto) {
         adminService.saveMember(clubId, memberDto);
-        return new ApiResponse<>(201, "소속 부원 저장에 성공했습니다.", memberDto);
+        return new ApiResponse<>(201, "소속 부원 저장에 성공했습니다.");
     }
 
     @Operation(summary = "소속 부원 삭제 api", description = "소속 부원 아이디로 소속 부원을 삭제합니다.")

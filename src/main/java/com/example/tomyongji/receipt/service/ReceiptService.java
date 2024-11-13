@@ -144,6 +144,7 @@ public class ReceiptService {
 
     private ReceiptDto convertToReceiptDto(Receipt receipt) {
         ReceiptDto receiptDto = new ReceiptDto();
+        receiptDto.setReceiptId(receipt.getId());
         receiptDto.setDate(receipt.getDate());
         receiptDto.setContent(receipt.getContent());
         receiptDto.setDeposit(receipt.getDeposit());

@@ -20,7 +20,7 @@ public class ReceiptDto {
 
     @JsonDeserialize(using = CustomDateDeserializer.class)
     private Date date;
-
+    private long receiptId;
     private String content;
 
     private int deposit;
@@ -29,6 +29,7 @@ public class ReceiptDto {
     public Receipt toEntity() {
         return Receipt.builder()
                 .date(this.date)
+                .id(this.receiptId)
                 .content(this.content)
                 .deposit(this.deposit)
                 .withdrawal(this.withdrawal)

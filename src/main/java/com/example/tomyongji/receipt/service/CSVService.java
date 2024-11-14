@@ -1,5 +1,6 @@
 package com.example.tomyongji.receipt.service;
 
+import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.receipt.entity.Receipt;
 import com.example.tomyongji.receipt.repository.ReceiptRepository;
 import com.opencsv.CSVReader;
@@ -22,14 +23,21 @@ import java.util.logging.Logger;
 @Service
 public class CSVService {
     private ReceiptRepository receiptRepository;
+    private UserRepository userRepository;
     private static final Logger LOGGER = Logger.getLogger(ReceiptService.class.getName());
+
+    @Autowired
+    public CSVService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
     @Autowired
     public void ReceiptService(ReceiptRepository receiptRepository) {
         this.receiptRepository = receiptRepository;
     }
 
     @Transactional
-    public List<Receipt> loadDataFromCSV(MultipartFile file) {
+    public List<Receipt> loadDataFromCSV(MultipartFile file, long userIndexId) {
         List<Receipt> receipts = new ArrayList<>();
         try (CSVReader csvReader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
             csvReader.readNext(); // Skip header row
@@ -50,6 +58,7 @@ public class CSVService {
                                 .content(content)
                                 .deposit(deposit)
                                 .withdrawal(withdrawal)
+                                .studentClub(userRepository.findById(userIndexId).get().getStudentClub())
                                 .build();
                         receiptRepository.save(receipt);
                         receipts.add(receipt);

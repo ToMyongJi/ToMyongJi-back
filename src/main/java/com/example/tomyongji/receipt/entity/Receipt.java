@@ -35,6 +35,4 @@ public class Receipt {
     @ManyToOne
     @JsonBackReference
     private StudentClub studentClub;
-
-
 }

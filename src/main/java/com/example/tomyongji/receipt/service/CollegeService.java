@@ -5,6 +5,7 @@ import com.example.tomyongji.receipt.dto.CollegeDto;
 import com.example.tomyongji.receipt.dto.CollegesDto;
 import com.example.tomyongji.receipt.entity.College;
 import com.example.tomyongji.receipt.entity.StudentClub;
+import com.example.tomyongji.receipt.mapper.CollegeMapper;
 import com.example.tomyongji.receipt.repository.CollegeRepository;
 import java.util.ArrayList;
 
@@ -23,12 +24,12 @@ public class CollegeService {
 
     @Autowired
     private final CollegeRepository collegeRepository;
-    @Autowired
     private final StudentClubRepository studentClubRepository;
+    private final CollegeMapper collegeMapper;
 
     public List<CollegesDto> getAllCollegesAndClubs() {
         List<CollegesDto> collegesAndClubs = new ArrayList<>();
-        List<College> collegeList = collegeRepository.findAll();
+        List<College> collegeList = collegeRepository.findAll(); //모든 대학들 가져오기
         for(College college : collegeList){
             List<ClubDto> clubs = new ArrayList<>();
             for(StudentClub club : college.getStudentClubs()){
@@ -38,21 +39,6 @@ public class CollegeService {
             collegesAndClubs.add(collegesDto);
         }
         return collegesAndClubs;
-    }
-
-    private CollegeDto convertToCollegeDto(College college) {
-        CollegeDto collegeDto = new CollegeDto();
-        collegeDto.setName(college.getCollegeName());
-        collegeDto.setId(college.getId());
-        return collegeDto;
-    }
-
-    private List<CollegeDto> collegeDtoList(List<College> colleges) {
-        List<CollegeDto> collegeDtoList = new ArrayList<>();
-        for (College college : colleges) {
-            collegeDtoList.add(convertToCollegeDto(college));
-        }
-        return collegeDtoList;
     }
 
 }

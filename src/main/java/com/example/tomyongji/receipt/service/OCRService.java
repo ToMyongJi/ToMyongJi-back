@@ -1,7 +1,9 @@
 package com.example.tomyongji.receipt.service;
 
 import com.example.tomyongji.receipt.dto.OCRResultDto;
+import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
+import com.example.tomyongji.receipt.mapper.ReceiptMapper;
 import com.example.tomyongji.validation.CustomException;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,9 +39,11 @@ public class OCRService {
     private String secretKey;
 
     private final ReceiptService receiptService;
+    private final ReceiptMapper receiptMapper;
 
-    public OCRService(ReceiptService receiptService) {
+    public OCRService(ReceiptService receiptService, ReceiptMapper receiptMapper) {
         this.receiptService = receiptService;
+        this.receiptMapper = receiptMapper;
     }
 
 
@@ -203,11 +207,15 @@ public class OCRService {
 
 
 
-    public void uploadOcrReceipt(OCRResultDto receiptDto, Long id) {
+    public void uploadOcrReceipt(OCRResultDto ocrResultDto, Long id) {
         // ReceiptDto를 사용하여 데이터베이스에 저장하는 로직을 여기에 구현
         // receiptService의 createReceipt 메서드를 사용해 영수증 저장
 
-        receiptService.createReceipt(OcrToRecipt(receiptDto), id);
+        ReceiptDto receiptDto = receiptMapper.toReceiptDto(ocrResultDto);
+        ReceiptCreateDto receiptCreateDto = receiptMapper.toReceiptCreateDto(receiptDto);
+        receiptCreateDto.setUserId(id);
+
+        receiptService.createReceipt(receiptCreateDto);
     }
 }
 

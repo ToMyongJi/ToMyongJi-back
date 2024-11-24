@@ -1,7 +1,7 @@
 package com.example.tomyongji.receipt.entity;
 
-import com.example.tomyongji.admin.entity.MemberInfo;
-import com.example.tomyongji.admin.entity.PresidentInfo;
+import com.example.tomyongji.admin.entity.Member;
+import com.example.tomyongji.admin.entity.President;
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.receipt.dto.ClubDto;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -42,12 +42,12 @@ public class StudentClub {
 
     @OneToOne
     @JsonManagedReference
-    @JoinColumn(name = "president_info_id")
-    private PresidentInfo presidentInfo;
+    @JoinColumn(name = "president_id")
+    private President president;
 
     @OneToMany(mappedBy = "studentClub")
     @JsonManagedReference
-    private List<MemberInfo> memberInfos;
+    private List<Member> members;
 
     public ClubDto toDto() {
         return ClubDto.builder()

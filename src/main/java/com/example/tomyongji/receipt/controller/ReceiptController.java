@@ -1,7 +1,9 @@
 package com.example.tomyongji.receipt.controller;
 
 import com.example.tomyongji.admin.dto.ApiResponse;
+import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
+import com.example.tomyongji.receipt.dto.ReceiptUpdateDto;
 import com.example.tomyongji.receipt.entity.Receipt;
 import com.example.tomyongji.receipt.service.ReceiptService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name="영수증 조회 api", description = "영수증과 관련된 API들입니다.")
@@ -36,10 +39,11 @@ public class ReceiptController {
 
 
     @Operation(summary = "영수증 작성 api", description = "유저 아이디를 통해 특정 학생회의 영수증을 작성합니다.")
-    @PostMapping("/{id}") //특정 학생회의 영수증 작성
-    public ApiResponse<ReceiptDto> createReceipt(@RequestBody ReceiptDto receiptDto, @PathVariable Long id) {
-        ReceiptDto createdReceipt = receiptService.createReceipt(receiptDto, id);
-        return new ApiResponse<>(200, "영수증을 성공적으로 작성했습니다.", createdReceipt); //201 created
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping //특정 학생회의 영수증 작성
+    public ApiResponse<ReceiptDto> createReceipt(@RequestBody ReceiptCreateDto receiptCreateDto) {
+        ReceiptDto createdReceipt = receiptService.createReceipt(receiptCreateDto);
+        return new ApiResponse<>(201, "영수증을 성공적으로 작성했습니다.", createdReceipt); //201 created
     }
 
     @Operation(summary = "모든 영수증 조회 api", description = "모든 영수증을 조회합니다.")
@@ -59,25 +63,25 @@ public class ReceiptController {
 
 
     @Operation(summary = "특정 영수증 조회 api", description = "영수증 아이디를 통해 특정 영수증을 조회합니다.")
-    @GetMapping("/{id}") //특정 영수증 조회
-    public ApiResponse<ReceiptDto> getReceiptById(@PathVariable Long id) {
-        ReceiptDto receipt = receiptService.getReceiptById(id);
+    @GetMapping("/{receiptId}") //특정 영수증 조회
+    public ApiResponse<ReceiptDto> getReceiptById(@PathVariable Long receiptId) {
+        ReceiptDto receipt = receiptService.getReceiptById(receiptId);
         return new ApiResponse<>(200, "영수증을 성공적으로 조회했습니다.", receipt);
     }
 
 
     @Operation(summary = "영수증 삭제 api", description = "영수증 아이디를 통해 특정 영수증을 삭제합니다.")
-    @DeleteMapping("/{id}") //특정 영수증 삭제
-    public ApiResponse<ReceiptDto> deleteReceipt(@PathVariable Long id) {
-        ReceiptDto receipt = receiptService.deleteReceipt(id);
+    @DeleteMapping("/{receiptId}") //특정 영수증 삭제
+    public ApiResponse<ReceiptDto> deleteReceipt(@PathVariable Long receiptId) {
+        ReceiptDto receipt = receiptService.deleteReceipt(receiptId);
         return new ApiResponse<>(200, "영수증을 성공적으로 삭제했습니다.", receipt);
     }
 
 
     @Operation(summary = "영수증 수정 api", description = "영수증 아이디를 통해 특정 영수증을 수정합니다.")
-    @PatchMapping("/{id}") //특정 영수증 수정
-    public ApiResponse<ReceiptDto> updateReceipt(@PathVariable Long id, @RequestBody ReceiptDto receiptDto) {
-        ReceiptDto updatedReceipt = receiptService.updateReceipt(id, receiptDto);
+    @PatchMapping //특정 영수증 수정
+    public ApiResponse<ReceiptDto> updateReceipt(@RequestBody ReceiptUpdateDto receiptUpdateDto) {
+        ReceiptDto updatedReceipt = receiptService.updateReceipt(receiptUpdateDto);
         return new ApiResponse<>(200, "영수증을 성공적으로 수정했습니다.", updatedReceipt);
     }
 }

@@ -5,6 +5,7 @@ import com.example.tomyongji.receipt.dto.CollegeDto;
 import com.example.tomyongji.receipt.dto.CollegesDto;
 import com.example.tomyongji.receipt.entity.College;
 import com.example.tomyongji.receipt.entity.StudentClub;
+import com.example.tomyongji.receipt.mapper.CollegeMapper;
 import com.example.tomyongji.receipt.repository.CollegeRepository;
 import java.util.ArrayList;
 
@@ -23,10 +24,8 @@ public class CollegeService {
 
     @Autowired
     private final CollegeRepository collegeRepository;
-    @Autowired
-    private final StudentClubRepository studentClubRepository;
-
     public List<CollegesDto> getAllCollegesAndClubs() {
+
         return collegeRepository.findAll().stream()
                 .map(college -> new CollegesDto(
                         college.getId(),
@@ -36,21 +35,7 @@ public class CollegeService {
                                 .toList()
                 ))
                 .toList();
-    }
 
-    private CollegeDto convertToCollegeDto(College college) {
-        CollegeDto collegeDto = new CollegeDto();
-        collegeDto.setName(college.getCollegeName());
-        collegeDto.setId(college.getId());
-        return collegeDto;
-    }
-
-    private List<CollegeDto> collegeDtoList(List<College> colleges) {
-        List<CollegeDto> collegeDtoList = new ArrayList<>();
-        for (College college : colleges) {
-            collegeDtoList.add(convertToCollegeDto(college));
-        }
-        return collegeDtoList;
     }
 
 }

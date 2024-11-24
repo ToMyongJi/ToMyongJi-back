@@ -19,6 +19,7 @@ public interface AdminMapper {
     AdminMapper INSTANCE = Mappers.getMapper(AdminMapper.class);
 
     // President Entity to DTO
+    @Mapping(source = "id", target = "presidentId")
     PresidentDto toPresidentDto(President president);
 
     // President UpdateDto to PresidentDto

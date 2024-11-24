@@ -1,11 +1,10 @@
 package com.example.tomyongji.auth.service;
 
 
-import com.example.tomyongji.admin.entity.MemberInfo;
-import com.example.tomyongji.admin.entity.PresidentInfo;
-import com.example.tomyongji.admin.repository.MemberInfoRepository;
-import com.example.tomyongji.admin.repository.PresidentInfoRepository;
-import com.example.tomyongji.auth.dto.CustomUserInfoDto;
+import com.example.tomyongji.admin.entity.Member;
+import com.example.tomyongji.admin.entity.President;
+import com.example.tomyongji.admin.repository.MemberRepository;
+import com.example.tomyongji.admin.repository.PresidentRepository;
 import com.example.tomyongji.auth.dto.LoginRequestDto;
 import com.example.tomyongji.auth.dto.UserRequsetDto;
 import com.example.tomyongji.auth.entity.User;
@@ -15,22 +14,14 @@ import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.time.Duration;
 import java.util.Optional;
-import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -38,8 +29,8 @@ import java.util.Random;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final MemberInfoRepository memberInfoRepository;
-    private final PresidentInfoRepository presidentInfoRepository;
+    private final MemberRepository memberInfoRepository;
+    private final PresidentRepository presidentInfoRepository;
     private final StudentClubRepository studentClubRepository;
     private final PasswordEncoder encoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
@@ -105,9 +96,9 @@ public Boolean verifyClub(Long clubId, String studentNum) {
     }
     StudentClub studentClub = optionalStudentClub.get();
 
-        Optional<PresidentInfo> optionalPresidentInfo = Optional.ofNullable(this.presidentInfoRepository.findByStudentNum(studentNum));
+        Optional<President> optionalPresidentInfo = Optional.ofNullable(this.presidentInfoRepository.findByStudentNum(studentNum));
         if (!optionalPresidentInfo.isPresent()) {
-            Optional<MemberInfo> optionalMemberInfo = Optional.ofNullable(this.memberInfoRepository.findByStudentNum(studentNum));
+            Optional<Member> optionalMemberInfo = Optional.ofNullable(this.memberInfoRepository.findByStudentNum(studentNum));
             if (!optionalMemberInfo.isPresent()) {
                 return false; // 회원 정보가 없는 경우
             }else{

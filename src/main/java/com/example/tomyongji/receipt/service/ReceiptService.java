@@ -9,9 +9,12 @@ import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
 
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.repository.UserRepository;
+import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
+import com.example.tomyongji.receipt.dto.ReceiptUpdateDto;
 import com.example.tomyongji.receipt.entity.Receipt;
 import com.example.tomyongji.receipt.entity.StudentClub;
+import com.example.tomyongji.receipt.mapper.ReceiptMapper;
 import com.example.tomyongji.receipt.repository.ReceiptRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.validation.CustomException;
@@ -29,17 +32,20 @@ public class ReceiptService {
     private final ReceiptRepository receiptRepository;
     private final StudentClubRepository studentClubRepository;
     private final UserRepository userRepository;
+    private final ReceiptMapper receiptMapper;
 
     @Autowired
     public ReceiptService(ReceiptRepository receiptRepository,
-        StudentClubRepository studentClubRepository, UserRepository userRepository) {
+        StudentClubRepository studentClubRepository, UserRepository userRepository,
+        ReceiptMapper receiptMapper) {
         this.receiptRepository = receiptRepository;
         this.studentClubRepository = studentClubRepository;
         this.userRepository = userRepository;
+        this.receiptMapper = receiptMapper;
     }
 
-    public ReceiptDto createReceipt(ReceiptDto receiptDto, Long id) {
-        Optional<User> user = userRepository.findById(id);
+    public ReceiptDto createReceipt(ReceiptCreateDto receiptDto) {
+        Optional<User> user = userRepository.findById(receiptDto.getUserId());
         if (user.isEmpty()) {
             throw new CustomException(NOT_FOUND_USER, 400);
         }
@@ -61,7 +67,7 @@ public class ReceiptService {
             throw new CustomException(DUPLICATED_FLOW, 400);
         }
 
-        Receipt receipt = convertToReceipt(receiptDto);
+        Receipt receipt = receiptMapper.toReceiptEntity(receiptDto);
         receipt.setStudentClub(studentClub);
 
         // 시분초를 0으로 설정하여 저장
@@ -74,7 +80,7 @@ public class ReceiptService {
         receipt.setDate(calendar.getTime());
 
         receiptRepository.save(receipt);
-        return receiptDto;
+        return receiptMapper.toReceiptDto(receiptDto);
     }
 
     public List<ReceiptDto> getAllReceipts() {
@@ -91,27 +97,27 @@ public class ReceiptService {
         List<Receipt> receipts = receiptRepository.findAllByStudentClub(studentClub.get());
         return receiptDtoList(receipts);
     }
-    public ReceiptDto getReceiptById(Long id) {
-        Optional<Receipt> receipt = receiptRepository.findById(id);
+    public ReceiptDto getReceiptById(Long receiptId) {
+        Optional<Receipt> receipt = receiptRepository.findById(receiptId);
         if (receipt.isEmpty()) {
             throw new CustomException(NOT_FOUND_RECEIPT, 400);
         }
-        return convertToReceiptDto(receipt.get());
+        return receiptMapper.toReceiptDto(receipt.get());
     }
-    public ReceiptDto deleteReceipt(Long id) {
-        Optional<Receipt> receipt = receiptRepository.findById(id);
+    public ReceiptDto deleteReceipt(Long receiptId) {
+        Optional<Receipt> receipt = receiptRepository.findById(receiptId);
         if (receipt.isEmpty()) {
             throw new CustomException(NOT_FOUND_RECEIPT, 400);
         }
-        ReceiptDto receiptDto = convertToReceiptDto(receipt.get());
-        receiptRepository.deleteById(id);
+        ReceiptDto receiptDto = receiptMapper.toReceiptDto(receipt.get());
+        receiptRepository.deleteById(receiptId);
         return receiptDto;
     }
-    public ReceiptDto updateReceipt(Long id, ReceiptDto receiptDto) {
-        Optional<Receipt> optionalReceipt = receiptRepository.findById(id);
+    public ReceiptDto updateReceipt(ReceiptUpdateDto receiptDto) {
+        Optional<Receipt> optionalReceipt = receiptRepository.findById(receiptDto.getReceiptId());
 
         if (optionalReceipt.isPresent()) {
-            Receipt existingReceipt = optionalReceipt.get();
+            Receipt existingReceipt = optionalReceipt.get(); //기존의
 
             // DTO로 들어온 값이 null이 아니면 해당 필드 업데이트
             if (receiptDto.getDate() != null) {
@@ -128,34 +134,16 @@ public class ReceiptService {
             }
 
             receiptRepository.save(existingReceipt);
-            return receiptDto;
+            return receiptMapper.toReceiptDto(receiptDto);
         } else {
             throw new CustomException(NOT_FOUND_RECEIPT, 400);
         }
-    }
-    public Receipt convertToReceipt(ReceiptDto receiptDto) {
-        Receipt receipt = new Receipt();
-        receipt.setDate(receiptDto.getDate());
-        receipt.setContent(receiptDto.getContent());
-        receipt.setDeposit(receiptDto.getDeposit());
-        receipt.setWithdrawal(receiptDto.getWithdrawal());
-        return receipt;
-    }
-
-    private ReceiptDto convertToReceiptDto(Receipt receipt) {
-        ReceiptDto receiptDto = new ReceiptDto();
-        receiptDto.setReceiptId(receipt.getId());
-        receiptDto.setDate(receipt.getDate());
-        receiptDto.setContent(receipt.getContent());
-        receiptDto.setDeposit(receipt.getDeposit());
-        receiptDto.setWithdrawal(receipt.getWithdrawal());
-        return receiptDto;
     }
 
     private List<ReceiptDto> receiptDtoList(List<Receipt> receipts) {
         List<ReceiptDto> receiptDtoList = new ArrayList<>();
         for (Receipt receipt : receipts) {
-            receiptDtoList.add(convertToReceiptDto(receipt));
+            receiptDtoList.add(receiptMapper.toReceiptDto(receipt));
         }
         return receiptDtoList;
     }

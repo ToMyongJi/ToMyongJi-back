@@ -6,12 +6,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import lombok.Data;
 
 @Entity
 @Data
-public class MemberInfo {
+public class President {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +20,7 @@ public class MemberInfo {
     private String studentNum;
     private String name;
 
-    @ManyToOne
+    @OneToOne(mappedBy = "president")
     @JsonBackReference
     private StudentClub studentClub;
 }

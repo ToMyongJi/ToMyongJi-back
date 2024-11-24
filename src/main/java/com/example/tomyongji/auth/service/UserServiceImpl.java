@@ -87,17 +87,17 @@ public class UserServiceImpl implements UserService {
 //        return null;
 //    }
 @Override
-public Boolean verifyClub(Long clubId, String studentNum) {
+public Boolean verifyClub(Long clubId, String studentNum) { //학생회 아이디, 유저 학번
 
 
     Optional<StudentClub> optionalStudentClub = this.studentClubRepository.findById(clubId);
     if (!optionalStudentClub.isPresent()) {
         return false; // 학생회 정보를 찾을 수 없는 경우
     }
-    StudentClub studentClub = optionalStudentClub.get();
+    StudentClub studentClub = optionalStudentClub.get(); //학생회
 
         Optional<President> optionalPresidentInfo = Optional.ofNullable(this.presidentInfoRepository.findByStudentNum(studentNum));
-        if (!optionalPresidentInfo.isPresent()) {
+        if (!optionalPresidentInfo.isPresent()) { //회장의 학번이 아니라면
             Optional<Member> optionalMemberInfo = Optional.ofNullable(this.memberInfoRepository.findByStudentNum(studentNum));
             if (!optionalMemberInfo.isPresent()) {
                 return false; // 회원 정보가 없는 경우
@@ -107,7 +107,8 @@ public Boolean verifyClub(Long clubId, String studentNum) {
                 }
             }
         }else{
-            if(optionalPresidentInfo.get().getStudentClub().getId().equals(clubId)){
+            StudentClub userClub = studentClubRepository.findByPresident(optionalPresidentInfo.get());
+            if(userClub.getId().equals(clubId)){
                 return true;
             }
         }

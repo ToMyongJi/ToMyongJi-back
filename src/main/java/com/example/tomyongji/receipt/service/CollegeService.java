@@ -27,17 +27,15 @@ public class CollegeService {
     private final StudentClubRepository studentClubRepository;
 
     public List<CollegesDto> getAllCollegesAndClubs() {
-        List<CollegesDto> collegesAndClubs = new ArrayList<>();
-        List<College> collegeList = collegeRepository.findAll();
-        for(College college : collegeList){
-            List<ClubDto> clubs = new ArrayList<>();
-            for(StudentClub club : college.getStudentClubs()){
-                clubs.add(club.toDto());
-            }
-            CollegesDto collegesDto = new CollegesDto(college.getId(),college.getCollegeName(),clubs);
-            collegesAndClubs.add(collegesDto);
-        }
-        return collegesAndClubs;
+        return collegeRepository.findAll().stream()
+                .map(college -> new CollegesDto(
+                        college.getId(),
+                        college.getCollegeName(),
+                        college.getStudentClubs().stream()
+                                .map(StudentClub::toDto)
+                                .toList()
+                ))
+                .toList();
     }
 
     private CollegeDto convertToCollegeDto(College college) {

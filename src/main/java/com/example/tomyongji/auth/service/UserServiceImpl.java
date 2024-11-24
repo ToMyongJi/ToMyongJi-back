@@ -82,47 +82,34 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
     }
 
-//    @Override
-//    public Boolean verifyClub(Long clubId, Long userId) {
-//        User user = this.userRepository.findById(userId).get();
-//        String role =  user.getRole();
-//        if(role.equals("PRESIDENT")){
-//            long presidentInfoId= this.studentClubRepository.findById(clubId).get().getPresidentInfo().getId();
-//            return this.presidentInfoRepository.findById(presidentInfoId).get().getStudentNum().equals(user.getStudentNum());
-//        }
-//        if(role.equals("STU")){
-//           return this.memberInfoRepository.findByStudentNum(user.getStudentNum()).getStudentClub().getId().equals(clubId);
-//        }
-//        return null;
-//    }
-@Override
-public Boolean verifyClub(Long clubId, String studentNum) {
 
+    @Override
+    public Boolean verifyClub(Long clubId, String studentNum) {
 
-    Optional<StudentClub> optionalStudentClub = this.studentClubRepository.findById(clubId);
-    if (!optionalStudentClub.isPresent()) {
-        return false; // 학생회 정보를 찾을 수 없는 경우
-    }
-    StudentClub studentClub = optionalStudentClub.get();
+        Optional<StudentClub> optionalStudentClub = this.studentClubRepository.findById(clubId);
+        if (!optionalStudentClub.isPresent()) {
+            return false; // 학생회 정보를 찾을 수 없는 경우
+        }
+        StudentClub studentClub = optionalStudentClub.get();
 
-        Optional<PresidentInfo> optionalPresidentInfo = Optional.ofNullable(this.presidentInfoRepository.findByStudentNum(studentNum));
-        if (!optionalPresidentInfo.isPresent()) {
-            Optional<MemberInfo> optionalMemberInfo = Optional.ofNullable(this.memberInfoRepository.findByStudentNum(studentNum));
-            if (!optionalMemberInfo.isPresent()) {
-                return false; // 회원 정보가 없는 경우
+            Optional<PresidentInfo> optionalPresidentInfo = Optional.ofNullable(this.presidentInfoRepository.findByStudentNum(studentNum));
+            if (!optionalPresidentInfo.isPresent()) {
+                Optional<MemberInfo> optionalMemberInfo = Optional.ofNullable(this.memberInfoRepository.findByStudentNum(studentNum));
+                if (!optionalMemberInfo.isPresent()) {
+                    return false; // 회원 정보가 없는 경우
+                }else{
+                    if(optionalMemberInfo.get().getStudentClub().getId().equals(clubId)){
+                        return true;
+                    }
+                }
             }else{
-                if(optionalMemberInfo.get().getStudentClub().getId().equals(clubId)){
+                if(optionalPresidentInfo.get().getStudentClub().getId().equals(clubId)){
                     return true;
                 }
             }
-        }else{
-            if(optionalPresidentInfo.get().getStudentClub().getId().equals(clubId)){
-                return true;
-            }
-        }
 
-    return false; // 역할이 "PRESIDENT"나 "STU"가 아닌 경우
-}
+        return false; // 역할이 "PRESIDENT"나 "STU"가 아닌 경우
+    }
 
     @Override
     public User createUser(UserRequsetDto dto) {

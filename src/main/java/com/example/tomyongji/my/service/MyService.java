@@ -57,15 +57,6 @@ public class MyService {
         return myDto;
     }
 
-//    public void updateMyInfo(Long id, String studentNum) {
-//        Optional<User> userById = userRepository.findById(id);
-//        if (userById.isEmpty()) {
-//            throw new RuntimeException("사용자를 찾을 수 없습니다.");
-//        }
-//        User user = userById.get();
-//        user.setStudentNum(studentNum);
-//        userRepository.save(user);
-//    }
 
     public List<MemberDto> getMembers(Long id) {
         Optional<User> user = userRepository.findById(id);

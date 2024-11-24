@@ -10,6 +10,7 @@ import com.example.tomyongji.my.dto.AdminSaveMemberDto;
 import com.example.tomyongji.my.dto.MemberRequestDto;
 import com.example.tomyongji.my.dto.SaveMemberDto;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
@@ -28,6 +29,7 @@ public interface AdminMapper {
     President toPresidentEntity(PresidentUpdateDto presidentUpdateDto);
 
     // Member Entity to DTO
+    @Mapping(source = "id", target = "memberId")
     MemberDto toMemberDto(Member member);
 
     // User Entity to DTO

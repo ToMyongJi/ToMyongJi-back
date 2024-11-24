@@ -20,7 +20,4 @@ public class President {
     private String studentNum;
     private String name;
 
-    @OneToOne(mappedBy = "president")
-    @JsonBackReference
-    private StudentClub studentClub;
 }

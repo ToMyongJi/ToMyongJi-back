@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ReceiptDto {
 
+    private long receiptId;
+
     @JsonDeserialize(using = CustomDateDeserializer.class)
     private Date date;
     //private long receiptId;

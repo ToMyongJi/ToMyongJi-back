@@ -80,8 +80,8 @@ public class ReceiptController {
 
     @Operation(summary = "영수증 수정 api", description = "영수증 아이디를 통해 특정 영수증을 수정합니다.")
     @PatchMapping //특정 영수증 수정
-    public ApiResponse<ReceiptDto> updateReceipt(@RequestBody ReceiptUpdateDto receiptUpdateDto) {
-        ReceiptDto updatedReceipt = receiptService.updateReceipt(receiptUpdateDto);
+    public ApiResponse<ReceiptDto> updateReceipt(@RequestBody ReceiptDto receiptDto) {
+        ReceiptDto updatedReceipt = receiptService.updateReceipt(receiptDto);
         return new ApiResponse<>(200, "영수증을 성공적으로 수정했습니다.", updatedReceipt);
     }
 }

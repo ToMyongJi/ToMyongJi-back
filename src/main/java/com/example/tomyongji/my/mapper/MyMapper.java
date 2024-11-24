@@ -7,6 +7,7 @@ import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.admin.entity.Member;
 import com.example.tomyongji.my.dto.SaveMemberDto;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
@@ -27,6 +28,7 @@ public interface MyMapper {
     MemberDto toMemberDto(User user);
 
     // Member Entity to MemberDto
+    @Mapping(source = "id", target = "memberId")
     MemberDto toMemberDto(Member member);
 
 

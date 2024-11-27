@@ -6,7 +6,6 @@ import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
 
 import com.example.tomyongji.admin.dto.MemberDto;
 import com.example.tomyongji.admin.dto.PresidentDto;
-import com.example.tomyongji.admin.dto.PresidentUpdateDto;
 import com.example.tomyongji.admin.entity.Member;
 import com.example.tomyongji.admin.entity.President;
 import com.example.tomyongji.admin.mapper.AdminMapper;
@@ -57,40 +56,33 @@ public class AdminService {
             throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
         }
         President president = studentClub.get().getPresident();
-        return adminMapper.toPresidentDto(president);
+        PresidentDto presidentDto = adminMapper.toPresidentDto(president);
+        presidentDto.setClubId(clubId);
+        return presidentDto;
     }
 
     @Transactional
-    public void savePresident(PresidentUpdateDto presidentUpdateDto) {
-        PresidentDto presidentDto = adminMapper.toPresidentDto(presidentUpdateDto);
+    public void savePresident(PresidentDto presidentDto) {
         if (presidentRepository.existsByStudentNum(presidentDto.getStudentNum())) {
             throw new CustomException(EXISTING_USER, 400);  // 중복 학번 예외 처리
         }
+        President president = adminMapper.toPresidentEntity(presidentDto);
+        presidentRepository.save(president);
 
-        Optional<StudentClub> studentClub = studentClubRepository.findById(presidentUpdateDto.getClubId());
+        Optional<StudentClub> studentClub = studentClubRepository.findById(presidentDto.getClubId());
         if (studentClub.isEmpty()) {
             throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
         }
-        President president = new President();
-        // DTO에서 값을 가져와 설정
-        president.setStudentNum(presidentDto.getStudentNum());
-        president.setName(presidentDto.getName());
 
-        presidentRepository.save(president);
-
-        // StudentClub 객체를 가져와서 PresidentInfo와의 관계 설정
         StudentClub studentClubEntity = studentClub.get();
-        president.setStudentClub(studentClubEntity);
         studentClubEntity.setPresident(president);
-
-        // 양방향 관계가 설정된 상태에서 StudentClub과 PresidentInfo를 저장
-        studentClubRepository.save(studentClubEntity);  // StudentClub을 먼저 저장
+        studentClubRepository.save(studentClubEntity);
 
     }
 
     @Transactional
-    public void updatePresident(PresidentUpdateDto presidentUpdateDto) {
-        Optional<StudentClub> studentClub = studentClubRepository.findById(presidentUpdateDto.getClubId());
+    public void updatePresident(PresidentDto presidentDto) {
+        Optional<StudentClub> studentClub = studentClubRepository.findById(presidentDto.getClubId());
         if (studentClub.isEmpty()) {
             throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
         }
@@ -106,11 +98,10 @@ public class AdminService {
 
         //PresidentInfo 정보 새로 바꾸기
         President president = presidentRepository.findByStudentNum(user.getStudentNum()); //기존 회장 불러오기
-        president.setStudentNum(presidentUpdateDto.getStudentNum()); //학번 고치기
-        president.setName(presidentUpdateDto.getName()); //이름 고치기
+        president.setStudentNum(presidentDto.getStudentNum()); //학번 고치기
+        president.setName(presidentDto.getName()); //이름 고치기
 
         StudentClub studentClubEntity = studentClub.get();
-        president.setStudentClub(studentClub.get());
         studentClubEntity.setPresident(president);
 
         studentClubRepository.save(studentClubEntity);

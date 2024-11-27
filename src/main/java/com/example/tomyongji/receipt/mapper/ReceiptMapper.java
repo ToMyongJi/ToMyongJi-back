@@ -7,6 +7,7 @@ import com.example.tomyongji.receipt.dto.ReceiptDto;
 import com.example.tomyongji.receipt.dto.ReceiptUpdateDto;
 import com.example.tomyongji.receipt.entity.Receipt;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
@@ -23,10 +24,8 @@ public interface ReceiptMapper {
     // ReceiptCreateDto to ReceiptDto
     ReceiptDto toReceiptDto(ReceiptCreateDto receiptCreateDto);
 
-    // ReceiptUpdateDto to ReceiptDto
-    ReceiptDto toReceiptDto(ReceiptUpdateDto receiptUpdateDto);
-
     // Receipt Entity to Receipt Dto
+    @Mapping(source = "id", target = "receiptId")
     ReceiptDto toReceiptDto(Receipt receipt);
 
     // OCRResultDto to Receipt Dto

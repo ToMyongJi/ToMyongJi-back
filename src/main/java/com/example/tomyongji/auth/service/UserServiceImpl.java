@@ -75,28 +75,23 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public Boolean verifyClub(Long clubId, String studentNum) {
+    public Boolean verifyClub(Long clubId, String studentNum) { //학생회 아이디, 유저 학번
 
         Optional<StudentClub> optionalStudentClub = this.studentClubRepository.findById(clubId);
         if (!optionalStudentClub.isPresent()) {
             return false; // 학생회 정보를 찾을 수 없는 경우
         }
-        StudentClub studentClub = optionalStudentClub.get();
-
-
-        Optional<President> optionalPresidentInfo = Optional.ofNullable(this.presidentInfoRepository.findByStudentNum(studentNum));
-        if (!optionalPresidentInfo.isPresent()) {
-            Optional<Member> optionalMemberInfo = Optional.ofNullable(this.memberInfoRepository.findByStudentNum(studentNum));
-            if (!optionalMemberInfo.isPresent()) {
-                return false; // 회원 정보가 없는 경우
-            } else {
-                if (optionalPresidentInfo.get().getStudentClub().getId().equals(clubId)) {
-                    return true;
-                }
-            }
+        StudentClub studentClub = optionalStudentClub.get(); //학생회
+        President president =this.presidentInfoRepository.findByStudentNum(studentNum);
+        if (president==null) { //회장의 학번이 아니라면
+            Member member = this.memberInfoRepository.findByStudentNum(studentNum);
+            if (member!=null) return true;
+        }else {
+            StudentClub userClub = studentClubRepository.findByPresident(president);
+            if (userClub!=null) return true;
         }
-        return false; // 역할이 "PRESIDENT"나 "STU"가 아닌 경우
-    }
+            return false;
+        }
 
     @Override
     public User createUser(UserRequsetDto dto) {

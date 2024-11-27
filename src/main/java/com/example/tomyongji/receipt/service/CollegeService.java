@@ -24,6 +24,7 @@ public class CollegeService {
 
     @Autowired
     private final CollegeRepository collegeRepository;
+    private final CollegeMapper collegeMapper;
     public List<CollegesDto> getAllCollegesAndClubs() {
 
         return collegeRepository.findAll().stream()

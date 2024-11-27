@@ -3,7 +3,6 @@ package com.example.tomyongji.admin.controller;
 import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.admin.dto.MemberDto;
 import com.example.tomyongji.admin.dto.PresidentDto;
-import com.example.tomyongji.admin.dto.PresidentUpdateDto;
 import com.example.tomyongji.admin.mapper.AdminMapper;
 import com.example.tomyongji.admin.service.AdminService;
 import com.example.tomyongji.auth.entity.User;
@@ -28,12 +27,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
     private final AdminService adminService;
-    private final AdminMapper adminMapper;
 
     @Autowired
-    public AdminController(AdminService adminService, AdminMapper adminMapper) {
+    public AdminController(AdminService adminService) {
         this.adminService = adminService;
-        this.adminMapper = adminMapper;
     }
 
     @Operation(summary = "학생회장 조회 api", description = "학생회 아이디를 통해 특정 학생회의 회장을 조회합니다.")
@@ -46,17 +43,15 @@ public class AdminController {
     @Operation(summary = "학생회장 저장 api", description = "학생회 아이디와 학번, 이름을 통해 특정 학생회의 회장 정보를 저장합니다.")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/president")
-    public ApiResponse<PresidentDto> savePresident(@RequestBody PresidentUpdateDto presidentUpdateDto) {
-        adminService.savePresident(presidentUpdateDto);
-        PresidentDto presidentDto = adminMapper.toPresidentDto(presidentUpdateDto);
+    public ApiResponse<PresidentDto> savePresident(@RequestBody PresidentDto presidentDto) {
+        adminService.savePresident(presidentDto);
         return new ApiResponse<>(201, "학생회장 저장에 성공했습니다.", presidentDto);
     }
 
     @Operation(summary = "학생회장 수정 api", description = "학생회 아이디와 학번, 이름을 통해 특정 학생회의 회장 정보를 수정합니다.")
     @PatchMapping("/president")
-    public ApiResponse<PresidentDto> updatePresident(@RequestBody PresidentUpdateDto presidentUpdateDto) {
-        adminService.updatePresident(presidentUpdateDto);
-        PresidentDto presidentDto = adminMapper.toPresidentDto(presidentUpdateDto);
+    public ApiResponse<PresidentDto> updatePresident(@RequestBody PresidentDto presidentDto) {
+        adminService.updatePresident(presidentDto);
         return new ApiResponse<>(200, "학생회장 수정에 성공했습니다.", presidentDto);
     }
 

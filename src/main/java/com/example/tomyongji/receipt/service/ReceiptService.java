@@ -113,7 +113,7 @@ public class ReceiptService {
         receiptRepository.deleteById(receiptId);
         return receiptDto;
     }
-    public ReceiptDto updateReceipt(ReceiptUpdateDto receiptDto) {
+    public ReceiptDto updateReceipt(ReceiptDto receiptDto) {
         Optional<Receipt> optionalReceipt = receiptRepository.findById(receiptDto.getReceiptId());
 
         if (optionalReceipt.isPresent()) {
@@ -134,7 +134,7 @@ public class ReceiptService {
             }
 
             receiptRepository.save(existingReceipt);
-            return receiptMapper.toReceiptDto(receiptDto);
+            return receiptDto;
         } else {
             throw new CustomException(NOT_FOUND_RECEIPT, 400);
         }

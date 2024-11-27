@@ -25,19 +25,18 @@ public class CollegeService {
     @Autowired
     private final CollegeRepository collegeRepository;
     private final CollegeMapper collegeMapper;
-
     public List<CollegesDto> getAllCollegesAndClubs() {
-        List<CollegesDto> collegesAndClubs = new ArrayList<>();
-        List<College> collegeList = collegeRepository.findAll(); //모든 대학들 가져오기
-        for(College college : collegeList){
-            List<ClubDto> clubs = new ArrayList<>();
-            for(StudentClub club : college.getStudentClubs()){
-                clubs.add(club.toDto());
-            }
-            CollegesDto collegesDto = new CollegesDto(college.getId(),college.getCollegeName(),clubs);
-            collegesAndClubs.add(collegesDto);
-        }
-        return collegesAndClubs;
+
+        return collegeRepository.findAll().stream()
+                .map(college -> new CollegesDto(
+                        college.getId(),
+                        college.getCollegeName(),
+                        college.getStudentClubs().stream()
+                                .map(StudentClub::toDto)
+                                .toList()
+                ))
+                .toList();
+
     }
 
 }

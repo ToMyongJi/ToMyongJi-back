@@ -80,35 +80,32 @@ public class AdminService {
 
     }
 
-    @Transactional
     public void updatePresident(PresidentDto presidentDto) {
-        Optional<StudentClub> studentClub = studentClubRepository.findById(presidentDto.getClubId());
-        if (studentClub.isEmpty()) {
+        StudentClub studentClub = studentClubRepository.findById(presidentDto.getClubId()).get();
+        if (studentClub==null) {
             throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
         }
 
-        //회장 역할을 STU로 바꾸기
-        User user = userRepository.findFirstByStudentClubAndRole(studentClub.get(), "PRESIDENT");
+//        1. 기존 회장 -> 멤버로
+//        2. 기존 회장 type -> 멤버
+//        3. new 회장 저장
+        User user = userRepository.findFirstByStudentClubAndRole(studentClub, "PRESIDENT");
+        user.setRole("STU");
+        userRepository.save(user);
 
         //MemberInfo에 추가하기
-        Member member = new Member();
-        member = adminMapper.toMemberEntity(user);
+        Member member =adminMapper.toMemberEntity(user);
         memberRepository.save(member);
-
 
         //PresidentInfo 정보 새로 바꾸기
         President president = presidentRepository.findByStudentNum(user.getStudentNum()); //기존 회장 불러오기
         president.setStudentNum(presidentDto.getStudentNum()); //학번 고치기
         president.setName(presidentDto.getName()); //이름 고치기
 
-        StudentClub studentClubEntity = studentClub.get();
-        studentClubEntity.setPresident(president);
+        studentClub.setPresident(president);
 
-        studentClubRepository.save(studentClubEntity);
+        studentClubRepository.save(studentClub);
         presidentRepository.save(president);
-
-        user.setRole("STU");
-        userRepository.save(user);
 
     }
 

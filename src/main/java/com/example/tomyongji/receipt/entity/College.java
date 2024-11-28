@@ -25,8 +25,4 @@ public class College {
 
     private String collegeName;
 
-    @OneToMany(mappedBy = "college")
-    @JsonManagedReference
-    private List<StudentClub> studentClubs;
-
 }

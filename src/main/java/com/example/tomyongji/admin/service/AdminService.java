@@ -86,9 +86,6 @@ public class AdminService {
             throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
         }
 
-//        1. 기존 회장 -> 멤버로
-//        2. 기존 회장 type -> 멤버
-//        3. new 회장 저장
         User user = userRepository.findFirstByStudentClubAndRole(studentClub, "PRESIDENT");
         user.setRole("STU");
         userRepository.save(user);

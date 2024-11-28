@@ -32,22 +32,11 @@ public class StudentClub {
     @JoinColumn(name = "college_id")
     private College college;
 
-    @OneToMany(mappedBy = "studentClub")
-    @JsonManagedReference
-    private List<Receipt> receipts;
-
-    @OneToMany(mappedBy = "studentClub")
-    @JsonManagedReference
-    private List<User> users;
-
     @OneToOne
     @JsonManagedReference
     @JoinColumn(name = "president_id")
     private President president;
-
-    @OneToMany(mappedBy = "studentClub")
-    @JsonManagedReference
-    private List<Member> members;
+    
 
     public ClubDto toDto() {
         return ClubDto.builder()

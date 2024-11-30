@@ -50,14 +50,7 @@ public class MyService {
             throw new CustomException(NOT_FOUND_USER, 400);
         }
         User user = userById.get();
-
-        MyDto myDto = new MyDto();
-        myDto.setName(user.getName());
-        myDto.setStudentNum(user.getStudentNum());
-        myDto.setCollege(user.getCollege());
-        myDto.setStudentClubId(user.getStudentClub().getId());
-
-        return myDto;
+        return myMapper.toMyDto(user);
     }
 
 

@@ -39,18 +39,4 @@ public class User {
     @ManyToOne
     @JsonBackReference
     private StudentClub studentClub;
-
-    public static PresidentDto convertToPresidentDto(User user) {
-        PresidentDto presidentDto = new PresidentDto();
-        presidentDto.setStudentNum(user.getStudentNum());
-        presidentDto.setName(user.getName());
-        return presidentDto;
-    }
-
-    public static MemberDto convertToMemebrDto(User user) {
-        MemberDto memberDto = new MemberDto();
-        memberDto.setStudentNum(user.getStudentNum());
-        memberDto.setName(user.getName());
-        return memberDto;
-    }
 }

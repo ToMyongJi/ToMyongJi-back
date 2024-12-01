@@ -16,6 +16,7 @@ public interface MyMapper {
     MyMapper INSTANCE = Mappers.getMapper(MyMapper.class);
 
     // User Entity to MyDto
+    @Mapping(source = "studentClub.id", target = "studentClubId")
     MyDto toMyDto(User user);
 
     // MemberRequestDto to Member Entity
@@ -30,6 +31,5 @@ public interface MyMapper {
     // Member Entity to MemberDto
     @Mapping(source = "id", target = "memberId")
     MemberDto toMemberDto(Member member);
-
 
 }

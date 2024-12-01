@@ -10,10 +10,14 @@ import com.example.tomyongji.auth.dto.UserRequsetDto;
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.jwt.JwtProvider;
 import com.example.tomyongji.auth.jwt.JwtToken;
+import com.example.tomyongji.auth.mapper.UserMapper;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -25,7 +29,6 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -35,7 +38,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder encoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtProvider jwtProvider;
-
+    private final UserMapper userMapper;
     @Override
     public Long join(User user) {
         Optional<User> valiUser = userRepository.findByUserId(user.getUserId());
@@ -70,7 +73,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public String findUserIdByEmail(String email) {
         return this.userRepository.findByEmail(email).map(User::getUserId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+                .orElseThrow(() -> new IllegalArgumentException("해당 이메일의 사용자가 없습니다.: " + email));
     }
 
 
@@ -98,17 +101,20 @@ public class UserServiceImpl implements UserService {
         System.out.println(dto.getStudentClubId());
         StudentClub studentClub = studentClubRepository.findById(dto.getStudentClubId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid student club ID"));
-
-        User user = User.builder()
-                .userId(dto.getUserId())
-                .name(dto.getName())
-                .studentNum(dto.getStudentNum())
-                .college(dto.getCollege())
-                .email(dto.getEmail())
-                .password(dto.getPassword())
-                .role(dto.getRole())
-                .studentClub(studentClub) // StudentClub 객체 설정
-                .build();
+        User user = userMapper.toUser(dto,studentClub);
+        if(user.getStudentClub()==null){
+            user.setStudentClub(studentClub);
+        }
+//        User user = User.builder()
+//                .userId(dto.getUserId())
+//                .name(dto.getName())
+//                .studentNum(dto.getStudentNum())
+//                .college(dto.getCollege())
+//                .email(dto.getEmail())
+//                .password(dto.getPassword())
+//                .role(dto.getRole())
+//                .studentClub(studentClub) // StudentClub 객체 설정
+//                .build();
 
         return user;
     }

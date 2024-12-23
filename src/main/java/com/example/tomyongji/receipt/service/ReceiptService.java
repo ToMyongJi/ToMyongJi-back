@@ -9,6 +9,7 @@ import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
 
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.repository.UserRepository;
+import com.example.tomyongji.receipt.dto.ReceiptByStudentClubDto;
 import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
 import com.example.tomyongji.receipt.dto.ReceiptUpdateDto;
@@ -23,6 +24,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -87,15 +90,20 @@ public class ReceiptService {
         List<Receipt> receipts = receiptRepository.findAll();
         return receiptDtoList(receipts);
     }
-    public List<ReceiptDto> getReceiptsByClub(Long clubId) {
+    public ReceiptByStudentClubDto getReceiptsByClub(Long clubId) {
 
         Optional<StudentClub> studentClub = studentClubRepository.findById(clubId);
         if (studentClub.isEmpty()) {
             throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
         }
-
         List<Receipt> receipts = receiptRepository.findAllByStudentClub(studentClub.get());
-        return receiptDtoList(receipts);
+
+        ReceiptByStudentClubDto receiptByStudentClubDto = new ReceiptByStudentClubDto();
+        receiptByStudentClubDto.setReceiptList(receipts.stream()
+                .map(receiptMapper::toReceiptDto)
+                .collect(Collectors.toList()));
+        receiptByStudentClubDto.setBalance(studentClub.get().getBalance());
+        return receiptByStudentClubDto;
     }
     public ReceiptDto getReceiptById(Long receiptId) {
         Optional<Receipt> receipt = receiptRepository.findById(receiptId);

@@ -24,6 +24,8 @@ public class CollegeService {
 
     @Autowired
     private final CollegeRepository collegeRepository;
+    @Autowired
+    private final StudentClubRepository studentClubRepository;
     private final CollegeMapper collegeMapper;
     public List<CollegesDto> getAllCollegesAndClubs() {
 
@@ -31,7 +33,7 @@ public class CollegeService {
                 .map(college -> new CollegesDto(
                         college.getId(),
                         college.getCollegeName(),
-                        college.getStudentClubs().stream()
+                        studentClubRepository.findAllByCollege_Id(college.getId()).stream()
                                 .map(StudentClub::toDto)
                                 .toList()
                 ))

@@ -27,6 +27,8 @@ public class StudentClub {
 
     private String studentClubName;
 
+    private int Balance;
+
     @ManyToOne
     @JsonBackReference
     @JoinColumn(name = "college_id")

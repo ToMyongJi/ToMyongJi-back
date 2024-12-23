@@ -31,8 +31,6 @@ public class Receipt {
     private String content;
     private int deposit;
     private int withdrawal;
-    private int balance;
-
     @ManyToOne
     @JsonBackReference
     private StudentClub studentClub;

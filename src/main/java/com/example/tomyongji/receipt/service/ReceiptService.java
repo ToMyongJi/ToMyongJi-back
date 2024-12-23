@@ -48,43 +48,34 @@ public class ReceiptService {
     }
 
     public ReceiptDto createReceipt(ReceiptCreateDto receiptDto) {
-        Optional<User> user = userRepository.findById(receiptDto.getUserId());
-        if (user.isEmpty()) {
-            throw new CustomException(NOT_FOUND_USER, 400);
-        }
-        StudentClub studentClub = user.get().getStudentClub();
+        //유저 및 소속 클럽 조회
+        User user = userRepository.findById(receiptDto.getUserId())
+            .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
+        StudentClub studentClub = user.getStudentClub();
 
+        //필수 입력값 검증
+        validateReceiptDto(receiptDto);
+
+        //날짜 초기화 및 시분초 제거
         if (receiptDto.getDate() == null) {
             receiptDto.setDate(new Date());
         }
-        if (receiptDto.getContent() == null || receiptDto.getContent().trim().isEmpty()) {
-            throw new CustomException(EMPTY_CONTENT, 400);
-        }
+        receiptDto.setDate(resetTimeToMidnight(receiptDto.getDate()));
 
-        // null 값을 0으로 처리
-        if (receiptDto.getDeposit() == 0 && receiptDto.getWithdrawal() == 0) {
-            throw new CustomException(EMPTY_MONEY, 400);
-        }
-
-        if (receiptDto.getDeposit() != 0 && receiptDto.getWithdrawal() != 0) {
-            throw new CustomException(DUPLICATED_FLOW, 400);
-        }
-
+        //영수증 엔티티 생성 및 저장
         Receipt receipt = receiptMapper.toReceiptEntity(receiptDto);
         receipt.setStudentClub(studentClub);
-
-        // 시분초를 0으로 설정하여 저장
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(receipt.getDate());
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        receipt.setDate(calendar.getTime());
-
         receiptRepository.save(receipt);
-        return receiptMapper.toReceiptDto(receiptDto);
+
+        //잔액 업데이트
+        int balanceAdjustment = receiptDto.getDeposit() - receiptDto.getWithdrawal();
+        studentClub.setBalance(studentClub.getBalance() + balanceAdjustment);
+        studentClubRepository.save(studentClub);
+
+        //생성된 영수증 DTO 반환
+        return receiptMapper.toReceiptDto(receipt);
     }
+
 
     public List<ReceiptDto> getAllReceipts() {
         List<Receipt> receipts = receiptRepository.findAll();
@@ -113,40 +104,58 @@ public class ReceiptService {
         return receiptMapper.toReceiptDto(receipt.get());
     }
     public ReceiptDto deleteReceipt(Long receiptId) {
-        Optional<Receipt> receipt = receiptRepository.findById(receiptId);
-        if (receipt.isEmpty()) {
-            throw new CustomException(NOT_FOUND_RECEIPT, 400);
-        }
-        ReceiptDto receiptDto = receiptMapper.toReceiptDto(receipt.get());
-        receiptRepository.deleteById(receiptId);
-        return receiptDto;
+        //영수증 조회 및 존재 여부 확인
+        Receipt receipt = receiptRepository.findById(receiptId)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_RECEIPT, 400));
+
+        StudentClub studentClub = receipt.getStudentClub();
+
+        //영수증 삭제
+        receiptRepository.delete(receipt);
+
+        //잔액 업데이트 (항상 deposit 또는 withdrawal 중 하나만 값이 존재)
+        int balanceAdjustment = receipt.getDeposit() - receipt.getWithdrawal();
+        studentClub.setBalance(studentClub.getBalance() - balanceAdjustment);
+        studentClubRepository.save(studentClub);
+
+        //DTO 반환
+        return receiptMapper.toReceiptDto(receipt);
     }
+
     public ReceiptDto updateReceipt(ReceiptDto receiptDto) {
-        Optional<Receipt> optionalReceipt = receiptRepository.findById(receiptDto.getReceiptId());
+        //영수증 조회
+        Receipt existingReceipt = receiptRepository.findById(receiptDto.getReceiptId())
+            .orElseThrow(() -> new CustomException(NOT_FOUND_RECEIPT, 400));
 
-        if (optionalReceipt.isPresent()) {
-            Receipt existingReceipt = optionalReceipt.get(); //기존의
+        //유효성 검증
+        validateReceiptDtoForUpdate(receiptDto);
 
-            // DTO로 들어온 값이 null이 아니면 해당 필드 업데이트
-            if (receiptDto.getDate() != null) {
-                existingReceipt.setDate(receiptDto.getDate());
-            }
-            if (receiptDto.getContent() != null) {
-                existingReceipt.setContent(receiptDto.getContent());
-            }
-            if (receiptDto.getDeposit() != 0) {
-                existingReceipt.setDeposit(receiptDto.getDeposit());
-            }
-            if (receiptDto.getWithdrawal() != 0) {
-                existingReceipt.setWithdrawal(receiptDto.getWithdrawal());
-            }
+        StudentClub studentClub = existingReceipt.getStudentClub();
 
-            receiptRepository.save(existingReceipt);
-            return receiptDto;
-        } else {
-            throw new CustomException(NOT_FOUND_RECEIPT, 400);
+        //기존 잔액 복원
+        int previousAdjustment = existingReceipt.getDeposit() - existingReceipt.getWithdrawal();
+        studentClub.setBalance(studentClub.getBalance() - previousAdjustment);
+
+        //영수증 값 업데이트
+        if (receiptDto.getDate() != null) {
+            existingReceipt.setDate(receiptDto.getDate());
         }
+        if (receiptDto.getContent() != null) {
+            existingReceipt.setContent(receiptDto.getContent());
+        }
+        existingReceipt.setDeposit(receiptDto.getDeposit());
+        existingReceipt.setWithdrawal(receiptDto.getWithdrawal());
+
+        //새 잔액 반영
+        int newAdjustment = receiptDto.getDeposit() - receiptDto.getWithdrawal();
+        studentClub.setBalance(studentClub.getBalance() + newAdjustment);
+
+        studentClubRepository.save(studentClub);
+        receiptRepository.save(existingReceipt);
+
+        return receiptMapper.toReceiptDto(existingReceipt);
     }
+
 
     private List<ReceiptDto> receiptDtoList(List<Receipt> receipts) {
         List<ReceiptDto> receiptDtoList = new ArrayList<>();
@@ -156,5 +165,30 @@ public class ReceiptService {
         return receiptDtoList;
     }
 
+    private void validateReceiptDto(ReceiptCreateDto receiptDto) {
+        if ((receiptDto.getDeposit() == 0 && receiptDto.getWithdrawal() == 0) ||
+            (receiptDto.getDeposit() != 0 && receiptDto.getWithdrawal() != 0)) {
+            throw new CustomException(DUPLICATED_FLOW, 400);
+        }
+        if (receiptDto.getContent() == null || receiptDto.getContent().trim().isEmpty()) {
+            throw new CustomException(EMPTY_CONTENT, 400);
+        }
+    }
 
+    private void validateReceiptDtoForUpdate(ReceiptDto receiptDto) {
+        if ((receiptDto.getDeposit() == 0 && receiptDto.getWithdrawal() == 0) ||
+            (receiptDto.getDeposit() != 0 && receiptDto.getWithdrawal() != 0)) {
+            throw new CustomException(DUPLICATED_FLOW, 400);
+        }
+    }
+
+    private Date resetTimeToMidnight(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTime();
+    }
 }

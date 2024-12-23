@@ -1,6 +1,7 @@
 package com.example.tomyongji.receipt.controller;
 
 import com.example.tomyongji.admin.dto.ApiResponse;
+import com.example.tomyongji.receipt.dto.ReceiptByStudentClubDto;
 import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
 import com.example.tomyongji.receipt.dto.ReceiptUpdateDto;
@@ -56,8 +57,8 @@ public class ReceiptController {
 
     @Operation(summary = "특정 학생회 영수증 조회 api", description = "학생회 아이디를 통해 특정 학생회의 영수증을 조회합니다.")
     @GetMapping("/club/{clubId}") //특정 학생회 영수증 조회
-    public ApiResponse<List<ReceiptDto>> getReceiptsByClub(@PathVariable Long clubId) {
-        List<ReceiptDto> receipts = receiptService.getReceiptsByClub(clubId);
+    public ApiResponse<ReceiptByStudentClubDto> getReceiptsByClub(@PathVariable Long clubId) {
+        ReceiptByStudentClubDto receipts = receiptService.getReceiptsByClub(clubId);
         return new ApiResponse<>(200, "해당 학생회의 영수증들을 성공적으로 조회했습니다.", receipts); // 200 OK
     }
 

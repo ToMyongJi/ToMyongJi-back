@@ -27,18 +27,39 @@ public class CollegeService {
     @Autowired
     private final StudentClubRepository studentClubRepository;
     private final CollegeMapper collegeMapper;
-    public List<CollegesDto> getAllCollegesAndClubs() {
+    private final StudentClubRepository studentClubRepository;
+//    public List<CollegesDto> getAllCollegesAndClubs() {
+//
+//        return collegeRepository.findAll().stream()
+//                .map(college -> new CollegesDto(
+//                        college.getId(),
+//                        college.getCollegeName(),
+//                        college.getStudentClubs().stream()
+//                                .map(StudentClub::toDto)
+//                                .toList()
+//                ))
+//                .toList();
+//
+//    }
 
+    public List<CollegesDto> getAllCollegesAndClubs() {        // 모든 College를 조회합니다.
         return collegeRepository.findAll().stream()
-                .map(college -> new CollegesDto(
-                        college.getId(),
-                        college.getCollegeName(),
-                        studentClubRepository.findAllByCollege_Id(college.getId()).stream()
-                                .map(StudentClub::toDto)
-                                .toList()
-                ))
-                .toList();
+            .map(college -> {
+                // 각 College에 속한 StudentClub을 조회합니다.
+                List<ClubDto> studentClubs = studentClubRepository.findAllByCollege_Id(college.getId()).stream()
+                    .map(StudentClub::toDto)
+                    .toList();
+
+                // CollegesDto를 생성합니다.
+                return new CollegesDto(
+                    college.getId(),
+                    college.getCollegeName(),
+                    studentClubs
+                );
+            })
+            .toList();
 
     }
+
 
 }

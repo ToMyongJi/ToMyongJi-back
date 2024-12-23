@@ -27,7 +27,6 @@ public class CollegeService {
     @Autowired
     private final StudentClubRepository studentClubRepository;
     private final CollegeMapper collegeMapper;
-    private final StudentClubRepository studentClubRepository;
 //    public List<CollegesDto> getAllCollegesAndClubs() {
 //
 //        return collegeRepository.findAll().stream()

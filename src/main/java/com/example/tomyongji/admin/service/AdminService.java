@@ -111,7 +111,8 @@ public class AdminService {
         if (studentClub.isEmpty()) {
             throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
         }
-        List<Member> members = studentClub.get().getMembers();
+
+        List<Member> members = memberRepository.findByStudentClub(studentClub.get());
         return members.stream().map(adminMapper::toMemberDto).collect(Collectors.toList());
     }
 

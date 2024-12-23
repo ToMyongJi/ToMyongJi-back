@@ -44,6 +44,7 @@ public class MyService {
         this.myMapper = myMapper;
     }
 
+    // mapper 사용 추천
     public MyDto getMyInfo(Long userId) {
         Optional<User> userById = userRepository.findById(userId);
         if (userById.isEmpty()) {

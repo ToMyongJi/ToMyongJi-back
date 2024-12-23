@@ -13,6 +13,7 @@ public interface StudentClubRepository extends JpaRepository<StudentClub, Long> 
 
 
     //StudentClub findByUsers(User user);
+
     List<StudentClub> findAllByCollege_Id(Long collegeId);
 
     StudentClub findByPresident(President president);

@@ -22,4 +22,5 @@ public interface StudentClubMapper {
     ClubDto toClubDto(StudentClub studentClub);
 
 
+
 }

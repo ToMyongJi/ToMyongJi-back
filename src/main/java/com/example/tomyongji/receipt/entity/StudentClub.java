@@ -36,7 +36,7 @@ public class StudentClub {
     @JsonManagedReference
     @JoinColumn(name = "president_id")
     private President president;
-    
+
 
     public ClubDto toDto() {
         return ClubDto.builder()

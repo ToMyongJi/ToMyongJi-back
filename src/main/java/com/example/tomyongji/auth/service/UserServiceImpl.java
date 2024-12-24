@@ -40,7 +40,8 @@ public class UserServiceImpl implements UserService {
     private final JwtProvider jwtProvider;
     private final UserMapper userMapper;
     @Override
-    public Long join(User user) {
+    public Long join(UserRequsetDto dto) {
+        User user =createUser(dto);
         Optional<User> valiUser = userRepository.findByUserId(user.getUserId());
         if (valiUser.isPresent()) {
             throw new IllegalArgumentException("이미 사용 중인 사용자 이름입니다.");

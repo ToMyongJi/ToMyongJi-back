@@ -1,7 +1,6 @@
 package com.example.tomyongji.admin.dto;
 
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

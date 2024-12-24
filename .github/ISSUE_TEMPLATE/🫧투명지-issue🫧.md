@@ -1,14 +1,12 @@
 ---
-name: tomyongji issue template
-about: github issue 등록을 위한 공통 템플릿
+name: "\U0001FAE7투명지 ISSUE\U0001FAE7"
+about: 투명지 이슈 템플릿입니다
 title: ''
 labels: ''
 assignees: ''
 
 ---
 
-# 🫧투명지 ISSUE🫧
----
 ## 📄 설명
 이슈에 대한 설명을 작성해 주세요.
       

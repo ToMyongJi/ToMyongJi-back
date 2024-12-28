@@ -15,10 +15,17 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import java.util.List;
+import jdk.jshell.Snippet;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class StudentClub {
 
     @Id
@@ -38,7 +45,6 @@ public class StudentClub {
     @JsonManagedReference
     @JoinColumn(name = "president_id")
     private President president;
-
 
     public ClubDto toDto() {
         return ClubDto.builder()

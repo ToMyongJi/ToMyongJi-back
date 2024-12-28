@@ -51,8 +51,12 @@ public class MyService {
             throw new CustomException(NOT_FOUND_USER, 400);
         }
         User user = userById.get();
+        if (user.getStudentClub() == null) {
+            throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
+        }
         return myMapper.toMyDto(user);
     }
+
 
 
     public List<MemberDto> getMembers(Long userId) {

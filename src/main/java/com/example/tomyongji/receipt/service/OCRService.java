@@ -48,7 +48,7 @@ public class OCRService {
 
 
     @Transactional
-    public OCRResultDto processImage(MultipartFile file, Long id) {
+    public OCRResultDto processImage(MultipartFile file) {
         String originalFilename = file.getOriginalFilename();
         String extension = getFileExtension(originalFilename).toLowerCase();
 
@@ -207,13 +207,13 @@ public class OCRService {
 
 
 
-    public void uploadOcrReceipt(OCRResultDto ocrResultDto, Long id) {
+    public void uploadOcrReceipt(OCRResultDto ocrResultDto, String userId) {
         // ReceiptDto를 사용하여 데이터베이스에 저장하는 로직을 여기에 구현
         // receiptService의 createReceipt 메서드를 사용해 영수증 저장
 
         ReceiptDto receiptDto = receiptMapper.toReceiptDto(ocrResultDto);
         ReceiptCreateDto receiptCreateDto = receiptMapper.toReceiptCreateDto(receiptDto);
-        receiptCreateDto.setUserId(id);
+        receiptCreateDto.setUserId(userId);
 
         receiptService.createReceipt(receiptCreateDto);
     }

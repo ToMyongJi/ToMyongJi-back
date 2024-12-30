@@ -49,7 +49,7 @@ public class ReceiptService {
 
     public ReceiptDto createReceipt(ReceiptCreateDto receiptDto) {
         //유저 및 소속 클럽 조회
-        User user = userRepository.findById(receiptDto.getUserId())
+        User user = userRepository.findByUserId(receiptDto.getUserId())
             .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
         StudentClub studentClub = user.getStudentClub();
 

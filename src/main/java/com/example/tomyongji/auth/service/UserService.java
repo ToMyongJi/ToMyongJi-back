@@ -1,12 +1,12 @@
 package com.example.tomyongji.auth.service;
 
 import com.example.tomyongji.auth.dto.LoginRequestDto;
-import com.example.tomyongji.auth.dto.UserRequsetDto;
+import com.example.tomyongji.auth.dto.UserRequestDto;
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.jwt.JwtToken;
 
 public interface UserService {
-    Long join(User entity);
+    Long signUp(UserRequestDto dto);
 
     Boolean checkUserIdDuplicate(String userId);
 
@@ -16,5 +16,5 @@ public interface UserService {
 
     Boolean verifyClub(Long clubId, String studentNum);
 
-    User createUser(UserRequsetDto dto);
+    User createUser(UserRequestDto dto);
 }

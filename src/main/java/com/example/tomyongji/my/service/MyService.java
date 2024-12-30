@@ -70,7 +70,7 @@ public class MyService {
     }
 
     public void saveMember(SaveMemberDto memberDto) {
-        Optional<User> user = userRepository.findById(memberDto.getPresidentUserId());
+        Optional<User> user = userRepository.findByUserId(memberDto.getPresidentUserId());
         if (user.isEmpty()) {
             throw new CustomException(NOT_FOUND_USER, 400);
         }

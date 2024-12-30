@@ -1,6 +1,6 @@
 package com.example.tomyongji.auth.service;
 
-
+import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_MEMBER;
 import com.example.tomyongji.admin.entity.Member;
 import com.example.tomyongji.admin.entity.President;
 import com.example.tomyongji.admin.repository.MemberRepository;
@@ -14,6 +14,7 @@ import com.example.tomyongji.auth.mapper.UserMapper;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
+import com.example.tomyongji.validation.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -85,7 +86,8 @@ public class UserServiceImpl implements UserService {
         StudentClub studentClub = optionalStudentClub.get(); //학생회
         President president =this.presidentInfoRepository.findByStudentNum(studentNum);
         if (president==null) { //회장의 학번이 아니라면
-            Member member = this.memberInfoRepository.findByStudentNum(studentNum);
+            Member member = this.memberInfoRepository.findByStudentNum(studentNum)
+                .orElseThrow(() -> new CustomException(NOT_FOUND_MEMBER, 400));
             if (member!=null) return true;
         }else {
             StudentClub userClub = studentClubRepository.findByPresident(president);

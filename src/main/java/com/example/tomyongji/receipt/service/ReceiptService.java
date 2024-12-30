@@ -83,25 +83,23 @@ public class ReceiptService {
     }
     public ReceiptByStudentClubDto getReceiptsByClub(Long clubId) {
 
-        Optional<StudentClub> studentClub = studentClubRepository.findById(clubId);
-        if (studentClub.isEmpty()) {
-            throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
-        }
-        List<Receipt> receipts = receiptRepository.findAllByStudentClub(studentClub.get());
+        StudentClub studentClub = studentClubRepository.findById(clubId)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
+
+        List<Receipt> receipts = receiptRepository.findAllByStudentClub(studentClub);
 
         ReceiptByStudentClubDto receiptByStudentClubDto = new ReceiptByStudentClubDto();
         receiptByStudentClubDto.setReceiptList(receipts.stream()
                 .map(receiptMapper::toReceiptDto)
                 .collect(Collectors.toList()));
-        receiptByStudentClubDto.setBalance(studentClub.get().getBalance());
+        receiptByStudentClubDto.setBalance(studentClub.getBalance());
         return receiptByStudentClubDto;
     }
     public ReceiptDto getReceiptById(Long receiptId) {
-        Optional<Receipt> receipt = receiptRepository.findById(receiptId);
-        if (receipt.isEmpty()) {
-            throw new CustomException(NOT_FOUND_RECEIPT, 400);
-        }
-        return receiptMapper.toReceiptDto(receipt.get());
+        Receipt receipt = receiptRepository.findById(receiptId)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_RECEIPT, 400));
+
+        return receiptMapper.toReceiptDto(receipt);
     }
     public ReceiptDto deleteReceipt(Long receiptId) {
         //영수증 조회 및 존재 여부 확인

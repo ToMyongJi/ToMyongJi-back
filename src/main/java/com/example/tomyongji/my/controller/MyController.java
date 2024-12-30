@@ -30,9 +30,9 @@ public class MyController {
     }
 
     @Operation(summary = "내 정보 조회 api", description = "유저 아이디를 통해 유저 정보를 조회합니다.")
-    @GetMapping("/{userId}")
-    public ApiResponse<MyDto> getMyInfo(@PathVariable Long userId) {
-        MyDto myDto = myService.getMyInfo(userId);
+    @GetMapping("/{id}")
+    public ApiResponse<MyDto> getMyInfo(@PathVariable Long id) {
+        MyDto myDto = myService.getMyInfo(id);
         return new ApiResponse<>(200, "내 정보 조회에 성공했습니다.", myDto);
     }
 
@@ -43,25 +43,24 @@ public class MyController {
 //    }
 
     @Operation(summary = "소속 부원 조회 api", description = "회장이 소속 부원들을 조회합니다.")
-    @GetMapping("members/{userId}") //자신의 아이디로 자기가 속한 학생회 조회
-    public ApiResponse<List<MemberDto>> getMembers(@PathVariable Long userId) {
-        List<MemberDto> memberDtos = myService.getMembers(userId);
+    @GetMapping("members/{id}") //자신의 아이디로 자기가 속한 학생회 조회
+    public ApiResponse<List<MemberDto>> getMembers(@PathVariable Long id) {
+        List<MemberDto> memberDtos = myService.getMembers(id);
         return new ApiResponse<>(200, "소속 부원 조회에 성공했습니다.", memberDtos);
     }
 
     @Operation(summary = "소속 부원 추가 api", description = "회장이 소속 부원 정보를 추가합니다.")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("members") //회장이 자신의 유저 아이디로 자기가 속한 학생회 조회
-    public ApiResponse<MemberDto> saveMember(@RequestBody  SaveMemberDto saveMemberDto) {
+    public ApiResponse<MemberDto> saveMember(@RequestBody SaveMemberDto saveMemberDto) {
         myService.saveMember(saveMemberDto);
         return new ApiResponse<>(201, "소속 부원 정보 저장에 성공했습니다.");
     }
 
     @Operation(summary = "소속 부원 삭제 api", description = "회장이 소속 부원과 그 정보를 삭제합니다.")
-    @DeleteMapping("members/{deleteId}") //삭제할 멤버 아이디를 통한 삭제
-    public ApiResponse<MemberDto> deleteMember(@PathVariable Long deleteId) {
-        MemberDto memberDto = myService.deleteMember(deleteId);
+    @DeleteMapping("members/{deletedStudentNum}") //삭제할 멤버 아이디를 통한 삭제
+    public ApiResponse<MemberDto> deleteMember(@PathVariable String deletedStudentNum) {
+        MemberDto memberDto = myService.deleteMember(deletedStudentNum);
         return new ApiResponse<>(200, "소속 부원 삭제에 성공했습니다.", memberDto);
     }
-
 }

@@ -4,11 +4,7 @@ import com.example.tomyongji.admin.dto.MemberDto;
 import com.example.tomyongji.admin.dto.PresidentDto;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
@@ -28,7 +24,7 @@ public class User {
     @NotBlank(message="학번은 필수 입력값입니다")
     private String studentNum;
     @NotBlank(message="학부는 필수 입력값입니다")
-    private String college;
+    private String collegeName;
     @NotBlank(message="이메일은 필수 입력값입니다")
     private String email;
     @NotBlank(message="비밀번호는 필수 입력값입니다")

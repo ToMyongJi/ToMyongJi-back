@@ -1,7 +1,5 @@
 package com.example.tomyongji.auth.dto;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,13 +9,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserRequsetDto {
+public class UserRequestDto {
 
     @NotBlank(message="사용자 아이디는 필수 입력값입니다")
     private String userId;
@@ -26,7 +22,7 @@ public class UserRequsetDto {
     @NotBlank(message="학번은 필수 입력값입니다")
     private String studentNum;
     @NotBlank(message="학부는 필수 입력값입니다")
-    private String college;
+    private String collegeName;
     @NotNull(message="학생회Id는 필수 입력값입니다")
     private long studentClubId;
     @NotBlank(message="이메일은 필수 입력값입니다")

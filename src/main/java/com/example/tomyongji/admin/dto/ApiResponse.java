@@ -2,7 +2,9 @@ package com.example.tomyongji.admin.dto;
 
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 @Data
 public class ApiResponse<T> {
     private int statusCode;
@@ -19,4 +21,6 @@ public class ApiResponse<T> {
         this.statusCode = statusCode;
         this.statusMessage = statusMessage;
     }
+
+
 }

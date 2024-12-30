@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ReceiptCreateDto {
 
-    private long userId;
+    private String userId;
 
     @JsonDeserialize(using = CustomDateDeserializer.class)
     private Date date;

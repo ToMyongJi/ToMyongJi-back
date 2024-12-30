@@ -18,4 +18,5 @@ public interface StudentClubRepository extends JpaRepository<StudentClub, Long> 
 
     StudentClub findByPresident(President president);
 
+    StudentClub findByStudentClubName(String clubName);
 }

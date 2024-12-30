@@ -32,8 +32,8 @@ public class OCRController {
     @Operation(summary = "영수증 업로드 api", description = "유저 아이디를 통해 특정 학생회의 영수증을 ocr 스캔을 통해 업로드합니다.")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/upload/{userId}")
-    public ApiResponse<OCRResultDto> uploadImageAndExtractText(@RequestPart("file") MultipartFile file, @PathVariable Long userId) {
-        OCRResultDto result = ocrService.processImage(file, userId);
+    public ApiResponse<OCRResultDto> uploadImageAndExtractText(@RequestPart("file") MultipartFile file, @PathVariable String userId) {
+        OCRResultDto result = ocrService.processImage(file);
         ocrService.uploadOcrReceipt(result, userId);
         return new ApiResponse<>(201, "영수증을 성공적으로 업로드했습니다.", result);
 

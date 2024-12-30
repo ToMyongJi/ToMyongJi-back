@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2024-12-27T18:21:31+0900",
+    date = "2024-12-30T18:11:46+0900",
     comments = "version: 1.5.0.Final, compiler: javac, environment: Java 17 (Oracle Corporation)"
 )
 @Component
@@ -24,17 +24,16 @@ public class MyMapperImpl implements MyMapper {
             return null;
         }
 
-        MyDto myDto = new MyDto();
+        MyDto.MyDtoBuilder myDto = MyDto.builder();
 
         Long id = userStudentClubId( user );
         if ( id != null ) {
-            myDto.setStudentClubId( id );
+            myDto.studentClubId( id );
         }
-        myDto.setName( user.getName() );
-        myDto.setStudentNum( user.getStudentNum() );
-        myDto.setCollege( user.getCollege() );
+        myDto.name( user.getName() );
+        myDto.studentNum( user.getStudentNum() );
 
-        return myDto;
+        return myDto.build();
     }
 
     @Override
@@ -43,12 +42,12 @@ public class MyMapperImpl implements MyMapper {
             return null;
         }
 
-        Member member = new Member();
+        Member.MemberBuilder member = Member.builder();
 
-        member.setStudentNum( memberRequestDto.getStudentNum() );
-        member.setName( memberRequestDto.getName() );
+        member.studentNum( memberRequestDto.getStudentNum() );
+        member.name( memberRequestDto.getName() );
 
-        return member;
+        return member.build();
     }
 
     @Override
@@ -57,12 +56,12 @@ public class MyMapperImpl implements MyMapper {
             return null;
         }
 
-        Member member = new Member();
+        Member.MemberBuilder member = Member.builder();
 
-        member.setStudentNum( saveMemberDto.getStudentNum() );
-        member.setName( saveMemberDto.getName() );
+        member.studentNum( saveMemberDto.getStudentNum() );
+        member.name( saveMemberDto.getName() );
 
-        return member;
+        return member.build();
     }
 
     @Override
@@ -71,12 +70,12 @@ public class MyMapperImpl implements MyMapper {
             return null;
         }
 
-        MemberDto memberDto = new MemberDto();
+        MemberDto.MemberDtoBuilder memberDto = MemberDto.builder();
 
-        memberDto.setStudentNum( user.getStudentNum() );
-        memberDto.setName( user.getName() );
+        memberDto.studentNum( user.getStudentNum() );
+        memberDto.name( user.getName() );
 
-        return memberDto;
+        return memberDto.build();
     }
 
     @Override
@@ -85,13 +84,13 @@ public class MyMapperImpl implements MyMapper {
             return null;
         }
 
-        MemberDto memberDto = new MemberDto();
+        MemberDto.MemberDtoBuilder memberDto = MemberDto.builder();
 
-        memberDto.setMemberId( member.getId() );
-        memberDto.setStudentNum( member.getStudentNum() );
-        memberDto.setName( member.getName() );
+        memberDto.memberId( member.getId() );
+        memberDto.studentNum( member.getStudentNum() );
+        memberDto.name( member.getName() );
 
-        return memberDto;
+        return memberDto.build();
     }
 
     private Long userStudentClubId(User user) {

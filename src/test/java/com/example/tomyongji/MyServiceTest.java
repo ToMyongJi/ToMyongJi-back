@@ -64,18 +64,17 @@ public class MyServiceTest {
     @BeforeEach
     void setUp() {
 
-        Long userId = 1L;
         studentClub = StudentClub.builder()
             .id(3L)
             .studentClubName("융합소프트웨어학부")
             .build();
 
         user = User.builder()
-            .id(userId)
+            .id(1L)
             .userId("testUser")
             .name("test name")
             .studentNum("60000000")
-            .college("ICT 융합대학")
+            .collegeName("ICT 융합대학")
             .email("test@example.com")
             .password("password123")
             .role("USER")
@@ -90,7 +89,7 @@ public class MyServiceTest {
             .build();
 
         saveMemberDto = SaveMemberDto.builder()
-            .presidentUserId(1L)
+            .id(1L)
             .studentNum("600000")
             .name("test name")
             .build();
@@ -112,11 +111,12 @@ public class MyServiceTest {
     @DisplayName("유저 정보 조회 성공")
     void getMyInfo_UserExists() {
         //Given
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        Long id = 1L;
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
         when(myMapper.toMyDto(user)).thenReturn(myDto);
 
         //When
-        MyDto result = myService.getMyInfo(1L);
+        MyDto result = myService.getMyInfo(id);
 
         //Then
         assertNotNull(result); //반환된 DTO가 null이 아닌지 검증
@@ -125,7 +125,7 @@ public class MyServiceTest {
         assertEquals("ICT 융합대학", result.getCollege());
         assertEquals(3L, result.getStudentClubId());
         //userRepository 에서 findById(1L)을 사용했는지
-        verify(userRepository).findById(1L);
+        verify(userRepository).findById(id);
         //myMapper 에서 toMyDto(user)를 사용했는지
         verify(myMapper).toMyDto(user);
     }
@@ -153,16 +153,17 @@ public class MyServiceTest {
     @DisplayName("존재하지 않는 학생회 조회 시 예외 발생")
     void getMyInfo_NoFoundStudentClub() {
         //Given
+        Long id = 1L;
         user.setStudentClub(null);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
         //When, Then
         CustomException exception  = assertThrows(CustomException.class,
-            () -> myService.getMyInfo(1L));
+            () -> myService.getMyInfo(id));
 
         assertEquals(400, exception.getErrorCode());
         assertEquals(NOT_FOUND_STUDENT_CLUB, exception.getMessage());
-        verify(userRepository).findById(1L);
+        verify(userRepository).findById(id);
         verify(myMapper, never()).toMyDto(any());
     }
 
@@ -170,6 +171,7 @@ public class MyServiceTest {
     @DisplayName("멤버 정보 조회 성공")
     void getMembers_Success() {
         //Given
+        Long id = 1L;
         List<Member> memberList = Arrays.asList(
             Member.builder()
                 .id(1L)
@@ -198,13 +200,13 @@ public class MyServiceTest {
                 .build()
         );
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
         when(memberRepository.findByStudentClub(studentClub)).thenReturn(memberList);
         when(myMapper.toMemberDto(memberList.get(0))).thenReturn(expectedDtos.get(0));
         when(myMapper.toMemberDto(memberList.get(1))).thenReturn(expectedDtos.get(1));
 
         //When
-        List<MemberDto> result = myService.getMembers(1L);
+        List<MemberDto> result = myService.getMembers(id);
 
         //Then
         assertNotNull(result);
@@ -212,7 +214,7 @@ public class MyServiceTest {
         assertEquals("member1", result.get(0).getName());
         assertEquals("member2", result.get(1).getName());
 
-        verify(userRepository).findById(1L);
+        verify(userRepository).findById(id);
         verify(memberRepository).findByStudentClub(studentClub);
         verify(myMapper, times(2)).toMemberDto(any(Member.class));
     }
@@ -239,17 +241,18 @@ public class MyServiceTest {
     @DisplayName("빈 회원 목록 조회")
     void getMembers_EmptyList() {
         //Given
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        Long id = 1L;
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
         when(memberRepository.findByStudentClub(studentClub)).thenReturn(Collections.emptyList());
 
         //When
-        List<MemberDto> result = myService.getMembers(1L);
+        List<MemberDto> result = myService.getMembers(id);
 
         //Then
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
-        verify(userRepository).findById(1L);
+        verify(userRepository).findById(id);
         verify(memberRepository).findByStudentClub(studentClub);
         verify(myMapper, never()).toMemberDto((Member) any());
     }
@@ -278,7 +281,7 @@ public class MyServiceTest {
     void saveMember_UserNotFound() {
         //Given
         long invalidUserId = 999L;
-        saveMemberDto.setPresidentUserId(invalidUserId);
+        saveMemberDto.setId(invalidUserId);
 
         when(userRepository.findById(invalidUserId)).thenReturn(Optional.empty());
 
@@ -331,6 +334,7 @@ public class MyServiceTest {
     @DisplayName("멤버 삭제 성공")
     void deleteMember_Success() {
         //Given
+        String deletedStudentNum = "600000";
         Long deleteId = 1L;
         MemberDto memberDto = MemberDto.builder()
             .memberId(deleteId)
@@ -338,35 +342,36 @@ public class MyServiceTest {
             .studentNum("600000")
             .build();
 
-        when(memberRepository.findById(deleteId)).thenReturn(Optional.of(member));
-        when(userRepository.findByStudentNum("600000")).thenReturn(user);
+        when(memberRepository.findByStudentNum(deletedStudentNum)).thenReturn(Optional.of(member));
+        when(userRepository.findByStudentNum(deletedStudentNum)).thenReturn(user);
         when(myMapper.toMemberDto(member)).thenReturn(memberDto);
 
         //When
-        MemberDto result = myService.deleteMember(deleteId);
+        MemberDto result = myService.deleteMember(deletedStudentNum);
 
         //Then
         assertNotNull(result);
         assertEquals("test name", result.getName());
-        verify(memberRepository).findById(deleteId);
-        verify(userRepository).findByStudentNum("600000");
+        verify(memberRepository).findByStudentNum(deletedStudentNum);
+        verify(userRepository).findByStudentNum(deletedStudentNum);
         verify(emailVerificationRepository).deleteByEmail("test@example.com");
         verify(userRepository).delete(user);
-        verify(memberRepository).deleteById(deleteId);
+        verify(memberRepository).delete(member);
     }
 
     @Test
     @DisplayName("멤버 조회 실패로 인한 멤버 삭제 실패")
     void deleteMember_NotFoundMember() {
         //Given
-        Long deleteId = 1L;
-        when(memberRepository.findById(deleteId)).thenReturn(Optional.empty());
+        String deletedStudentNum = "999";
+        when(memberRepository.findByStudentNum(deletedStudentNum)).thenReturn(Optional.empty());
 
         //When, Then
-        CustomException exception = assertThrows(CustomException.class, () -> myService.deleteMember(deleteId));
-        assertEquals(400, exception.getErrorCode());
+        CustomException exception = assertThrows(CustomException.class, () -> myService.deleteMember(
+            deletedStudentNum));
         assertEquals(NOT_FOUND_MEMBER, exception.getMessage());
-        verify(memberRepository).findById(deleteId);
+        assertEquals(400, exception.getErrorCode());
+        verify(memberRepository).findByStudentNum(deletedStudentNum);
         verify(userRepository, never()).findByStudentNum(any());
         verify(emailVerificationRepository, never()).deleteByEmail(any());
 

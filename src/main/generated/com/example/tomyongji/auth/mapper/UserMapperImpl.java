@@ -1,6 +1,6 @@
 package com.example.tomyongji.auth.mapper;
 
-import com.example.tomyongji.auth.dto.UserRequsetDto;
+import com.example.tomyongji.auth.dto.UserRequestDto;
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import javax.annotation.processing.Generated;
@@ -8,14 +8,14 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2024-12-27T18:21:31+0900",
+    date = "2024-12-30T18:11:46+0900",
     comments = "version: 1.5.0.Final, compiler: javac, environment: Java 17 (Oracle Corporation)"
 )
 @Component
 public class UserMapperImpl implements UserMapper {
 
     @Override
-    public User toUser(UserRequsetDto dto, StudentClub studentClub) {
+    public User toUser(UserRequestDto dto, StudentClub studentClub) {
         if ( dto == null && studentClub == null ) {
             return null;
         }
@@ -23,7 +23,7 @@ public class UserMapperImpl implements UserMapper {
         User.UserBuilder user = User.builder();
 
         if ( dto != null ) {
-            user.college( dto.getCollege() );
+            user.collegeName( dto.getCollegeName() );
             user.userId( dto.getUserId() );
             user.name( dto.getName() );
             user.studentNum( dto.getStudentNum() );

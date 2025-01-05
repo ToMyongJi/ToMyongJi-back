@@ -24,5 +24,5 @@ services:
       - app_network  # 여기서 'app_network'로 변경
 
 networks:
-  app_app_network:  # 사용자 정의 네트워크 정의
+  app_network:  # 사용자 정의 네트워크 정의
     driver: bridge

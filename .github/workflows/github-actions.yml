@@ -94,5 +94,5 @@ jobs:
             
             cd /home/ubuntu/
             sudo docker-compose pull  # 변경된 이미지를 가져옴
-            sudo docker-compose -p "" up -d  # 컨테이너를 백그라운드에서 실행
+            sudo docker-compose up -d  # 컨테이너를 백그라운드에서 실행
 

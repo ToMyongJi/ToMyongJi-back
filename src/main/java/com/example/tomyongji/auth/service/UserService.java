@@ -16,5 +16,4 @@ public interface UserService {
 
     Boolean verifyClub(Long clubId, String studentNum);
 
-    User createUser(UserRequestDto dto);
 }

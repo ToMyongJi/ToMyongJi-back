@@ -3,6 +3,7 @@ package com.example.tomyongji.auth.service;
 import com.example.tomyongji.auth.dto.VerifyDto;
 import com.example.tomyongji.auth.entity.EmailVerification;
 import com.example.tomyongji.auth.repository.EmailVerificationRepository;
+import com.example.tomyongji.validation.CustomException;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Random;
+
+import static com.example.tomyongji.validation.ErrorMsg.ERROR_SEND_EMAIL;
 
 @Slf4j
 @Service
@@ -62,21 +65,20 @@ public class EmailService {
             javaMailSender.send(message);
         } catch (MailException e) {
             e.printStackTrace();
-            throw new IllegalArgumentException("메일 발송 중 오류가 발생했습니다.");
+            throw new CustomException(ERROR_SEND_EMAIL,400);
         }
-
         // 인증 코드와 이메일 주소를 저장
         EmailVerification verification = new EmailVerification();
         verification.setEmail(sendEmail);
         verification.setVerificationCode(number);
-        verification.setCreatedAt(LocalDateTime.now());
+        verification.setVerificatedAt(LocalDateTime.now());
         emailVerificationRepository.save(verification);
 
         return number;
     }
 
     public boolean verifyCode(VerifyDto verifyDto) {
-        return emailVerificationRepository.findById(verifyDto.getEmail())
+        return emailVerificationRepository.findByEmail(verifyDto.getEmail())
                 .map(verification -> verification.getVerificationCode().equals(verifyDto.getCode()))
                 .orElse(false);
     }

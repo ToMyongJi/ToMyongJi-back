@@ -15,13 +15,10 @@ import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.my.dto.MyDto;
 import com.example.tomyongji.my.dto.SaveMemberDto;
-import com.example.tomyongji.my.mapper.MyMapper;
 import com.example.tomyongji.my.service.MyService;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
-import com.example.tomyongji.validation.CustomException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,9 +41,6 @@ public class MyTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @Autowired
-    private MyMapper myMapper;
 
     @Autowired
     private MyService myService;

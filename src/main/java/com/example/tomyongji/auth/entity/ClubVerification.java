@@ -10,17 +10,16 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
+@Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "email_verification")
-public class EmailVerification {
+public class ClubVerification {
     @Id
-    private long id;
-    private String email;
-    private String verificationCode;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    long id;
     private LocalDateTime verificatedAt;
+    private String studentNum;
     @OneToOne
     @JsonBackReference
     private User user;

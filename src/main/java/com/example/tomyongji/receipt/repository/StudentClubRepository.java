@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface StudentClubRepository extends JpaRepository<StudentClub, Long> {
@@ -16,7 +17,7 @@ public interface StudentClubRepository extends JpaRepository<StudentClub, Long> 
 
     List<StudentClub> findAllByCollege_Id(Long collegeId);
 
-    StudentClub findByPresident(President president);
+    Optional<StudentClub> findByPresident(President president);
 
     StudentClub findByStudentClubName(String clubName);
 }

@@ -21,6 +21,7 @@ import com.example.tomyongji.receipt.entity.College;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.CollegeRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
+import com.example.tomyongji.validation.CustomException;
 import org.hibernate.mapping.Any;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,7 +40,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static com.example.tomyongji.validation.ErrorMsg.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -174,6 +178,126 @@ public class UserServiceTest {
     }
 
     @Test
+    @DisplayName("존재하지 않는 학생회 소속의 회원가입시 예외발생")
+    void notFoundStudentClubSignUpTest(){
+        //given
+        UserRequestDto errorDto = UserRequestDto.builder()
+                .userId("tomyongji2024")
+                .name("투명지")
+                .password("*Tomyongji2024")
+                .role("STU")
+                .email("eeeseohyun615@gmail.com")
+                .collegeName("ICT융합대학")
+                .studentClubId(100L)
+                .studentNum("60222024")
+                .build();
+        when(collegeRepository.findByCollegeName(errorDto.getCollegeName())).thenReturn(Optional.of(college));
+        when(studentClubRepository.findById(errorDto.getStudentClubId())).thenReturn(Optional.empty());
+        //when
+        CustomException exception = assertThrows(CustomException.class,()->userService.signUp(errorDto));
+        //then
+        assertEquals(400,exception.getErrorCode());
+        assertEquals(NOT_FOUND_STUDENT_CLUB,exception.getMessage());
+        verify(studentClubRepository).findById(errorDto.getStudentClubId());
+        verify(userRepository, never()).findByUserId(any());
+    }
+    @Test
+    @DisplayName("존재하지 않는 대학 소속의 회원가입시 예외발생")
+    void notFoundCollegeSignUpTest(){
+        //given
+        UserRequestDto errorDto = UserRequestDto.builder()
+                .userId("tomyongji2024")
+                .name("투명지")
+                .password("*Tomyongji2024")
+                .role("STU")
+                .email("eeeseohyun615@gmail.com")
+                .collegeName("투명지대학")
+                .studentClubId(1L)
+                .studentNum("60222024")
+                .build();
+        when(collegeRepository.findByCollegeName(errorDto.getCollegeName())).thenReturn(Optional.empty());
+        //when
+        CustomException exception = assertThrows(CustomException.class,()->userService.signUp(errorDto));
+        //then
+        assertEquals(400,exception.getErrorCode());
+        assertEquals(NOT_FOUND_COLLEGE,exception.getMessage());
+        verify(collegeRepository).findByCollegeName(errorDto.getCollegeName());
+        verify(studentClubRepository, never()).findById(any());
+    }
+    @Test
+    @DisplayName("대학안에 특정 학생회가 존재하지 않는 회원가입시 예외발생")
+    void notHaveStudentClubSignUpTest(){
+        //given
+        UserRequestDto errorDto = UserRequestDto.builder()
+                .userId("tomyongji2024")
+                .name("투명지")
+                .password("*Tomyongji2024")
+                .role("STU")
+                .email("eeeseohyun615@gmail.com")
+                .collegeName("ICT융합대학")
+                .studentClubId(2L)
+                .studentNum("60222024")
+                .build();
+        College otherCollege =College.builder()
+                .id(2L)
+                .collegeName("투명지대학")
+                .build();
+        StudentClub otherClub= StudentClub.builder()
+                .id(2L)
+                .studentClubName("투명지 학생회")
+                .Balance(0)
+                .college(otherCollege)
+                .build();
+        when(collegeRepository.findByCollegeName(errorDto.getCollegeName())).thenReturn(Optional.of(college));
+        when(studentClubRepository.findById(errorDto.getStudentClubId())).thenReturn(Optional.of(otherClub));
+        //when
+        CustomException exception = assertThrows(CustomException.class,()->userService.signUp(errorDto));
+        //then
+        assertEquals(400,exception.getErrorCode());
+        assertEquals(NOT_HAVE_STUDENT_CLUB,exception.getMessage());
+        verify(studentClubRepository).findById(errorDto.getStudentClubId());
+        verify(userRepository, never()).findByUserId(any());
+    }
+    @Test
+    @DisplayName("이메일 인증을 하지않는 회원가입시 예외발생")
+    void notVerifyEmailSignUpTest(){
+
+        when(collegeRepository.findByCollegeName(studentRequestDto.getCollegeName())).thenReturn(Optional.of(college));
+        when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
+        when(userRepository.findByUserId(studentRequestDto.getUserId())).thenReturn(Optional.empty());
+        when(emailVerificationRepository.findByEmail(studentRequestDto.getEmail())).thenReturn(Optional.empty());
+        //when
+        CustomException exception = assertThrows(CustomException.class,()->userService.signUp(studentRequestDto));
+        //then
+        assertEquals(400,exception.getErrorCode());
+        assertEquals(NOT_VERIFY_EMAIL,exception.getMessage());
+        verify(emailVerificationRepository).findByEmail(studentRequestDto.getEmail());
+        verify(clubVerificationRepository, never()).findByStudentNum(any());
+    }
+    @Test
+    @DisplayName("소속 인증을 하지않는 회원가입시 예외발생")
+    void notVerifyClubSignUpTest(){
+        EmailVerification emailVerification = EmailVerification.builder()
+                .id(1L)
+                .email("eeeseohyun615@gmail.com")
+                .verificationCode("SSSSS1234")
+                .verificatedAt(LocalDateTime.now())
+                .build();
+        when(collegeRepository.findByCollegeName(studentRequestDto.getCollegeName())).thenReturn(Optional.of(college));
+        when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
+        when(userRepository.findByUserId(studentRequestDto.getUserId())).thenReturn(Optional.empty());
+        when(emailVerificationRepository.findByEmail(studentRequestDto.getEmail())).thenReturn(Optional.of(emailVerification));
+        when(clubVerificationRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn(Optional.empty());
+
+        //when
+        CustomException exception = assertThrows(CustomException.class,()->userService.signUp(studentRequestDto));
+        //then
+        assertEquals(400,exception.getErrorCode());
+        assertEquals(NOT_VERIFY_CLUB,exception.getMessage());
+        verify(clubVerificationRepository).findByStudentNum(studentRequestDto.getStudentNum());
+        verify(userMapper, never()).toUser(any(),any());
+    }
+    @Test
     @DisplayName("사용자 아이디 중복 테스트")
     void checkUserEmailDuplicateTest(){
         //given
@@ -182,6 +306,16 @@ public class UserServiceTest {
         Boolean EmailDuplicate = userService.checkUserIdDuplicate(studentRequestDto.getUserId());
         //then
         assertThat(EmailDuplicate).isEqualTo(true);
+    }
+    @Test
+    @DisplayName("id 찾기 테스트")
+    void findUserIdByEmail(){
+        //given
+        when(userRepository.findByEmail(studentRequestDto.getEmail())).thenReturn(Optional.of(user));
+        //when
+        String userId = userService.findUserIdByEmail(studentRequestDto.getEmail());
+        //then
+        assertThat(userId).isEqualTo(studentRequestDto.getUserId() );
     }
     @Test
     @DisplayName("부원 소속 인증 테스트")

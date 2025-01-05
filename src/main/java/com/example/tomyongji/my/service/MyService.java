@@ -23,26 +23,17 @@ import com.example.tomyongji.validation.CustomException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class MyService {
 
     private final UserRepository userRepository;
     private final MemberRepository memberRepository;
     private final EmailVerificationRepository emailVerificationRepository;
     private final MyMapper myMapper;
-
-    @Autowired
-    public MyService(UserRepository userRepository,
-        EmailVerificationRepository emailVerificationRepository,
-        MemberRepository memberRepository, MyMapper myMapper) {
-        this.userRepository = userRepository;
-        this.memberRepository = memberRepository;
-        this.emailVerificationRepository = emailVerificationRepository;
-        this.myMapper = myMapper;
-    }
 
     // mapper 사용 추천
     public MyDto getMyInfo(Long id) {

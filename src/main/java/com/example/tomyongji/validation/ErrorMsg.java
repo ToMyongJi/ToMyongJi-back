@@ -12,4 +12,5 @@ public class ErrorMsg {
     public static final String EMPTY_CONTENT = "학생회비 사용 내용을 작성해주세요.";
     public static final String EMPTY_MONEY = "입출금 내역을 작성해주세요.";
     public static final String DUPLICATED_FLOW = "입금과 출금 둘 중 하나만 적어주세요.";
+    public static final String NO_AUTHRORIZATION = "접근 권한이 없습니다";
 }

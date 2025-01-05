@@ -31,7 +31,7 @@ public class MyController {
 
     @Operation(summary = "내 정보 조회 api", description = "유저 아이디를 통해 유저 정보를 조회합니다.")
     @GetMapping("/{id}")
-    public ApiResponse<MyDto> getMyInfo(@PathVariable Long id) {
+    public ApiResponse<MyDto> getMyInfo(@PathVariable("id") Long id) {
         MyDto myDto = myService.getMyInfo(id);
         return new ApiResponse<>(200, "내 정보 조회에 성공했습니다.", myDto);
     }
@@ -44,7 +44,7 @@ public class MyController {
 
     @Operation(summary = "소속 부원 조회 api", description = "회장이 소속 부원들을 조회합니다.")
     @GetMapping("members/{id}") //자신의 아이디로 자기가 속한 학생회 조회
-    public ApiResponse<List<MemberDto>> getMembers(@PathVariable Long id) {
+    public ApiResponse<List<MemberDto>> getMembers(@PathVariable("id") Long id) {
         List<MemberDto> memberDtos = myService.getMembers(id);
         return new ApiResponse<>(200, "소속 부원 조회에 성공했습니다.", memberDtos);
     }
@@ -59,7 +59,7 @@ public class MyController {
 
     @Operation(summary = "소속 부원 삭제 api", description = "회장이 소속 부원과 그 정보를 삭제합니다.")
     @DeleteMapping("members/{deletedStudentNum}") //삭제할 멤버 아이디를 통한 삭제
-    public ApiResponse<MemberDto> deleteMember(@PathVariable String deletedStudentNum) {
+    public ApiResponse<MemberDto> deleteMember(@PathVariable("deletedStudentNum") String deletedStudentNum) {
         MemberDto memberDto = myService.deleteMember(deletedStudentNum);
         return new ApiResponse<>(200, "소속 부원 삭제에 성공했습니다.", memberDto);
     }

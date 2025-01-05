@@ -2,19 +2,24 @@ package com.example.tomyongji.auth.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "email_verification")
-public class EmailVerification {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ClubVerification {
     @Id
-    private long id;
-    private String email;
-    private String verificationCode;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    long id;
     private LocalDateTime verificatedAt;
+    private String studentNum;
     @OneToOne
     @JsonBackReference
     private User user;

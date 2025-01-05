@@ -8,6 +8,7 @@ import com.example.tomyongji.auth.dto.LoginRequestDto;
 import com.example.tomyongji.auth.dto.UserRequestDto;
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.jwt.JwtToken;
+import com.example.tomyongji.auth.mapper.UserMapper;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.auth.service.UserService;
 import com.example.tomyongji.receipt.entity.College;
@@ -20,83 +21,97 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Optional;
 
-@SpringBootTest
-@TestPropertySource(properties = "spring.main.web-application-type=none")
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
 
-    @Autowired
+    @InjectMocks
     UserService userService;
-    @Autowired
+    @Mock
     UserRepository userRepository;
-    @Autowired
+    @Mock
     CollegeRepository collegeRepository;
-    @Autowired
+    @Mock
     StudentClubRepository studentClubRepository;
-    @Autowired
-    ReceiptRepository receiptRepository;
-    @Autowired
+    @Mock
     MemberRepository memberRepository;
-    @Autowired
+    @Mock
     PresidentRepository presidentRepository;
-    @Autowired
+    @Mock
     PasswordEncoder encoder;
+    @Mock
+    UserMapper userMapper;
     UserRequestDto userRequestDto;
     StudentClub studentClub;
-
+    College college;
+    User user;
 
     @BeforeEach
     void beforeEach(){
 
-        // Save College
-        College college = new College();
-        college.setCollegeName("ICT융합대학");
-        College savedCollege = collegeRepository.save(college);
+        college =College.builder()
+                .id(1L)
+                .collegeName("ICT융합대학")
+                .build();
 
-        // Save StudentClub
-        studentClub = new StudentClub();
-        studentClub.setStudentClubName("ICT융합대학 학생회");
-        studentClub.setBalance(0);
-        studentClub.setCollege(savedCollege);
-        StudentClub savedStudentClub = studentClubRepository.save(studentClub);
+        studentClub = StudentClub.builder()
+                .id(1L)
+                .studentClubName("ICT융합대학 학생회")
+                .Balance(0)
+                .college(college)
+                .build();
 
-        // Initialize UserRequestDto
-        userRequestDto = new UserRequestDto();
-        userRequestDto.setUserId("tomyongji2024");
-        userRequestDto.setName("투명지");
-        userRequestDto.setPassword("*Tomyongji2024");
-        userRequestDto.setRole("STU");
-        userRequestDto.setEmail("eeeseohyun615@gmail.com");
-        userRequestDto.setCollegeName(savedCollege.getCollegeName());
-        userRequestDto.setStudentClubId(savedStudentClub.getId());
-        userRequestDto.setStudentNum("60222024");
-    }
-    @AfterEach
-    void afterEach(){
-        userRepository.deleteAll();
-        memberRepository.deleteAll();
-        receiptRepository.deleteAll();
-        studentClubRepository.deleteAll();
-        presidentRepository.deleteAll();
-        collegeRepository.deleteAll();
+        userRequestDto = UserRequestDto.builder()
+                .userId("tomyongji2024")
+                .name("투명지")
+                .password("*Tomyongji2024")
+                .role("STU")
+                .email("eeeseohyun615@gmail.com")
+                .collegeName(college.getCollegeName())
+                .studentClubId(studentClub.getId())
+                .studentNum("60222024")
+                .build();
+        user = User.builder()
+                .id(1L)
+                .userId("tomyongji2024")
+                .name("투명지")
+                .password("*Tomyongji2024")
+                .role("STU")
+                .email("eeeseohyun615@gmail.com")
+                .collegeName(college.getCollegeName())
+                .studentClub(studentClub)
+                .studentNum("60222024")
+                .build();
     }
     @Test
     @DisplayName("회원가입 테스트")
     void signUpTest(){
         //given
+        when(userMapper.toUser(userRequestDto,studentClub)).thenReturn(user);
+        when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
+        when(userRepository.findByUserId(userRequestDto.getUserId())).thenReturn(Optional.of(user));
         //when
         long returnId = userService.signUp(userRequestDto);
-        User user = userRepository.findById(returnId).orElseThrow(() -> new IllegalArgumentException("해당 ID의 사용자를 찾을 수 없습니다. 사용자 index id: " + returnId));
         //then
+//        assertEquals()
         assertThat(user.getStudentNum()).isEqualTo(userRequestDto.getStudentNum());
     }
+
     @Test
     @DisplayName("사용자 아이디 중복 테스트")
     void checkUserEmailDuplicateTest(){

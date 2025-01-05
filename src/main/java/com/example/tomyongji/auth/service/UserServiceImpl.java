@@ -61,7 +61,7 @@ public class UserServiceImpl implements UserService {
         }
         // userID가 겹치지 않는지
         Optional<User> validUser = userRepository.findByUserId(dto.getUserId());
-        if(validUser.get()!=null){
+        if(!validUser.isEmpty()){
             throw new CustomException(EXISTING_USER,400);
         }
         // email 인증이 되었는지
@@ -74,14 +74,14 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toUser(dto,studentClub);
         // 비밀번호 해시 처리
         user.setPassword(encoder.encode(user.getPassword()));
-        userRepository.save(user);
+        User response = userRepository.save(user);
         // user foreign key mapping 해주기
         emailVerification.setUser(user);
         clubVerification.setUser(user);
         emailVerificationRepository.save(emailVerification);
         clubVerificationRepository.save(clubVerification);
 
-        return userRepository.findByUserId(dto.getUserId()).get().getId();
+        return response.getId();
     }
 
     @Override

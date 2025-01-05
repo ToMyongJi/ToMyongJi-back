@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Random;
 
-import static com.example.tomyongji.validation.ErrorMsg.EROOR_SEND_EMAIL;
+import static com.example.tomyongji.validation.ErrorMsg.ERROR_SEND_EMAIL;
 
 @Slf4j
 @Service
@@ -65,7 +65,7 @@ public class EmailService {
             javaMailSender.send(message);
         } catch (MailException e) {
             e.printStackTrace();
-            throw new CustomException(EROOR_SEND_EMAIL,400);
+            throw new CustomException(ERROR_SEND_EMAIL,400);
         }
         // 인증 코드와 이메일 주소를 저장
         EmailVerification verification = new EmailVerification();

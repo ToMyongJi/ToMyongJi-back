@@ -44,15 +44,15 @@ public class AdminController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/president")
     public ApiResponse<PresidentDto> savePresident(@RequestBody PresidentDto presidentDto) {
-        adminService.savePresident(presidentDto);
-        return new ApiResponse<>(201, "학생회장 저장에 성공했습니다.", presidentDto);
+        PresidentDto response = adminService.savePresident(presidentDto);
+        return new ApiResponse<>(201, "학생회장 저장에 성공했습니다.", response);
     }
 
     @Operation(summary = "학생회장 수정 api", description = "학생회 아이디와 학번, 이름을 통해 특정 학생회의 회장 정보를 수정합니다.")
     @PatchMapping("/president")
     public ApiResponse<PresidentDto> updatePresident(@RequestBody PresidentDto presidentDto) {
-        adminService.updatePresident(presidentDto);
-        return new ApiResponse<>(200, "학생회장 수정에 성공했습니다.", presidentDto);
+        PresidentDto response = adminService.updatePresident(presidentDto);
+        return new ApiResponse<>(200, "학생회장 수정에 성공했습니다.", response);
     }
 
     @Operation(summary = "소속 부원 조회 api", description = "학생회 아이디로 소속 부원을 조회합니다.")
@@ -62,12 +62,13 @@ public class AdminController {
         return new ApiResponse<>(200, "소속 부원 조회에 성공했습니다.", users);
     }
 
+    // 수정
     @Operation(summary = "소속 부원 저장 api", description = "학생회 아이디로 소속 부원 정보를 저장합니다.")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/member")
     public ApiResponse<MemberDto> saveMember(@RequestBody AdminSaveMemberDto memberDto) {
-        adminService.saveMember(memberDto);
-        return new ApiResponse<>(201, "소속 부원 저장에 성공했습니다.");
+        MemberDto response = adminService.saveMember(memberDto);
+        return new ApiResponse<>(201, "소속 부원 저장에 성공했습니다.", response);
     }
 
     @Operation(summary = "소속 부원 삭제 api", description = "소속 부원 아이디로 소속 부원을 삭제합니다.")

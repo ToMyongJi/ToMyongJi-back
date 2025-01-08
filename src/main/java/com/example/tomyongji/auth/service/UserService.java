@@ -6,7 +6,7 @@ import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.jwt.JwtToken;
 
 public interface UserService {
-    Long signUp(UserRequestDto dto);
+    Long signUp(UserRequestDto userRequestDto);
 
     Boolean checkUserIdDuplicate(String userId);
 

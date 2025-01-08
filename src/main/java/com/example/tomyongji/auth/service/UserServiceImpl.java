@@ -20,6 +20,7 @@ import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.CollegeRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.validation.CustomException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -27,6 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -49,37 +51,38 @@ public class UserServiceImpl implements UserService {
     private final JwtProvider jwtProvider;
     private final UserMapper userMapper;
     @Override
-    public Long signUp(UserRequestDto dto) {
+    public Long signUp(UserRequestDto userRequestDto) {
         // 각 학생회, 대학이 존재하는지
-        College college = collegeRepository.findByCollegeName(dto.getCollegeName())
+        College college = collegeRepository.findByCollegeName(userRequestDto.getCollegeName())
                 .orElseThrow(() -> new CustomException(NOT_FOUND_COLLEGE, 400));
-        StudentClub studentClub = studentClubRepository.findById(dto.getStudentClubId())
+        StudentClub studentClub = studentClubRepository.findById(userRequestDto.getStudentClubId())
                 .orElseThrow(()-> new CustomException(NOT_FOUND_STUDENT_CLUB,400));
         // 대학 안에 학생회가 존재하는지
         if(college.getId()!=studentClub.getCollege().getId()){
             throw new CustomException(NOT_HAVE_STUDENT_CLUB,400);
         }
         // userID가 겹치지 않는지
-        Optional<User> validUser = userRepository.findByUserId(dto.getUserId());
+        Optional<User> validUser = userRepository.findByUserId(userRequestDto.getUserId());
         if(!validUser.isEmpty()){
             throw new CustomException(EXISTING_USER,400);
         }
         // email 인증이 되었는지
-        EmailVerification emailVerification = emailVerificationRepository.findByEmail(dto.getEmail())
-                .orElseThrow(()->new CustomException(NOT_VERIFY_EMAIL,400));
+        EmailVerification emailVerification = emailVerificationRepository.findByEmail(userRequestDto.getEmail())
+                    .orElseThrow(()->new CustomException(NOT_VERIFY_EMAIL,400));
         // 소속 인증이 되었는지
-        ClubVerification clubVerification = clubVerificationRepository.findByStudentNum(dto.getStudentNum())
+        ClubVerification clubVerification = clubVerificationRepository.findByStudentNum(userRequestDto.getStudentNum())
                 .orElseThrow(()-> new CustomException(NOT_VERIFY_CLUB,400));
         //Dto->Entity
-        User user = userMapper.toUser(dto,studentClub);
+        User user = userMapper.toUser(userRequestDto,studentClub);
         // 비밀번호 해시 처리
         user.setPassword(encoder.encode(user.getPassword()));
         User response = userRepository.save(user);
         // user foreign key mapping 해주기
-        emailVerification.setUser(user);
-        clubVerification.setUser(user);
+        emailVerification.setUser(response);
         emailVerificationRepository.save(emailVerification);
+        clubVerification.setUser(response);
         clubVerificationRepository.save(clubVerification);
+
 
         return response.getId();
     }

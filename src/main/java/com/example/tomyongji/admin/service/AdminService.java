@@ -62,12 +62,12 @@ public class AdminService {
     }
 
     @Transactional
-    public void savePresident(PresidentDto presidentDto) {
+    public PresidentDto savePresident(PresidentDto presidentDto) {
         if (presidentRepository.existsByStudentNum(presidentDto.getStudentNum())) {
             throw new CustomException(EXISTING_USER, 400);  // 중복 학번 예외 처리
         }
         President president = adminMapper.toPresidentEntity(presidentDto);
-        presidentRepository.save(president);
+        President returnPresident = presidentRepository.save(president);
 
         Optional<StudentClub> studentClub = studentClubRepository.findById(presidentDto.getClubId());
         if (studentClub.isEmpty()) {
@@ -78,13 +78,12 @@ public class AdminService {
         studentClubEntity.setPresident(president);
         studentClubRepository.save(studentClubEntity);
 
+        return adminMapper.toPresidentDto(returnPresident);
     }
 
-    public void updatePresident(PresidentDto presidentDto) {
-        StudentClub studentClub = studentClubRepository.findById(presidentDto.getClubId()).get();
-        if (studentClub==null) {
-            throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
-        }
+    public PresidentDto updatePresident(PresidentDto presidentDto) {
+        StudentClub studentClub = studentClubRepository.findById(presidentDto.getClubId())
+                .orElseThrow(()-> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
 
         User user = userRepository.findFirstByStudentClubAndRole(studentClub, "PRESIDENT");
         user.setRole("STU");
@@ -102,8 +101,8 @@ public class AdminService {
         studentClub.setPresident(president);
 
         studentClubRepository.save(studentClub);
-        presidentRepository.save(president);
-
+        President returnPresident = presidentRepository.save(president);
+        return adminMapper.toPresidentDto(returnPresident);
     }
 
     public List<MemberDto> getMembers(Long clubId) {
@@ -115,7 +114,7 @@ public class AdminService {
         return members.stream().map(adminMapper::toMemberDto).collect(Collectors.toList());
     }
 
-    public void saveMember(AdminSaveMemberDto memberDto) {
+    public MemberDto saveMember(AdminSaveMemberDto memberDto) {
         if (memberRepository.existsByStudentNum(memberDto.getStudentNum())) {
             throw new CustomException(EXISTING_USER, 400);  // 중복 학번 예외 처리
         }
@@ -129,7 +128,8 @@ public class AdminService {
         //해당 멤버를 레포지터리에 저장
         Member member = adminMapper.toMemberEntity(memberDto);
         member.setStudentClub(studentClub.get());
-        memberRepository.save(member);
+        Member returnMember = memberRepository.save(member);
+        return adminMapper.toMemberDto(returnMember);
     }
 
     public MemberDto deleteMember(Long memberId) {

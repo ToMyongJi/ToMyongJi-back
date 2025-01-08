@@ -5,6 +5,7 @@ import com.example.tomyongji.admin.entity.Member;
 import com.example.tomyongji.admin.entity.President;
 import com.example.tomyongji.admin.repository.MemberRepository;
 import com.example.tomyongji.admin.repository.PresidentRepository;
+import com.example.tomyongji.auth.dto.EmailDto;
 import com.example.tomyongji.auth.dto.FindIdRequestDto;
 import com.example.tomyongji.auth.dto.LoginRequestDto;
 import com.example.tomyongji.auth.dto.UserRequestDto;
@@ -367,5 +368,59 @@ public class UserTest {
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isNotNull();
+    }
+    @DisplayName("이메일 전송")
+    @Test
+    void emailCheck(){
+        //Given
+        College college = College.builder()
+                .id(6L)
+                .collegeName("인공지능소프트웨어융합대학")
+                .build();
+
+        StudentClub studentClub = StudentClub.builder()
+                .id(26L)
+                .studentClubName("ICT융합대학 학생회")
+                .Balance(0)
+                .college(college)
+                .build();
+
+        User user = User.builder()
+                .id(1L)
+                .userId("tomyongji")
+                .name("투명지")
+                .password(encoder.encode("*Tomyongji2024"))
+                .role("STU")
+                .email("eeeseohyun@gmail.com")
+                .collegeName("인공지능소프트웨어융합대학")
+                .studentClub(studentClub)
+                .studentNum("60222024")
+                .build();
+
+        userRepository.save(user);
+        userRepository.flush();
+
+        EmailDto emailDto = EmailDto.builder()
+                .email("eeeseohyun@gmail.com")
+                .build();
+
+        //When
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<EmailDto> entity = new HttpEntity<>(emailDto, headers);
+
+        //When
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/users/emailCheck",
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<String>() {}
+        );
+
+        System.out.println("Response JSON: " + response.getBody());
+
+        //Then
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isNotEmpty();
     }
 }

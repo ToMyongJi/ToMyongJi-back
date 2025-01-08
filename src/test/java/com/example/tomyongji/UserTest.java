@@ -2,20 +2,28 @@ package com.example.tomyongji;
 
 import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.admin.entity.Member;
+import com.example.tomyongji.admin.entity.President;
 import com.example.tomyongji.admin.repository.MemberRepository;
+import com.example.tomyongji.admin.repository.PresidentRepository;
+import com.example.tomyongji.auth.dto.FindIdRequestDto;
+import com.example.tomyongji.auth.dto.LoginRequestDto;
 import com.example.tomyongji.auth.dto.UserRequestDto;
 import com.example.tomyongji.auth.entity.ClubVerification;
 import com.example.tomyongji.auth.entity.EmailVerification;
 import com.example.tomyongji.auth.entity.User;
+import com.example.tomyongji.auth.jwt.JwtToken;
 import com.example.tomyongji.auth.repository.ClubVerificationRepository;
 import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.auth.service.UserServiceImpl;
 import com.example.tomyongji.receipt.entity.College;
 import com.example.tomyongji.receipt.entity.StudentClub;
+import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
+import org.aspectj.lang.annotation.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -40,8 +48,6 @@ import java.util.Map;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-//@Transactional
-//@Rollback(false)
 public class UserTest {
     @Autowired
     private TestRestTemplate restTemplate;
@@ -55,6 +61,10 @@ public class UserTest {
     private ClubVerificationRepository clubVerificationRepository;
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private PresidentRepository presidentRepository;
+    @Autowired
+    private StudentClubRepository studentClubRepository;
     private UserRequestDto userRequestDto;
 
     @Test
@@ -101,6 +111,7 @@ public class UserTest {
                 .build();
         clubVerificationRepository.save(clubVerification);
         clubVerificationRepository.flush();
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -142,7 +153,6 @@ public class UserTest {
                 .studentClub(studentClub)
                 .studentNum("60222024")
                 .build();
-        userRepository.save(user);
         String userId = "tomyongji";
         //When
         Map<String, Object> uriVariables = new HashMap<>();
@@ -161,5 +171,201 @@ public class UserTest {
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo(false);
+    }
+    @DisplayName("유저 아이디 찾기 테스트")
+    @Test
+    void findUserIdByEmail(){
+        //Given
+        College college = College.builder()
+                .id(6L)
+                .collegeName("인공지능소프트웨어융합대학")
+                .build();
+        StudentClub studentClub = StudentClub.builder()
+                .id(26L)
+                .studentClubName("ICT융합대학 학생회")
+                .Balance(0)
+                .college(college)
+                .build();
+        User user = User.builder()
+                .id(1L)
+                .userId("tomyongji")
+                .name("투명지")
+                .password(encoder.encode("*Tomyongji2024"))
+                .role("STU")
+                .email("eeeseohyun@gmail.com")
+                .collegeName("인공지능소프트웨어융합대학")
+                .studentClub(studentClub)
+                .studentNum("60222024")
+                .build();
+        userRepository.save(user);
+        userRepository.flush();
+
+        FindIdRequestDto findIdRequestDto = FindIdRequestDto.builder()
+                .email("eeeseohyun@gmail.com")
+                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<FindIdRequestDto> entity = new HttpEntity<>(findIdRequestDto, headers);
+
+        //When
+        ResponseEntity<ApiResponse<String>> response = restTemplate.exchange(
+                "/api/users/find-id",
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<ApiResponse<String>>() {}
+        );
+
+        //Then
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody().getStatusCode()).isEqualTo(200);
+        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getData()).isEqualTo("tomyongji");
+    }
+    @DisplayName("부원 소속 인증 테스트")
+    @Test
+    void VerifyClubMember(){
+        //Given
+        College college = College.builder()
+                .id(6L)
+                .collegeName("인공지능소프트웨어융합대학")
+                .build();
+        StudentClub studentClub = StudentClub.builder()
+                .id(26L)
+                .studentClubName("ICT융합대학 학생회")
+                .Balance(0)
+                .college(college)
+                .build();
+        Member member = Member.builder()
+                .studentNum("60222024")
+                .name("투명지")
+                .studentClub(studentClub)
+                .build();
+        memberRepository.save(member);
+        memberRepository.flush();
+
+
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("clubId", 26L);
+        uriVariables.put("studentNum","60222024");
+
+        //When
+        ResponseEntity<ApiResponse<Boolean>> response = restTemplate.exchange(
+                "/api/users/clubVerify/{clubId}/{studentNum}",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<ApiResponse<Boolean>>() {},
+                uriVariables
+        );
+        System.out.println("Response JSON: " + response.getBody());
+
+
+        //Then
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody().getStatusCode()).isEqualTo(200);
+        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getData()).isEqualTo(true);
+    }
+    @DisplayName("회장 소속 인증 테스트")
+    @Test
+    void VerifyClubPresident(){
+        //Given
+        President president = President.builder()
+                .studentNum("60222024")
+                .name("투명지")
+                .build();
+        presidentRepository.save(president);
+        presidentRepository.flush();
+
+        College college = College.builder()
+                .id(6L)
+                .collegeName("인공지능소프트웨어융합대학")
+                .build();
+
+        StudentClub studentClub = StudentClub.builder()
+                .id(26L)
+                .studentClubName("ICT융합대학 학생회")
+                .Balance(0)
+                .college(college)
+                .president(president)
+                .build();
+        studentClubRepository.save(studentClub);
+        studentClubRepository.flush();
+
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("clubId", 26L);
+        uriVariables.put("studentNum","60222024");
+
+        //When
+        ResponseEntity<ApiResponse<Boolean>> response = restTemplate.exchange(
+                "/api/users/clubVerify/{clubId}/{studentNum}",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<ApiResponse<Boolean>>() {},
+                uriVariables
+        );
+        System.out.println("Response JSON: " + response.getBody());
+
+
+        //Then
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody().getStatusCode()).isEqualTo(200);
+        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getData()).isEqualTo(true);
+    }
+    @DisplayName("로그인")
+    @Test
+    void login(){
+        //Given
+        College college = College.builder()
+                .id(6L)
+                .collegeName("인공지능소프트웨어융합대학")
+                .build();
+
+        StudentClub studentClub = StudentClub.builder()
+                .id(26L)
+                .studentClubName("ICT융합대학 학생회")
+                .Balance(0)
+                .college(college)
+                .build();
+        User user = User.builder()
+                .id(1L)
+                .userId("tomyongji")
+                .name("투명지")
+                .password(encoder.encode("*Tomyongji2024"))
+                .role("STU")
+                .email("eeeseohyun@gmail.com")
+                .collegeName("인공지능소프트웨어융합대학")
+                .studentClub(studentClub)
+                .studentNum("60222024")
+                .build();
+        userRepository.save(user);
+        userRepository.flush();
+
+        LoginRequestDto loginRequestDto = LoginRequestDto.builder()
+                .userId("tomyongji")
+                .password("*Tomyongji2024")
+                .build();
+
+        //When
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<LoginRequestDto> entity = new HttpEntity<>(loginRequestDto, headers);
+
+        //When
+        ResponseEntity<ApiResponse<JwtToken>> response = restTemplate.exchange(
+                "/api/users/login",
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<ApiResponse<JwtToken>>() {}
+        );
+
+        System.out.println("Response JSON: " + response.getBody());
+
+        //Then
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody().getStatusCode()).isEqualTo(200);
+        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getData()).isNotNull();
     }
 }

@@ -23,8 +23,8 @@ public class UserController {
 
     @Operation(summary = "회원가입 api", description = "사용자가 회원가입하면, 유효성검사후 회원가입합니다.")
     @PostMapping("/signup")
-    public ApiResponse<Long> signUp(@Valid @RequestBody UserRequestDto dto){
-        Long id = userService.signUp(dto);
+    public ApiResponse<Long> signUp(@Valid @RequestBody UserRequestDto userRequestDto){
+        Long id = userService.signUp(userRequestDto);
         return new ApiResponse<>(200,"회원가입에 성공하셨습니다. 사용자 index id: "+id,id);
     }
     @Operation(summary = "유저 아이디 중복 검사 api", description = "사용자가 ID 중복검사를 누르면 중복 검사합니다. ")

@@ -54,6 +54,7 @@ public class StudentClubServiceTest {
             .id(2L)
             .studentClubName("디지털콘텐츠디자인전공 학생회")
             .Balance(1000)
+            .college(college)
             .build();
         business = StudentClub.builder()
             .id(3L)

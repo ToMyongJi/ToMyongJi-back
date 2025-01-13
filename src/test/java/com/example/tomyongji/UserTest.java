@@ -16,33 +16,19 @@ import com.example.tomyongji.auth.jwt.JwtToken;
 import com.example.tomyongji.auth.repository.ClubVerificationRepository;
 import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
-import com.example.tomyongji.auth.service.UserServiceImpl;
 import com.example.tomyongji.receipt.entity.College;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
-import org.aspectj.lang.annotation.After;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.context.annotation.Bean;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.annotation.Rollback;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -128,6 +114,10 @@ public class UserTest {
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isNotNegative();
+        emailVerificationRepository.deleteAll();
+        clubVerificationRepository.deleteAll();
+        memberRepository.deleteAll();
+        userRepository.deleteAll();
     }
     @DisplayName("유저 아이디 중복 검사 테스트")
     @Test
@@ -222,6 +212,7 @@ public class UserTest {
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo("tomyongji");
+        userRepository.deleteAll();
     }
     @DisplayName("부원 소속 인증 테스트")
     @Test
@@ -258,14 +249,14 @@ public class UserTest {
                 new ParameterizedTypeReference<ApiResponse<Boolean>>() {},
                 uriVariables
         );
-        System.out.println("Response JSON: " + response.getBody());
-
 
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo(true);
+        memberRepository.deleteAll();
+        clubVerificationRepository.deleteAll();
     }
     @DisplayName("회장 소속 인증 테스트")
     @Test
@@ -313,6 +304,9 @@ public class UserTest {
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo(true);
+
+        presidentRepository.deleteAll();
+        clubVerificationRepository.deleteAll();
     }
     @DisplayName("로그인")
     @Test
@@ -422,5 +416,6 @@ public class UserTest {
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody()).isNotEmpty();
+        userRepository.deleteAll();
     }
 }

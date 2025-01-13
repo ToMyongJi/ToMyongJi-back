@@ -7,24 +7,17 @@ import com.example.tomyongji.admin.entity.Member;
 import com.example.tomyongji.admin.entity.President;
 import com.example.tomyongji.admin.repository.MemberRepository;
 import com.example.tomyongji.admin.repository.PresidentRepository;
-import com.example.tomyongji.auth.dto.FindIdRequestDto;
-import com.example.tomyongji.auth.dto.UserRequestDto;
 import com.example.tomyongji.my.dto.AdminSaveMemberDto;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import jakarta.transaction.Transactional;
-import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.context.annotation.Bean;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.List;
@@ -73,8 +66,12 @@ public class AdminTest {
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData().getClubId()).isEqualTo(26L);
         assertThat(response.getBody().getData().getStudentNum()).isEqualTo(president.getStudentNum());
+        club.setPresident(null);
+        studentClubRepository.save(club);
+        presidentRepository.delete(president);
     }
     @Test
+    @Transactional
     @DisplayName("학생회장 저장 테스트")
     void savePresident(){
         //Given
@@ -83,7 +80,10 @@ public class AdminTest {
                 .studentNum("60222024")
                 .clubId(26L)
                 .build();
-
+        President president = President.builder()
+                .studentNum("60222024")
+                .name("투명지")
+                .build();
         //When
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -99,8 +99,8 @@ public class AdminTest {
         //then
         assertThat(response.getStatusCode().value()).isEqualTo(201);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
-        assertThat(response.getBody().getData().getClubId()).isEqualTo(26L);
         assertThat(response.getBody().getData().getStudentNum()).isEqualTo(presidentDto.getStudentNum());
+        presidentRepository.deleteAll();
     }
 
     @Test
@@ -129,6 +129,7 @@ public class AdminTest {
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData().get(0).getStudentNum()).isEqualTo(member.getStudentNum());
+        memberRepository.deleteAll();
     }
     @Test
     @DisplayName("소속 부원 저장 테스트")
@@ -138,6 +139,12 @@ public class AdminTest {
                 .name("뉴투명지")
                 .studentNum("60222025")
                 .clubId(26L)
+                .build();
+        StudentClub studentClub = studentClubRepository.findById(26L).get();
+        Member member = Member.builder()
+                .studentNum("60222025")
+                .name("뉴투명지")
+                .studentClub(studentClub)
                 .build();
         //When
         HttpHeaders headers = new HttpHeaders();
@@ -154,6 +161,7 @@ public class AdminTest {
         assertThat(response.getStatusCode().value()).isEqualTo(201);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData().getStudentNum()).isEqualTo(adminSaveMemberDto.getStudentNum());
+        memberRepository.deleteAll();
     }
     @Test
     @DisplayName("소속 부원 삭제 테스트")

@@ -1,9 +1,5 @@
 package com.example.tomyongji;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.when;
-
 import com.example.tomyongji.receipt.dto.ClubDto;
 import com.example.tomyongji.receipt.dto.CollegeDto;
 import com.example.tomyongji.receipt.dto.CollegesDto;
@@ -13,13 +9,18 @@ import com.example.tomyongji.receipt.mapper.CollegeMapper;
 import com.example.tomyongji.receipt.repository.CollegeRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.receipt.service.CollegeService;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class CollegeServiceTest {

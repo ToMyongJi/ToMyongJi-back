@@ -8,4 +8,5 @@ public interface PresidentRepository extends JpaRepository<President, Long> {
     President findByStudentNum(String studentNum);
 
     Boolean existsByStudentNum(String studentNum);
+
 }

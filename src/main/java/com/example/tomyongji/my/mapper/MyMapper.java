@@ -17,6 +17,7 @@ public interface MyMapper {
 
     // User Entity to MyDto
     @Mapping(source = "studentClub.id", target = "studentClubId")
+    @Mapping(source = "collegeName", target = "college")
     MyDto toMyDto(User user);
 
     // MemberRequestDto to Member Entity

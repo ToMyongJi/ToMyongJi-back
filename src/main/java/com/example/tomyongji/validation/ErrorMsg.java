@@ -15,7 +15,10 @@ public class ErrorMsg {
     public static final String EMPTY_CONTENT = "학생회비 사용 내용을 작성해주세요.";
     public static final String EMPTY_MONEY = "입출금 내역을 작성해주세요.";
     public static final String DUPLICATED_FLOW = "입금과 출금 둘 중 하나만 적어주세요.";
-    public static final String NO_AUTHRORIZATION = "접근 권한이 없습니다";
+    public static final String NO_AUTHORIZATION_USER = "접근 권한이 없습니다"; //가입된 유저가 아닌 경우
+    public static final String NO_AUTHORIZATION_ROLE = "접근 권한이 없습니다"; //접근 가능한 ROLE이 아닌 경우
+    public static final String NO_AUTHORIZATION_BELONGING = "접근 권한이 없습니다"; //접근 가능한 소속이 아닌 경우
+
     public static final String ERROR_SEND_EMAIL = "이메일 전송 중 오류가 발생했습니다.";
 
 }

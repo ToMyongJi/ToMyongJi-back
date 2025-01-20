@@ -5,6 +5,8 @@ import static com.example.tomyongji.validation.ErrorMsg.EMPTY_CONTENT;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_RECEIPT;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
+import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_BELONGING;
+import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_USER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -13,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.repository.UserRepository;
+import com.example.tomyongji.auth.service.CustomUserDetails;
 import com.example.tomyongji.receipt.dto.ReceiptByStudentClubDto;
 import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
@@ -327,6 +330,32 @@ public class ReceiptServiceTest {
         verify(receiptRepository).findById(wrongReceiptId);
     }
 
+//    @Test
+//    @DisplayName("특정 영수증 삭제 성공")
+//    void deleteReceipt_Success() {
+//        //Given
+//        Long receiptId = receipt.getId();
+//        ReceiptDto receiptDto = ReceiptDto.builder()
+//            .receiptId(receipt.getId())
+//            .date(receipt.getDate())
+//            .content(receipt.getContent())
+//            .deposit(receipt.getDeposit())
+//            .build();
+//        CustomUserDetails currentUser = new CustomUserDetails(user);
+//
+//        when(receiptRepository.findById(receiptId)).thenReturn(Optional.of(receipt));
+//        when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
+//        //When
+//        ReceiptDto result = receiptService.deleteReceipt(receiptId, currentUser);
+//        //Then
+//        assertNotNull(result);
+//        assertEquals(result, receiptDto);
+//        assertEquals(user, currentUser.getUser());
+//        verify(receiptRepository).findById(receiptId);
+//        verify(receiptRepository).delete(receipt);
+//        verify(studentClubRepository).save(studentClub);
+//        verify(receiptMapper).toReceiptDto(receipt);
+//    }
     @Test
     @DisplayName("특정 영수증 삭제 성공")
     void deleteReceipt_Success() {
@@ -352,8 +381,24 @@ public class ReceiptServiceTest {
         verify(receiptMapper).toReceiptDto(receipt);
     }
 
+//    @Test
+//    @DisplayName("영수증 조회 실패로 인한 특정 영수증 삭제 실패")
+//    void deleteReceipt_NotFoundReceipt() {
+//        //Given
+//        Long wrongReceiptId = 999L;
+//        CustomUserDetails currentUser = new CustomUserDetails(user);
+//
+//        when(receiptRepository.findById(wrongReceiptId)).thenReturn(Optional.empty());
+//        //When
+//        CustomException exception = assertThrows(CustomException.class,
+//            () -> receiptService.deleteReceipt(wrongReceiptId, currentUser));
+//        //Then
+//        assertEquals(400, exception.getErrorCode());
+//        assertEquals(NOT_FOUND_RECEIPT, exception.getMessage());
+//        verify(receiptRepository).findById(wrongReceiptId);
+//    }
     @Test
-    @DisplayName("영수증 조회 실패로 인한 특정 영수증 삭제 성공")
+    @DisplayName("영수증 조회 실패로 인한 특정 영수증 삭제 실패")
     void deleteReceipt_NotFoundReceipt() {
         //Given
         Long wrongReceiptId = 999L;
@@ -367,6 +412,55 @@ public class ReceiptServiceTest {
         assertEquals(NOT_FOUND_RECEIPT, exception.getMessage());
         verify(receiptRepository).findById(wrongReceiptId);
     }
+
+//    @Test
+//    @DisplayName("미가입 유저의 접근으로 인한 특정 영수증 삭제 실패")
+//    void deleteReceipt_NoAuthorizationUser() {
+//        //Given
+//        Long receiptId = receipt.getId();
+//        CustomUserDetails currentUser = new CustomUserDetails(null);
+//
+//        //When
+//        CustomException exception = assertThrows(CustomException.class,
+//            () -> receiptService.deleteReceipt(receiptId, currentUser));
+//        //Then
+//        assertEquals(400, exception.getErrorCode());
+//        assertEquals(NO_AUTHORIZATION_USER, exception.getMessage());
+//    }
+//
+//    @Test
+//    @DisplayName("타소속의 접근으로 인한 특정 영수증 삭제 실패")
+//    void deleteReceipt_NoAuthorizationBelonging() {
+//        //Given
+//        Long receiptId = receipt.getId();
+//        StudentClub business = StudentClub.builder()
+//            .id(4L)
+//            .studentClubName("경영학과")
+//            .Balance(1000)
+//            .build();
+//        User user2 = User.builder()
+//            .id(2L)
+//            .userId("testUser2")
+//            .name("test name2")
+//            .studentNum("60000001")
+//            .collegeName("경영학부")
+//            .email("test2@example.com")
+//            .password("password123")
+//            .role("USER")
+//            .studentClub(business)
+//            .build();
+//        CustomUserDetails currentUser = new CustomUserDetails(user2);
+//
+//
+//        when(receiptRepository.findById(receiptId)).thenReturn(Optional.of(receipt));
+//        //When
+//        CustomException exception = assertThrows(CustomException.class,
+//            () -> receiptService.deleteReceipt(receiptId, currentUser));
+//        //Then
+//        assertEquals(400, exception.getErrorCode());
+//        assertEquals(NO_AUTHORIZATION_BELONGING, exception.getMessage());
+//        verify(receiptRepository).findById(receiptId);
+//    }
 
     @Test
     @DisplayName("영수증 수정 성공")

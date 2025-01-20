@@ -11,6 +11,7 @@ import com.example.tomyongji.admin.mapper.AdminMapper;
 import com.example.tomyongji.admin.repository.MemberRepository;
 import com.example.tomyongji.admin.service.AdminService;
 import com.example.tomyongji.auth.entity.User;
+import com.example.tomyongji.auth.repository.ClubVerificationRepository;
 import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.my.dto.MemberRequestDto;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +35,7 @@ public class MyService {
     private final UserRepository userRepository;
     private final MemberRepository memberRepository;
     private final EmailVerificationRepository emailVerificationRepository;
+    private final ClubVerificationRepository clubVerificationRepository;
     private final MyMapper myMapper;
 
     // mapper 사용 추천
@@ -67,19 +70,18 @@ public class MyService {
         if (memberRepository.existsByStudentNum(memberDto.getStudentNum())) {
             throw new CustomException(EXISTING_USER, 400);  // 중복 학번 예외 처리
         }
-        Optional<StudentClub> studentClub = Optional.ofNullable(user.getStudentClub()); //회장 유저 정보로 학생회 찾기
-        if (studentClub.isEmpty()) {
-            throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
-        }
+        StudentClub studentClub = Optional.ofNullable(user.getStudentClub())
+            .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
         //멤버 생성 후
         //받은 dto의 정보를 멤버에 삽입
         //멤버의 학생회 정보를 따로 삽입
         //해당 멤버를 레포지터리에 저장
         Member member = myMapper.toMemberEntity(memberDto);
-        member.setStudentClub(studentClub.get());
+        member.setStudentClub(studentClub);
         memberRepository.save(member);
     }
 
+    @Transactional
     public MemberDto deleteMember(String deletedStudentNum) {
 
         Member member = memberRepository.findByStudentNum(deletedStudentNum)
@@ -93,6 +95,7 @@ public class MyService {
             userRepository.findByStudentNum(deletedStudentNum));
         //유저가 있다면 유저의 메일과 유저를 삭제
         if (user.isPresent()) {
+            clubVerificationRepository.deleteByStudentNum(user.get().getStudentNum());
             emailVerificationRepository.deleteByEmail(user.get().getEmail());
             userRepository.delete(user.get());
         }

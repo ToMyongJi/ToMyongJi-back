@@ -1,6 +1,7 @@
 package com.example.tomyongji.receipt.controller;
 
 import com.example.tomyongji.admin.dto.ApiResponse;
+import com.example.tomyongji.auth.service.CustomUserDetails;
 import com.example.tomyongji.receipt.dto.ReceiptByStudentClubDto;
 import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
@@ -73,13 +74,19 @@ public class ReceiptController {
     }
 
 
+//    @Operation(summary = "영수증 삭제 api", description = "영수증 아이디를 통해 특정 영수증을 삭제합니다.")
+//    @DeleteMapping("/{receiptId}") //특정 영수증 삭제
+//    public ApiResponse<ReceiptDto> deleteReceipt(@PathVariable("receiptId") Long receiptId, @AuthenticationPrincipal CustomUserDetails currentUser) {
+//        ReceiptDto receipt = receiptService.deleteReceipt(receiptId, currentUser);
+//        return new ApiResponse<>(200, "영수증을 성공적으로 삭제했습니다.", receipt);
+//    }
+
     @Operation(summary = "영수증 삭제 api", description = "영수증 아이디를 통해 특정 영수증을 삭제합니다.")
     @DeleteMapping("/{receiptId}") //특정 영수증 삭제
-    public ApiResponse<ReceiptDto> deleteReceipt(@PathVariable Long receiptId) {
+    public ApiResponse<ReceiptDto> deleteReceipt(@PathVariable("receiptId") Long receiptId) {
         ReceiptDto receipt = receiptService.deleteReceipt(receiptId);
         return new ApiResponse<>(200, "영수증을 성공적으로 삭제했습니다.", receipt);
     }
-
 
     @Operation(summary = "영수증 수정 api", description = "영수증 아이디를 통해 특정 영수증을 수정합니다.")
     @PatchMapping //특정 영수증 수정

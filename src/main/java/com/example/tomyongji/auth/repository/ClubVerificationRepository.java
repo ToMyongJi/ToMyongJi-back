@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface ClubVerificationRepository extends JpaRepository<ClubVerification, Long> {
     Optional<ClubVerification> findByStudentNum(String studentNum);
+
+    void deleteByStudentNum(String studentNum);
 }

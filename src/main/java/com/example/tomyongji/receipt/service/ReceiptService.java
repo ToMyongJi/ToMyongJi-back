@@ -2,17 +2,18 @@ package com.example.tomyongji.receipt.service;
 
 import static com.example.tomyongji.validation.ErrorMsg.DUPLICATED_FLOW;
 import static com.example.tomyongji.validation.ErrorMsg.EMPTY_CONTENT;
-import static com.example.tomyongji.validation.ErrorMsg.EMPTY_MONEY;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_RECEIPT;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
+import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_BELONGING;
+import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_USER;
 
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.repository.UserRepository;
+import com.example.tomyongji.auth.service.CustomUserDetails;
 import com.example.tomyongji.receipt.dto.ReceiptByStudentClubDto;
 import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
-import com.example.tomyongji.receipt.dto.ReceiptUpdateDto;
 import com.example.tomyongji.receipt.entity.Receipt;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.mapper.ReceiptMapper;
@@ -23,9 +24,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -101,6 +100,36 @@ public class ReceiptService {
 
         return receiptMapper.toReceiptDto(receipt);
     }
+//    public ReceiptDto deleteReceipt(Long receiptId, CustomUserDetails currentUser) {
+//        //접근 권한: 유저가 아닌 경우
+//        if (currentUser == null || currentUser.getUser() == null) {
+//            throw new CustomException(NO_AUTHORIZATION_USER, 400);
+//        }
+//        User user = currentUser.getUser();
+//        StudentClub userStudentClub = user.getStudentClub();
+//
+//        //영수증 조회 및 존재 여부 확인
+//        Receipt receipt = receiptRepository.findById(receiptId)
+//            .orElseThrow(() -> new CustomException(NOT_FOUND_RECEIPT, 400));
+//
+//        //접근 권한: 다른 학생회인 경우
+//        StudentClub studentClub = receipt.getStudentClub();
+//        if (studentClub != userStudentClub) {
+//            throw new CustomException(NO_AUTHORIZATION_BELONGING, 400);
+//        }
+//
+//        //영수증 삭제
+//        receiptRepository.delete(receipt);
+//
+//        //잔액 업데이트 (항상 deposit 또는 withdrawal 중 하나만 값이 존재)
+//        int balanceAdjustment = receipt.getDeposit() - receipt.getWithdrawal();
+//        studentClub.setBalance(studentClub.getBalance() - balanceAdjustment);
+//        studentClubRepository.save(studentClub);
+//
+//        //DTO 반환
+//        return receiptMapper.toReceiptDto(receipt);
+//    }
+
     public ReceiptDto deleteReceipt(Long receiptId) {
         //영수증 조회 및 존재 여부 확인
         Receipt receipt = receiptRepository.findById(receiptId)

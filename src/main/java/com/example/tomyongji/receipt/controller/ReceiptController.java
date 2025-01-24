@@ -60,7 +60,7 @@ public class ReceiptController {
 
     @Operation(summary = "특정 학생회 영수증 조회 api", description = "학생회 아이디를 통해 특정 학생회의 영수증을 조회합니다.")
     @GetMapping("/club/{clubId}") //특정 학생회 영수증 조회
-    public ApiResponse<ReceiptByStudentClubDto> getReceiptsByClub(@PathVariable Long clubId) {
+    public ApiResponse<ReceiptByStudentClubDto> getReceiptsByClub(@PathVariable("clubId") Long clubId) {
         ReceiptByStudentClubDto receipts = receiptService.getReceiptsByClub(clubId);
         return new ApiResponse<>(200, "해당 학생회의 영수증들을 성공적으로 조회했습니다.", receipts); // 200 OK
     }
@@ -68,7 +68,7 @@ public class ReceiptController {
 
     @Operation(summary = "특정 영수증 조회 api", description = "영수증 아이디를 통해 특정 영수증을 조회합니다.")
     @GetMapping("/{receiptId}") //특정 영수증 조회
-    public ApiResponse<ReceiptDto> getReceiptById(@PathVariable Long receiptId) {
+    public ApiResponse<ReceiptDto> getReceiptById(@PathVariable("receiptId") Long receiptId) {
         ReceiptDto receipt = receiptService.getReceiptById(receiptId);
         return new ApiResponse<>(200, "영수증을 성공적으로 조회했습니다.", receipt);
     }

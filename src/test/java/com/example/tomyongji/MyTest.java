@@ -111,7 +111,7 @@ public class MyTest {
         uriVariables.put("id", id);
 
         ResponseEntity<ApiResponse<MyDto>> response = restTemplate.exchange(
-            "/api/my/{id}",
+            "/api/receipt/club/{id}",
             HttpMethod.GET,
             entity,
             new ParameterizedTypeReference<ApiResponse<MyDto>>() {},

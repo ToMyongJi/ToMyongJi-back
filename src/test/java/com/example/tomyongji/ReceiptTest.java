@@ -176,7 +176,6 @@ public class ReceiptTest {
     void testGetReceiptById() throws Exception {
         //Given
         Receipt receipt = Receipt.builder()
-            .id(1L) // ID 설정
             .content("영수증 테스트")
             .deposit(1000)
             .studentClub(user.getStudentClub())

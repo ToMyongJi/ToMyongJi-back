@@ -12,6 +12,7 @@ import com.example.tomyongji.admin.mapper.AdminMapper;
 import com.example.tomyongji.admin.repository.MemberRepository;
 import com.example.tomyongji.admin.repository.PresidentRepository;
 import com.example.tomyongji.auth.entity.User;
+import com.example.tomyongji.auth.repository.ClubVerificationRepository;
 import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.my.dto.AdminSaveMemberDto;
@@ -23,11 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class AdminService {
 
     private final UserRepository userRepository;
@@ -36,19 +39,7 @@ public class AdminService {
     private final MemberRepository memberRepository;
     private final EmailVerificationRepository emailVerificationRepository;
     private final AdminMapper adminMapper;
-
-    @Autowired
-    public AdminService(UserRepository userRepository, StudentClubRepository studentClubRepository,
-                        PresidentRepository presidentRepository, MemberRepository memberRepository,
-                        EmailVerificationRepository emailVerificationRepository,
-        AdminMapper adminMapper) {
-        this.userRepository = userRepository;
-        this.studentClubRepository = studentClubRepository;
-        this.presidentRepository = presidentRepository;
-        this.memberRepository = memberRepository;
-        this.emailVerificationRepository = emailVerificationRepository;
-        this.adminMapper = adminMapper;
-    }
+    private final ClubVerificationRepository clubVerificationRepository;
 
     public PresidentDto getPresident(Long clubId) {
         Optional<StudentClub> studentClub = studentClubRepository.findById(clubId);
@@ -132,18 +123,20 @@ public class AdminService {
         return adminMapper.toMemberDto(returnMember);
     }
 
+    @Transactional
     public MemberDto deleteMember(Long memberId) {
-        Optional<Member> member = memberRepository.findById(memberId);
-        if (member.isEmpty()) {
-            throw new CustomException(NOT_FOUND_MEMBER, 400);
-        }
-        MemberDto memberDto = adminMapper.toMemberDto(member.get()); //삭제된 멤버정보 반환을 위한 저장
+        Member member = memberRepository.findById(memberId)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_MEMBER, 400));
+
+        MemberDto memberDto = adminMapper.toMemberDto(member); //삭제된 멤버정보 반환을 위한 저장
+
         //멤버 등록을 해도 유저가 없을 수 있음
         Optional<User> user = Optional.ofNullable(
-            userRepository.findByStudentNum(member.get().getStudentNum()));
+            userRepository.findByStudentNum(member.getStudentNum()));
 
         //유저가 있다면 유저의 메일과 유저를 삭제
         if (user.isPresent()) {
+            clubVerificationRepository.deleteByStudentNum(user.get().getStudentNum());
             emailVerificationRepository.deleteByEmail(user.get().getEmail());
             userRepository.delete(user.get());
         }

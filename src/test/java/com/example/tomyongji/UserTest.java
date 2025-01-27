@@ -305,8 +305,10 @@ public class UserTest {
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo(true);
 
-        presidentRepository.deleteAll();
         clubVerificationRepository.deleteAll();
+        studentClub.setPresident(null);
+        studentClubRepository.save(studentClub);
+        presidentRepository.deleteAll();
     }
     @DisplayName("로그인")
     @Test

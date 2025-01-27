@@ -78,8 +78,11 @@ public class EmailService {
     }
 
     public boolean verifyCode(VerifyDto verifyDto) {
-        return emailVerificationRepository.findByEmail(verifyDto.getEmail())
+        return emailVerificationRepository.findByEmailOrderByVerificatedAtDesc(verifyDto.getEmail())
+                .stream()
+                .findFirst()
                 .map(verification -> verification.getVerificationCode().equals(verifyDto.getCode()))
                 .orElse(false);
     }
+
 }

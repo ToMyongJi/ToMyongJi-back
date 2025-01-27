@@ -52,37 +52,47 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     @Override
     public Long signUp(UserRequestDto userRequestDto) {
-        // 각 학생회, 대학이 존재하는지
+        // 각 학생회, 대학이 존재하는지 확인
         College college = collegeRepository.findByCollegeName(userRequestDto.getCollegeName())
                 .orElseThrow(() -> new CustomException(NOT_FOUND_COLLEGE, 400));
         StudentClub studentClub = studentClubRepository.findById(userRequestDto.getStudentClubId())
-                .orElseThrow(()-> new CustomException(NOT_FOUND_STUDENT_CLUB,400));
-        // 대학 안에 학생회가 존재하는지
-        if(college.getId()!=studentClub.getCollege().getId()){
-            throw new CustomException(NOT_HAVE_STUDENT_CLUB,400);
+                .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
+
+        // 대학 안에 학생회가 존재하는지 확인
+        if (!college.getId().equals(studentClub.getCollege().getId())) {
+            throw new CustomException(NOT_HAVE_STUDENT_CLUB, 400);
         }
-        // userID가 겹치지 않는지
+
+        // userID가 겹치지 않는지 확인
         Optional<User> validUser = userRepository.findByUserId(userRequestDto.getUserId());
-        if(!validUser.isEmpty()){
-            throw new CustomException(EXISTING_USER,400);
+        if (validUser.isPresent()) {
+            throw new CustomException(EXISTING_USER, 400);
         }
-        // email 인증이 되었는지
-        EmailVerification emailVerification = emailVerificationRepository.findByEmail(userRequestDto.getEmail())
-                    .orElseThrow(()->new CustomException(NOT_VERIFY_EMAIL,400));
-        // 소속 인증이 되었는지
+
+        // email 인증이 되었는지 확인 (최신 데이터로 선택)
+        EmailVerification emailVerification = emailVerificationRepository.findByEmailOrderByVerificatedAtDesc(userRequestDto.getEmail())
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new CustomException(NOT_VERIFY_EMAIL, 400));
+
+        // 소속 인증이 되었는지 확인 (아무 데이터나 선택)
         ClubVerification clubVerification = clubVerificationRepository.findByStudentNum(userRequestDto.getStudentNum())
-                .orElseThrow(()-> new CustomException(NOT_VERIFY_CLUB,400));
-        //Dto->Entity
-        User user = userMapper.toUser(userRequestDto,studentClub);
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new CustomException(NOT_VERIFY_CLUB, 400));
+
+        // Dto -> Entity
+        User user = userMapper.toUser(userRequestDto, studentClub);
+
         // 비밀번호 해시 처리
         user.setPassword(encoder.encode(user.getPassword()));
         User response = userRepository.save(user);
-        // user foreign key mapping 해주기
+
+        // user foreign key mapping
         emailVerification.setUser(response);
         emailVerificationRepository.save(emailVerification);
         clubVerification.setUser(response);
         clubVerificationRepository.save(clubVerification);
-
 
         return response.getId();
     }

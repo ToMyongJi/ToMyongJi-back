@@ -5,10 +5,7 @@ import com.example.tomyongji.admin.entity.Member;
 import com.example.tomyongji.admin.entity.President;
 import com.example.tomyongji.admin.repository.MemberRepository;
 import com.example.tomyongji.admin.repository.PresidentRepository;
-import com.example.tomyongji.auth.dto.EmailDto;
-import com.example.tomyongji.auth.dto.FindIdRequestDto;
-import com.example.tomyongji.auth.dto.LoginRequestDto;
-import com.example.tomyongji.auth.dto.UserRequestDto;
+import com.example.tomyongji.auth.dto.*;
 import com.example.tomyongji.auth.entity.ClubVerification;
 import com.example.tomyongji.auth.entity.EmailVerification;
 import com.example.tomyongji.auth.entity.User;
@@ -236,18 +233,22 @@ public class UserTest {
         memberRepository.save(member);
         memberRepository.flush();
 
+        ClubVerifyRequestDto clubVerifyRequestDto = ClubVerifyRequestDto.builder()
+                .clubId(26L)
+                .studentNum("60222024")
+                .role("STU")
+                .build();
 
-        Map<String, Object> uriVariables = new HashMap<>();
-        uriVariables.put("clubId", 26L);
-        uriVariables.put("studentNum","60222024");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<ClubVerifyRequestDto> entity = new HttpEntity<>(clubVerifyRequestDto, headers);
 
         //When
-        ResponseEntity<ApiResponse<Boolean>> response = restTemplate.exchange(
-                "/api/users/clubVerify/{clubId}/{studentNum}",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ApiResponse<Boolean>>() {},
-                uriVariables
+        ResponseEntity<ApiResponse<String>> response = restTemplate.exchange(
+                "/api/users/clubVerify",
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<ApiResponse<String>>() {}
         );
 
         //Then
@@ -284,19 +285,23 @@ public class UserTest {
         studentClubRepository.save(studentClub);
         studentClubRepository.flush();
 
-        Map<String, Object> uriVariables = new HashMap<>();
-        uriVariables.put("clubId", 26L);
-        uriVariables.put("studentNum","60222024");
+        ClubVerifyRequestDto clubVerifyRequestDto = ClubVerifyRequestDto.builder()
+                .clubId(26L)
+                .studentNum("60222024")
+                .role("PRESIDENT")
+                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<ClubVerifyRequestDto> entity = new HttpEntity<>(clubVerifyRequestDto, headers);
 
         //When
-        ResponseEntity<ApiResponse<Boolean>> response = restTemplate.exchange(
-                "/api/users/clubVerify/{clubId}/{studentNum}",
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<ApiResponse<Boolean>>() {},
-                uriVariables
+        ResponseEntity<ApiResponse<String>> response = restTemplate.exchange(
+                "/api/users/clubVerify",
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<ApiResponse<String>>() {}
         );
-        System.out.println("Response JSON: " + response.getBody());
 
 
         //Then

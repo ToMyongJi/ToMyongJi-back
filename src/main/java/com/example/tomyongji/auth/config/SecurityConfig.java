@@ -45,16 +45,17 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         // 해당 API에 대해서는 모든 요청을 허가
-                        .requestMatchers("/api/users/**","/swagger-ui/**", "/v3/api-docs/**","/api/receipt/club/{clubId}","/api/club/**","/api/collegesAndClubs").permitAll()
-                        .requestMatchers(HttpMethod.GET,"/api/receipt").permitAll()
-                        .requestMatchers(HttpMethod.POST,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
-                        .requestMatchers(HttpMethod.PATCH,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
-                        .requestMatchers(HttpMethod.GET,"/api/receipt/{receiptId}").permitAll()
-                        .requestMatchers(HttpMethod.DELETE,"/api/receipt/{receiptId}").hasAnyRole("STU","PRESIDENT","ADMIN")
-                        .requestMatchers("/api/csv/upload/{userIndexId}","/api/ocr/upload/{userId}","/api/my/{id}").hasAnyRole("STU","PRESIDENT","ADMIN")
-                        .requestMatchers("/api/my/members","/api/my/members/{id}","/api/my/members/{deletedStudentNum}").hasAnyRole("PRESIDENT","ADMIN")
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .anyRequest().denyAll())
+//                        .requestMatchers("/api/users/**","/swagger-ui/**", "/v3/api-docs/**","/api/receipt/club/{clubId}","/api/club/**","/api/collegesAndClubs").permitAll()
+//                        .requestMatchers(HttpMethod.GET,"/api/receipt").permitAll()
+//                        .requestMatchers(HttpMethod.POST,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
+//                        .requestMatchers(HttpMethod.PATCH,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
+//                        .requestMatchers(HttpMethod.GET,"/api/receipt/{receiptId}").permitAll()
+//                        .requestMatchers(HttpMethod.DELETE,"/api/receipt/{receiptId}").hasAnyRole("STU","PRESIDENT","ADMIN")
+//                        .requestMatchers("/api/csv/upload/{userIndexId}","/api/ocr/upload/{userId}","/api/my/{id}").hasAnyRole("STU","PRESIDENT","ADMIN")
+//                        .requestMatchers("/api/my/members","/api/my/members/{id}","/api/my/members/{deletedStudentNum}").hasAnyRole("PRESIDENT","ADMIN")
+//                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+//                        .anyRequest().denyAll())
+                        .anyRequest().permitAll())
                 // JWT 인증을 위하여 직접 구현한 필터를 UsernamePasswordAuthenticationFilter 전에 실행
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class

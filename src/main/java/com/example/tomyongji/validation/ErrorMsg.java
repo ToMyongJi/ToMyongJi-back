@@ -18,6 +18,7 @@ public class ErrorMsg {
     public static final String NO_AUTHORIZATION_USER = "접근 권한이 없습니다"; //가입된 유저가 아닌 경우
     public static final String NO_AUTHORIZATION_ROLE = "접근 권한이 없습니다"; //접근 가능한 ROLE이 아닌 경우
     public static final String NO_AUTHORIZATION_BELONGING = "접근 권한이 없습니다"; //접근 가능한 소속이 아닌 경우
+    public static final String INCORRECT_ROLE_VALUE="Role의 값이 올바르지 않습니다.";
 
     public static final String ERROR_SEND_EMAIL = "이메일 전송 중 오류가 발생했습니다.";
 

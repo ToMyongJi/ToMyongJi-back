@@ -1,5 +1,6 @@
 package com.example.tomyongji.auth.service;
 
+import com.example.tomyongji.auth.dto.ClubVerifyRequestDto;
 import com.example.tomyongji.auth.dto.LoginRequestDto;
 import com.example.tomyongji.auth.dto.UserRequestDto;
 import com.example.tomyongji.auth.entity.User;
@@ -14,6 +15,6 @@ public interface UserService {
 
     String findUserIdByEmail(String email);
 
-    Boolean verifyClub(Long clubId, String studentNum);
+    Boolean verifyClub(ClubVerifyRequestDto clubVerifyRequestDto);
 
 }

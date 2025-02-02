@@ -4,6 +4,7 @@ import com.example.tomyongji.admin.entity.Member;
 import com.example.tomyongji.admin.entity.President;
 import com.example.tomyongji.admin.repository.MemberRepository;
 import com.example.tomyongji.admin.repository.PresidentRepository;
+import com.example.tomyongji.auth.dto.ClubVerifyRequestDto;
 import com.example.tomyongji.auth.dto.LoginRequestDto;
 import com.example.tomyongji.auth.dto.UserRequestDto;
 import com.example.tomyongji.auth.entity.ClubVerification;
@@ -287,7 +288,7 @@ public class UserServiceTest {
         when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
         when(userRepository.findByUserId(studentRequestDto.getUserId())).thenReturn(Optional.empty());
         when(emailVerificationRepository.findByEmail(studentRequestDto.getEmail())).thenReturn(Optional.of(emailVerification));
-        when(clubVerificationRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn(Optional.empty());
+        when(clubVerificationRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn(null);
 
         //when
         CustomException exception = assertThrows(CustomException.class,()->userService.signUp(studentRequestDto));
@@ -332,14 +333,18 @@ public class UserServiceTest {
                         .name(studentRequestDto.getName())
                         .studentClub(studentClub)
                         .build();
-
+        ClubVerifyRequestDto clubVerifyRequestDto = ClubVerifyRequestDto.builder()
+                        .clubId(studentClub.getId())
+                        .studentNum(studentRequestDto.getStudentNum())
+                        .role("STU")
+                        .build();
         when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
         when(presidentRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn(null);
         when(memberRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn(Optional.of(member));
         lenient().when(clubVerificationRepository.save(any(ClubVerification.class)))
                 .thenReturn(clubVerification);
         //when
-        Boolean isVerify = userService.verifyClub(studentClub.getId(), studentRequestDto.getStudentNum());
+        Boolean isVerify = userService.verifyClub(clubVerifyRequestDto);
         //then
         assertThat(isVerify).isEqualTo(true);
     }
@@ -357,13 +362,18 @@ public class UserServiceTest {
                 .studentNum("60222024")
                 .verificatedAt(LocalDateTime.now())
                 .build();
+        ClubVerifyRequestDto clubVerifyRequestDto = ClubVerifyRequestDto.builder()
+                .clubId(studentClub.getId())
+                .studentNum(studentRequestDto.getStudentNum())
+                .role("PRESIDENT")
+                .build();
         when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
         when(presidentRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn(president);
         when(studentClubRepository.findByPresident(president)).thenReturn(Optional.of(studentClub));
         lenient().when(clubVerificationRepository.save(any(ClubVerification.class)))
                 .thenReturn(clubVerification);
         //when
-        Boolean isVerify = userService.verifyClub(studentClub.getId(), studentRequestDto.getStudentNum());
+        Boolean isVerify = userService.verifyClub(clubVerifyRequestDto);
         //then
         assertThat(isVerify).isEqualTo(true);
     }

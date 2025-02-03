@@ -137,6 +137,9 @@ public class UserServiceImpl implements UserService {
         if (clubVerifyRequestDto.getRole().equals("STU")) { //회장의 학번이 아니라면
             Member member = this.memberInfoRepository.findByStudentNum(clubVerifyRequestDto.getStudentNum())
                 .orElseThrow(() -> new CustomException(NOT_FOUND_MEMBER, 400));
+            if(!member.getStudentClub().getId().equals(studentClub.getId())){
+                throw new CustomException(NOT_FOUND_MEMBER,400);
+            }
             ClubVerification clubVerification = ClubVerification.builder()
                     .studentNum(clubVerifyRequestDto.getStudentNum())
                     .verificatedAt(LocalDateTime.now())

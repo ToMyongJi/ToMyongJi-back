@@ -141,7 +141,7 @@ public class UserServiceImpl implements UserService {
             clubVerificationRepository.save(clubVerification);
             return true;
         }else if(clubVerifyRequestDto.getRole().equals("PRESIDENT")){
-            President president =this.presidentInfoRepository.findByStudentNum(clubVerifyRequestDto.getStudentNum());
+            President president = this.presidentInfoRepository.findByStudentNum(clubVerifyRequestDto.getStudentNum());
             StudentClub userClub = studentClubRepository.findByPresident(president)
                     .orElseThrow(()-> new CustomException(NOT_FOUND_STUDENT_CLUB,400));
             ClubVerification clubVerification = ClubVerification.builder()

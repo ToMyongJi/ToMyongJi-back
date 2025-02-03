@@ -39,6 +39,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static com.example.tomyongji.validation.ErrorMsg.*;
@@ -139,6 +141,10 @@ public class UserServiceTest {
                 .studentNum("60222024")
                 .verificatedAt(LocalDateTime.now())
                 .build();
+        List<ClubVerification> list = new ArrayList<>();
+        List<EmailVerification> emailList = new ArrayList<>();
+        emailList.add(emailVerification);
+        list.add(clubVerification);
         ClubVerification setUserClubVerification = ClubVerification.builder()
                 .id(1L)
                 .studentNum("60222024")
@@ -150,8 +156,8 @@ public class UserServiceTest {
         when(collegeRepository.findByCollegeName(studentRequestDto.getCollegeName())).thenReturn(Optional.of(college));
         when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
         when(userRepository.findByUserId(studentRequestDto.getUserId())).thenReturn(Optional.empty());
-        when(emailVerificationRepository.findByEmail(studentRequestDto.getEmail())).thenReturn(Optional.of(emailVerification));
-        when(clubVerificationRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn(Optional.of(clubVerification));
+        when(emailVerificationRepository.findByEmailOrderByVerificatedAtDesc(studentRequestDto.getEmail())).thenReturn(emailList);
+        when(clubVerificationRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn((List<ClubVerification>) list);
         when(userMapper.toUser(studentRequestDto,studentClub)).thenReturn(user);
         doAnswer(invocation -> {
             User savedUser = invocation.getArgument(0);
@@ -262,17 +268,17 @@ public class UserServiceTest {
     @Test
     @DisplayName("이메일 인증을 하지않는 회원가입시 예외발생")
     void notVerifyEmailSignUpTest(){
-
+        List<EmailVerification> list = new ArrayList();
         when(collegeRepository.findByCollegeName(studentRequestDto.getCollegeName())).thenReturn(Optional.of(college));
         when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
         when(userRepository.findByUserId(studentRequestDto.getUserId())).thenReturn(Optional.empty());
-        when(emailVerificationRepository.findByEmail(studentRequestDto.getEmail())).thenReturn(Optional.empty());
+        when(emailVerificationRepository.findByEmailOrderByVerificatedAtDesc(studentRequestDto.getEmail())).thenReturn(list);
         //when
         CustomException exception = assertThrows(CustomException.class,()->userService.signUp(studentRequestDto));
         //then
         assertEquals(400,exception.getErrorCode());
         assertEquals(NOT_VERIFY_EMAIL,exception.getMessage());
-        verify(emailVerificationRepository).findByEmail(studentRequestDto.getEmail());
+        verify(emailVerificationRepository).findByEmailOrderByVerificatedAtDesc(studentRequestDto.getEmail());
         verify(clubVerificationRepository, never()).findByStudentNum(any());
     }
     @Test
@@ -284,11 +290,14 @@ public class UserServiceTest {
                 .verificationCode("SSSSS1234")
                 .verificatedAt(LocalDateTime.now())
                 .build();
+        List<EmailVerification> list = new ArrayList<>();
+        list.add(emailVerification);
+        List<ClubVerification> clubList = new ArrayList<>();
         when(collegeRepository.findByCollegeName(studentRequestDto.getCollegeName())).thenReturn(Optional.of(college));
         when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
         when(userRepository.findByUserId(studentRequestDto.getUserId())).thenReturn(Optional.empty());
-        when(emailVerificationRepository.findByEmail(studentRequestDto.getEmail())).thenReturn(Optional.of(emailVerification));
-        when(clubVerificationRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn(null);
+        when(emailVerificationRepository.findByEmailOrderByVerificatedAtDesc(studentRequestDto.getEmail())).thenReturn(list);
+        when(clubVerificationRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn(clubList);
 
         //when
         CustomException exception = assertThrows(CustomException.class,()->userService.signUp(studentRequestDto));
@@ -339,7 +348,6 @@ public class UserServiceTest {
                         .role("STU")
                         .build();
         when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
-        when(presidentRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn(null);
         when(memberRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn(Optional.of(member));
         lenient().when(clubVerificationRepository.save(any(ClubVerification.class)))
                 .thenReturn(clubVerification);

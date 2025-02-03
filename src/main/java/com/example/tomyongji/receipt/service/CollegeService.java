@@ -41,15 +41,15 @@ public class CollegeService {
 //
 //    }
 
-    public List<CollegesDto> getAllCollegesAndClubs() {        // 모든 College를 조회합니다.
+    public List<CollegesDto> getAllCollegesAndClubs() {
         return collegeRepository.findAll().stream()
+            // "어드민"인 college 제외
+            .filter(college -> !"어드민".equals(college.getCollegeName()))
             .map(college -> {
-                // 각 College에 속한 StudentClub을 조회합니다.
                 List<ClubDto> studentClubs = studentClubRepository.findAllByCollege_Id(college.getId()).stream()
                     .map(StudentClub::toDto)
                     .toList();
 
-                // CollegesDto를 생성합니다.
                 return new CollegesDto(
                     college.getId(),
                     college.getCollegeName(),
@@ -57,8 +57,8 @@ public class CollegeService {
                 );
             })
             .toList();
-
     }
+
 
 
 }

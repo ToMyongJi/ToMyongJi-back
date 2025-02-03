@@ -130,13 +130,14 @@ public class AdminService {
 
         MemberDto memberDto = adminMapper.toMemberDto(member); //삭제된 멤버정보 반환을 위한 저장
 
+        if (!clubVerificationRepository.findByStudentNum(member.getStudentNum()).isEmpty()) {
+            clubVerificationRepository.deleteByStudentNum(member.getStudentNum());
+        }
         //멤버 등록을 해도 유저가 없을 수 있음
         Optional<User> user = Optional.ofNullable(
             userRepository.findByStudentNum(member.getStudentNum()));
-
         //유저가 있다면 유저의 메일과 유저를 삭제
         if (user.isPresent()) {
-            clubVerificationRepository.deleteByStudentNum(user.get().getStudentNum());
             emailVerificationRepository.deleteByEmail(user.get().getEmail());
             userRepository.delete(user.get());
         }

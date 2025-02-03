@@ -70,7 +70,7 @@ public class UserServiceImpl implements UserService {
             throw new CustomException(EXISTING_USER, 400);
         }
         Optional<User> emailValidUser = userRepository.findByEmail(userRequestDto.getEmail());
-        if (validUser.isPresent()) {
+        if (emailValidUser.isPresent()) {
             throw new CustomException(EXISTING_USER, 400);
         }
 

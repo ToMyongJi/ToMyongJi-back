@@ -2,6 +2,7 @@ package com.example.tomyongji.receipt.service;
 
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.receipt.entity.Receipt;
+import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.ReceiptRepository;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
@@ -53,15 +54,25 @@ public class CSVService {
                 if (date != null && !content.isEmpty() && deposit != -1 && withdrawal != -1) {
                     boolean exists = receiptRepository.existsByDateAndContent(date, content);
                     if (!exists) {
+                        StudentClub studentClub = userRepository.findById(userIndexId).get().getStudentClub();
                         Receipt receipt = Receipt.builder()
                                 .date(date)
                                 .content(content)
                                 .deposit(deposit)
                                 .withdrawal(withdrawal)
-                                .studentClub(userRepository.findById(userIndexId).get().getStudentClub())
+                                .studentClub(studentClub)
                                 .build();
-                        receiptRepository.save(receipt);
-                        receipts.add(receipt);
+                        if(withdrawal!=0&&deposit!=0){
+                        }else if(withdrawal==0) {
+                            studentClub.setBalance(studentClub.getBalance()+deposit);
+                            receiptRepository.save(receipt);
+                            receipts.add(receipt);
+                        }else if(deposit==0){
+                            studentClub.setBalance(studentClub.getBalance()-withdrawal);
+                            receiptRepository.save(receipt);
+                            receipts.add(receipt);
+
+                        }
                     } else {
                         LOGGER.info("Duplicate found for date: " + date + ", content: " + content);
                     }

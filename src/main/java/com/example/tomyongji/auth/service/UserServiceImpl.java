@@ -4,6 +4,7 @@ import com.example.tomyongji.admin.entity.Member;
 import com.example.tomyongji.admin.entity.President;
 import com.example.tomyongji.admin.repository.MemberRepository;
 import com.example.tomyongji.admin.repository.PresidentRepository;
+import com.example.tomyongji.auth.dto.ClubVerifyRequestDto;
 import com.example.tomyongji.auth.dto.LoginRequestDto;
 import com.example.tomyongji.auth.dto.UserRequestDto;
 import com.example.tomyongji.auth.entity.ClubVerification;
@@ -68,6 +69,10 @@ public class UserServiceImpl implements UserService {
         if (validUser.isPresent()) {
             throw new CustomException(EXISTING_USER, 400);
         }
+        Optional<User> emailValidUser = userRepository.findByEmail(userRequestDto.getEmail());
+        if (emailValidUser.isPresent()) {
+            throw new CustomException(EXISTING_USER, 400);
+        }
 
         // email 인증이 되었는지 확인 (최신 데이터로 선택)
         EmailVerification emailVerification = emailVerificationRepository.findByEmailOrderByVerificatedAtDesc(userRequestDto.getEmail())
@@ -124,32 +129,34 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public Boolean verifyClub(Long clubId, String studentNum) { //학생회 아이디, 유저 학번
+    public Boolean verifyClub(ClubVerifyRequestDto clubVerifyRequestDto) { //학생회 아이디, 유저 학번
 
-        StudentClub studentClub = this.studentClubRepository.findById(clubId)
+        StudentClub studentClub = this.studentClubRepository.findById(clubVerifyRequestDto.getClubId())
                 .orElseThrow(()-> new CustomException(NOT_FOUND_STUDENT_CLUB,400));
 
-        President president =this.presidentInfoRepository.findByStudentNum(studentNum);
-        if (president==null) { //회장의 학번이 아니라면
-            Member member = this.memberInfoRepository.findByStudentNum(studentNum)
+        if (clubVerifyRequestDto.getRole().equals("STU")) { //회장의 학번이 아니라면
+            Member member = this.memberInfoRepository.findByStudentNum(clubVerifyRequestDto.getStudentNum())
                 .orElseThrow(() -> new CustomException(NOT_FOUND_MEMBER, 400));
             ClubVerification clubVerification = ClubVerification.builder()
-                    .studentNum(studentNum)
+                    .studentNum(clubVerifyRequestDto.getStudentNum())
+                    .verificatedAt(LocalDateTime.now())
+                    .build();
+
+            clubVerificationRepository.save(clubVerification);
+            return true;
+        }else if(clubVerifyRequestDto.getRole().equals("PRESIDENT")){
+            President president = this.presidentInfoRepository.findByStudentNum(clubVerifyRequestDto.getStudentNum());
+            StudentClub userClub = studentClubRepository.findByPresident(president)
+                    .orElseThrow(()-> new CustomException(NOT_FOUND_STUDENT_CLUB,400));
+            ClubVerification clubVerification = ClubVerification.builder()
+                    .studentNum(clubVerifyRequestDto.getStudentNum())
                     .verificatedAt(LocalDateTime.now())
                     .build();
 
             clubVerificationRepository.save(clubVerification);
             return true;
         }else {
-            StudentClub userClub = studentClubRepository.findByPresident(president)
-                    .orElseThrow(()-> new CustomException(NOT_FOUND_STUDENT_CLUB,400));
-            ClubVerification clubVerification = ClubVerification.builder()
-                    .studentNum(studentNum)
-                    .verificatedAt(LocalDateTime.now())
-                    .build();
-
-            clubVerificationRepository.save(clubVerification);
-            return true;
+            throw new CustomException(INCORRECT_ROLE_VALUE, 400);
         }
     }
 

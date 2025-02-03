@@ -1,6 +1,7 @@
 package com.example.tomyongji.auth.controller;
 
 import com.example.tomyongji.admin.dto.ApiResponse;
+import com.example.tomyongji.auth.dto.ClubVerifyRequestDto;
 import com.example.tomyongji.auth.dto.FindIdRequestDto;
 import com.example.tomyongji.auth.dto.LoginRequestDto;
 import com.example.tomyongji.auth.dto.UserRequestDto;
@@ -48,9 +49,9 @@ public class UserController {
     }
 
     @Operation(summary = "소속 인증 API", description = "사용자 id와 학생회 id를 넣으면  소속인증을 합니다.")
-    @GetMapping("/clubVerify/{clubId}/{studentNum}")
-    public ApiResponse<Boolean> VerifyClub(@PathVariable Long clubId, @PathVariable String studentNum) {
-        boolean isClubVerify = userService.verifyClub(clubId,studentNum);
+    @PostMapping("/clubVerify")
+    public ApiResponse<Boolean> VerifyClub(@RequestBody ClubVerifyRequestDto clubVerifyDto) {
+        boolean isClubVerify = userService.verifyClub(clubVerifyDto);
         return new ApiResponse(200,"소속인증을 성공적으로 마쳤습니다.",isClubVerify);
     }
 }

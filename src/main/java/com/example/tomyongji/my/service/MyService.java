@@ -87,15 +87,16 @@ public class MyService {
         Member member = memberRepository.findByStudentNum(deletedStudentNum)
             .orElseThrow(() -> new CustomException(NOT_FOUND_MEMBER, 400));
 
-
         MemberDto memberDto = myMapper.toMemberDto(member); //삭제된 멤버 정보를 보여주기 위한 반환값
 
+        if (!clubVerificationRepository.findByStudentNum(deletedStudentNum).isEmpty()) {
+            clubVerificationRepository.deleteByStudentNum(deletedStudentNum);
+        }
         //멤버 등록을 해도 유저가 없을 수 있음
         Optional<User> user = Optional.ofNullable(
             userRepository.findByStudentNum(deletedStudentNum));
         //유저가 있다면 유저의 메일과 유저를 삭제
         if (user.isPresent()) {
-            clubVerificationRepository.deleteByStudentNum(user.get().getStudentNum());
             emailVerificationRepository.deleteByEmail(user.get().getEmail());
             userRepository.delete(user.get());
         }

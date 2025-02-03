@@ -69,6 +69,10 @@ public class UserServiceImpl implements UserService {
         if (validUser.isPresent()) {
             throw new CustomException(EXISTING_USER, 400);
         }
+        Optional<User> emailValidUser = userRepository.findByEmail(userRequestDto.getEmail());
+        if (validUser.isPresent()) {
+            throw new CustomException(EXISTING_USER, 400);
+        }
 
         // email 인증이 되었는지 확인 (최신 데이터로 선택)
         EmailVerification emailVerification = emailVerificationRepository.findByEmailOrderByVerificatedAtDesc(userRequestDto.getEmail())

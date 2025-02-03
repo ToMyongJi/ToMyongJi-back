@@ -4,6 +4,8 @@ import com.example.tomyongji.admin.entity.President;
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -20,4 +22,6 @@ public interface StudentClubRepository extends JpaRepository<StudentClub, Long> 
     Optional<StudentClub> findByPresident(President president);
 
     StudentClub findByStudentClubName(String clubName);
+
+
 }

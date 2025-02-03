@@ -5,6 +5,7 @@ import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.mapper.StudentClubMapper;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +19,15 @@ public class StudentClubService {
     private final StudentClubMapper studentClubMapper;
     public List<ClubDto> getAllStudentClub() {
         List<StudentClub> studentClubs = studentClubRepository.findAll();
-        return clubDtoList(studentClubs);
+
+        // 특정 StudentClub을 제외 (예: 특정 이름 제외)
+        List<StudentClub> filteredClubs = studentClubs.stream()
+            .filter(club -> !club.getStudentClubName().equals("어드민")) // 제외할 조건
+            .collect(Collectors.toList());
+
+        return clubDtoList(filteredClubs);
     }
+
 
     public List<ClubDto> getStudentClubById(Long collegeId) {
         List<StudentClub> studentClubs = studentClubRepository.findAllByCollege_Id(collegeId);

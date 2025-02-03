@@ -7,6 +7,8 @@ import com.example.tomyongji.admin.entity.Member;
 import com.example.tomyongji.admin.entity.President;
 import com.example.tomyongji.admin.repository.MemberRepository;
 import com.example.tomyongji.admin.repository.PresidentRepository;
+import com.example.tomyongji.auth.dto.LoginRequestDto;
+import com.example.tomyongji.auth.jwt.JwtToken;
 import com.example.tomyongji.my.dto.AdminSaveMemberDto;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
@@ -36,6 +38,24 @@ public class AdminTest {
     @Autowired
     private MemberRepository memberRepository;
 
+    private String getAdminToken() {
+        LoginRequestDto loginRequest = new LoginRequestDto("admin", "Admin123!");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<LoginRequestDto> entity = new HttpEntity<>(loginRequest, headers);
+
+        ResponseEntity<ApiResponse<JwtToken>> response = restTemplate.exchange(
+                "http://localhost:8080/api/users/login",
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<ApiResponse<JwtToken>>() {}
+        );
+        System.out.println(response);
+        return response.getBody().getData().getAccessToken(); // JWT 토큰 반환
+    }
+
     @Test
     @DisplayName("학생회장 조회 테스트")
     void getPresident(){
@@ -50,14 +70,20 @@ public class AdminTest {
         studentClubRepository.save(club);
 
         Long clubId = 26L;
-        //When
+        String token = getAdminToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("clubId", clubId);
-
+        //when
         ResponseEntity<ApiResponse<PresidentDto>> response = restTemplate.exchange(
                 "/api/admin/president/{clubId}",
                 HttpMethod.GET,
-                null,
+                entity,
                 new ParameterizedTypeReference<ApiResponse<PresidentDto>>() {},
                 uriVariables
         );
@@ -71,22 +97,24 @@ public class AdminTest {
         presidentRepository.delete(president);
     }
     @Test
-    @Transactional
     @DisplayName("학생회장 저장 테스트")
     void savePresident(){
         //Given
         PresidentDto presidentDto = PresidentDto.builder()
                 .name("투명지")
-                .studentNum("60222024")
+                .studentNum("60222026")
                 .clubId(26L)
                 .build();
         President president = President.builder()
-                .studentNum("60222024")
+                .studentNum("60222026")
                 .name("투명지")
                 .build();
-        //When
+
+        String token = getAdminToken();
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
 
         HttpEntity<PresidentDto> entity = new HttpEntity<>(presidentDto, headers);
         //When
@@ -96,10 +124,14 @@ public class AdminTest {
                 entity,
                 new ParameterizedTypeReference<ApiResponse<PresidentDto>>() {}
         );
+
         //then
         assertThat(response.getStatusCode().value()).isEqualTo(201);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData().getStudentNum()).isEqualTo(presidentDto.getStudentNum());
+        StudentClub studentClub = studentClubRepository.findById(26L).get();
+        studentClub.setPresident(null);
+        studentClubRepository.save(studentClub);
         presidentRepository.deleteAll();
     }
 
@@ -119,10 +151,17 @@ public class AdminTest {
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("clubId", clubId);
 
+        String token = getAdminToken();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+        HttpEntity<AdminSaveMemberDto> entity = new HttpEntity<>(headers);
+
         ResponseEntity<ApiResponse<List<MemberDto>>> response = restTemplate.exchange(
                 "/api/admin/member/{clubId}",
                 HttpMethod.GET,
-                null,
+                entity,
                 new ParameterizedTypeReference<ApiResponse<List<MemberDto>>>() {},
                 uriVariables
         );
@@ -147,8 +186,11 @@ public class AdminTest {
                 .studentClub(studentClub)
                 .build();
         //When
+        String token = getAdminToken();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+
         HttpEntity<AdminSaveMemberDto> entity = new HttpEntity<>(adminSaveMemberDto, headers);
 
         //When
@@ -178,10 +220,17 @@ public class AdminTest {
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("memberId", memberId);
 
+        String token = getAdminToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+
+        HttpEntity<AdminSaveMemberDto> entity = new HttpEntity<>(headers);
+
         ResponseEntity<ApiResponse<MemberDto>> response = restTemplate.exchange(
                 "/api/admin/member/{memberId}",
                 HttpMethod.DELETE,
-                null,
+                entity,
                 new ParameterizedTypeReference<ApiResponse<MemberDto>>() {},
                 uriVariables
         );

@@ -244,11 +244,11 @@ public class UserTest {
         HttpEntity<ClubVerifyRequestDto> entity = new HttpEntity<>(clubVerifyRequestDto, headers);
 
         //When
-        ResponseEntity<ApiResponse<String>> response = restTemplate.exchange(
+        ResponseEntity<ApiResponse<Boolean>> response = restTemplate.exchange(
                 "/api/users/clubVerify",
                 HttpMethod.POST,
                 entity,
-                new ParameterizedTypeReference<ApiResponse<String>>() {}
+                new ParameterizedTypeReference<ApiResponse<Boolean>>() {}
         );
 
         //Then
@@ -264,7 +264,7 @@ public class UserTest {
     void VerifyClubPresident(){
         //Given
         President president = President.builder()
-                .studentNum("60222024")
+                .studentNum("60222025")
                 .name("투명지")
                 .build();
         presidentRepository.save(president);
@@ -287,7 +287,7 @@ public class UserTest {
 
         ClubVerifyRequestDto clubVerifyRequestDto = ClubVerifyRequestDto.builder()
                 .clubId(26L)
-                .studentNum("60222024")
+                .studentNum("60222025")
                 .role("PRESIDENT")
                 .build();
 
@@ -296,13 +296,12 @@ public class UserTest {
         HttpEntity<ClubVerifyRequestDto> entity = new HttpEntity<>(clubVerifyRequestDto, headers);
 
         //When
-        ResponseEntity<ApiResponse<String>> response = restTemplate.exchange(
+        ResponseEntity<ApiResponse<Boolean>> response = restTemplate.exchange(
                 "/api/users/clubVerify",
                 HttpMethod.POST,
                 entity,
-                new ParameterizedTypeReference<ApiResponse<String>>() {}
+                new ParameterizedTypeReference<ApiResponse<Boolean>>() {}
         );
-
 
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);

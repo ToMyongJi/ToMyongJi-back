@@ -1,6 +1,7 @@
 package com.example.tomyongji.receipt.controller;
 
 import com.example.tomyongji.admin.dto.ApiResponse;
+import com.example.tomyongji.auth.service.CustomUserDetails;
 import com.example.tomyongji.receipt.dto.OCRResultDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
 import com.example.tomyongji.receipt.service.OCRService;
@@ -10,6 +11,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,9 +35,10 @@ public class OCRController {
     @Operation(summary = "영수증 업로드 api", description = "유저 아이디를 통해 특정 학생회의 영수증을 ocr 스캔을 통해 업로드합니다.")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/upload/{userId}")
-    public ApiResponse<OCRResultDto> uploadImageAndExtractText(@RequestPart("file") MultipartFile file, @PathVariable String userId) {
+    public ApiResponse<OCRResultDto> uploadImageAndExtractText(@RequestPart("file") MultipartFile file, @PathVariable String userId, @AuthenticationPrincipal
+    UserDetails currentUser) {
         OCRResultDto result = ocrService.processImage(file);
-        ocrService.uploadOcrReceipt(result, userId);
+        ocrService.uploadOcrReceipt(result, userId, currentUser);
         return new ApiResponse<>(201, "영수증을 성공적으로 업로드했습니다.", result);
 
     }

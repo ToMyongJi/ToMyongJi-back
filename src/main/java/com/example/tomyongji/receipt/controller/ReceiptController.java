@@ -1,5 +1,7 @@
 package com.example.tomyongji.receipt.controller;
 
+import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_USER;
+
 import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.auth.service.CustomUserDetails;
 import com.example.tomyongji.receipt.dto.ReceiptByStudentClubDto;
@@ -8,6 +10,7 @@ import com.example.tomyongji.receipt.dto.ReceiptDto;
 import com.example.tomyongji.receipt.dto.ReceiptUpdateDto;
 import com.example.tomyongji.receipt.entity.Receipt;
 import com.example.tomyongji.receipt.service.ReceiptService;
+import com.example.tomyongji.validation.CustomException;
 import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 
@@ -16,8 +19,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -45,8 +51,8 @@ public class ReceiptController {
     @Operation(summary = "영수증 작성 api", description = "유저 아이디를 통해 특정 학생회의 영수증을 작성합니다.")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping //특정 학생회의 영수증 작성
-    public ApiResponse<ReceiptDto> createReceipt(@RequestBody ReceiptCreateDto receiptCreateDto) {
-        ReceiptDto createdReceipt = receiptService.createReceipt(receiptCreateDto);
+    public ApiResponse<ReceiptDto> createReceipt(@RequestBody ReceiptCreateDto receiptCreateDto, @AuthenticationPrincipal UserDetails currentUser) {
+        ReceiptDto createdReceipt = receiptService.createReceipt(receiptCreateDto, currentUser);
         return new ApiResponse<>(201, "영수증을 성공적으로 작성했습니다.", createdReceipt); //201 created
     }
 
@@ -74,17 +80,10 @@ public class ReceiptController {
     }
 
 
-//    @Operation(summary = "영수증 삭제 api", description = "영수증 아이디를 통해 특정 영수증을 삭제합니다.")
-//    @DeleteMapping("/{receiptId}") //특정 영수증 삭제
-//    public ApiResponse<ReceiptDto> deleteReceipt(@PathVariable("receiptId") Long receiptId, @AuthenticationPrincipal CustomUserDetails currentUser) {
-//        ReceiptDto receipt = receiptService.deleteReceipt(receiptId, currentUser);
-//        return new ApiResponse<>(200, "영수증을 성공적으로 삭제했습니다.", receipt);
-//    }
-
     @Operation(summary = "영수증 삭제 api", description = "영수증 아이디를 통해 특정 영수증을 삭제합니다.")
     @DeleteMapping("/{receiptId}") //특정 영수증 삭제
-    public ApiResponse<ReceiptDto> deleteReceipt(@PathVariable("receiptId") Long receiptId) {
-        ReceiptDto receipt = receiptService.deleteReceipt(receiptId);
+    public ApiResponse<ReceiptDto> deleteReceipt(@PathVariable("receiptId") Long receiptId, @AuthenticationPrincipal UserDetails currentUser) {
+        ReceiptDto receipt = receiptService.deleteReceipt(receiptId, currentUser);
         return new ApiResponse<>(200, "영수증을 성공적으로 삭제했습니다.", receipt);
     }
 

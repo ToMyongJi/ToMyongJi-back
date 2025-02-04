@@ -1,14 +1,23 @@
 package com.example.tomyongji.receipt.service;
 
+import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
+import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_BELONGING;
+import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_USER;
+
+import com.example.tomyongji.auth.entity.User;
+import com.example.tomyongji.auth.repository.UserRepository;
+import com.example.tomyongji.auth.service.CustomUserDetails;
 import com.example.tomyongji.receipt.dto.OCRResultDto;
 import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
 import com.example.tomyongji.receipt.mapper.ReceiptMapper;
 import com.example.tomyongji.validation.CustomException;
+import lombok.AllArgsConstructor;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,10 +49,13 @@ public class OCRService {
 
     private final ReceiptService receiptService;
     private final ReceiptMapper receiptMapper;
+    private final UserRepository userRepository;
 
-    public OCRService(ReceiptService receiptService, ReceiptMapper receiptMapper) {
+    public OCRService(ReceiptService receiptService, ReceiptMapper receiptMapper,
+        UserRepository userRepository) {
         this.receiptService = receiptService;
         this.receiptMapper = receiptMapper;
+        this.userRepository = userRepository;
     }
 
 
@@ -207,15 +219,17 @@ public class OCRService {
 
 
 
-    public void uploadOcrReceipt(OCRResultDto ocrResultDto, String userId) {
+    public void uploadOcrReceipt(OCRResultDto ocrResultDto, String userId, UserDetails currentUser) {
         // ReceiptDto를 사용하여 데이터베이스에 저장하는 로직을 여기에 구현
         // receiptService의 createReceipt 메서드를 사용해 영수증 저장
+        User user = userRepository.findByUserId(userId)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
 
         ReceiptDto receiptDto = receiptMapper.toReceiptDto(ocrResultDto);
         ReceiptCreateDto receiptCreateDto = receiptMapper.toReceiptCreateDto(receiptDto);
         receiptCreateDto.setUserId(userId);
 
-        receiptService.createReceipt(receiptCreateDto);
+        receiptService.createReceipt(receiptCreateDto, currentUser);
     }
 }
 

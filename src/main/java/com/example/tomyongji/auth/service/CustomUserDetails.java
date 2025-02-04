@@ -35,8 +35,6 @@ public class CustomUserDetails implements UserDetails {
         return user.getUserId();
     }
 
-    public User getUser() {return user;}
-
     // 기타 UserDetails 메소드 구현
 }
 

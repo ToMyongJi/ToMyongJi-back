@@ -50,10 +50,11 @@ jobs:
         run: ls -l build/libs/
 
       - name: Upload JAR Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tomyongji
           path: build/libs/tomyongji-SNAPSHOT.jar
+
 
   deploy:
     name: Deploy to EC2 Instance

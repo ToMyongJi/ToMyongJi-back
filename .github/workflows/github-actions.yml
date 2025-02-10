@@ -1,74 +1,77 @@
-name: Build and Deploy Gradle Project
+name: CI/CD using GitHub Actions
 
 on:
-  push:   
-    branches: [ "dev" ]
-  pull_request:
-    branches: [ "dev" ]
+  push:
+    branches:
+      - main
+
+permissions:  
+  contents: read
 
 jobs:
-  build:
-    name: Build Gradle Project
+  CI-CD:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-
     steps:
-    - name: Checkout source code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
-      with:
-        gradle-version: '8.3'
+      - name: Create application.properties
+        run: |
+          mkdir -p ./src/main/resources
+          echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./src/main/resources/application.properties
 
-    - name: Cache Gradle dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          gradle-${{ runner.os }}
-    
-    - name: Build with Gradle Wrapper
-      run: ./gradlew clean bootJar
+      - name: Check application.properties contents
+        run: |
+          echo "${{ secrets.APPLICATION_PROPERTIES }}"
 
-    - name: Verify JAR File
-      run: ls -l build/libs/
+      - name: Gradle Caching
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
-    - name: Upload JAR Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: insurance-service
-        path: build/libs/tomyongji-SNAPSHOT.jar
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew build -x test
+
+      - name: Verify JAR File
+        run: ls -l build/libs/
+
+      - name: Upload JAR Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: tomyongji
+          path: build/libs/tomyongji-SNAPSHOT.jar
 
   deploy:
     name: Deploy to EC2 Instance
     runs-on: ubuntu-latest
-    needs: build
-
+    needs: CI-CD
     steps:
-    - name: Download JAR Artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: insurance-service
+      - name: Download JAR Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: tomyongji
 
-    - name: Deploy to EC2 Instance
-      run: |
-        echo "$SSH_PRIVATE_KEY" > /tmp/id_rsa
-        chmod 600 /tmp/id_rsa
-        scp -i /tmp/id_rsa -o StrictHostKeyChecking=no build/libs/tomyongji-SNAPSHOT.jar ubuntu@13.125.66.151:/home/ubuntu/
-        ssh -i /tmp/id_rsa -o StrictHostKeyChecking=no ubuntu@13.125.66.151 << 'EOF'
-        pkill -f 'tomyongji-SNAPSHOT.jar' || true
-        nohup java -jar /home/ubuntu/tomyongji-SNAPSHOT.jar > /dev/null 2>&1 &
-        EOF
+      - name: Deploy to EC2 Instance
+        run: |
+          echo "$PRIVATE_KEY" > /tmp/tomyongji.pem
+          chmod 600 /tmp/tomyongji.pem
+          scp -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no build/libs/tomyongji-SNAPSHOT.jar ubuntu@13.125.66.151:/home/ubuntu/
+          
+          ssh -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no ubuntu@13.125.66.151 << 'EOF'
+          pkill -f 'tomyongji-SNAPSHOT.jar' || true
+          nohup java -jar /home/ubuntu/tomyongji-SNAPSHOT.jar > /dev/null 2>&1 &
+          EOF

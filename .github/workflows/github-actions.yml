@@ -2,7 +2,7 @@ name: CI/CD using GitHub Actions
 
 on:
   push:
-    branches: 
+    branches:
       - dev
 
 permissions:  
@@ -25,10 +25,6 @@ jobs:
         run: |
           mkdir -p ./src/main/resources
           echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./src/main/resources/application.properties
-
-      - name: Check application.properties contents
-        run: |
-          echo "${{ secrets.APPLICATION_PROPERTIES }}"
 
       - name: Gradle Caching
         uses: actions/cache@v4
@@ -53,7 +49,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tomyongji
-          path: build/libs/tomyongji-SNAPSHOT.jar
+          path: build/libs/*.jar  # 빌드된 모든 JAR 파일 업로드
 
 
   deploy:
@@ -65,14 +61,24 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tomyongji
+          path: /tmp
+
+      - name: Find Downloaded JAR
+        run: ls -l /tmp
 
       - name: Deploy to EC2 Instance
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         run: |
           echo "$PRIVATE_KEY" > /tmp/tomyongji.pem
           chmod 600 /tmp/tomyongji.pem
-          scp -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no build/libs/tomyongji-SNAPSHOT.jar ubuntu@13.125.66.151:/home/ubuntu/
-          
+
+          # 최신 JAR 파일 찾기
+          JAR_FILE=$(ls /tmp/*.jar | head -n 1)
+
+          scp -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no "$JAR_FILE" ubuntu@13.125.66.151:/home/ubuntu/
+
           ssh -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no ubuntu@13.125.66.151 << 'EOF'
           pkill -f 'tomyongji-SNAPSHOT.jar' || true
-          nohup java -jar /home/ubuntu/tomyongji-SNAPSHOT.jar > /dev/null 2>&1 &
+          nohup java -jar /home/ubuntu/$(ls /home/ubuntu/*.jar | head -n 1) > /dev/null 2>&1 &
           EOF

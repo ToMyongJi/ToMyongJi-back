@@ -78,7 +78,7 @@ jobs:
 
           scp -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no "$JAR_FILE" ubuntu@13.125.66.151:/home/ubuntu/
 
-          ssh -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no ubuntu@13.125.66.151 << 'EOF'
+          ssh -v -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no ubuntu@13.125.66.151 << 'EOF'
           pkill -f 'tomyongji-SNAPSHOT.jar' || true
           nohup java -jar /home/ubuntu/$(ls /home/ubuntu/*.jar | head -n 1) > /dev/null 2>&1 &
           EOF

@@ -2,8 +2,8 @@ name: CI/CD using GitHub Actions
 
 on:
   push:
-    branches:
-      - main
+    branches: 
+      - dev
 
 permissions:  
   contents: read

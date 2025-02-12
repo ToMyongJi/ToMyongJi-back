@@ -42,9 +42,9 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class OCRService {
 
-    @Value("${ocr.apiUrl]")
+    @Value("${ocr.apiUrl}")
     private String apiURL ;
-    @Value("${ocr.secretKey]")
+    @Value("${ocr.secretKey}")
     private String secretKey;
 
     private final ReceiptService receiptService;
@@ -128,6 +128,7 @@ public class OCRService {
             return parseOCRResult(response.toString());
 
         } catch (IOException | JSONException | ParseException e) {
+            e.printStackTrace();
             throw new CustomException("OCR 처리 중 오류가 발생했습니다.", 500);
         }
     }
@@ -174,32 +175,115 @@ public class OCRService {
 
     // OCR 결과에서 date, content, withdrawal 파싱 후 ReceiptDto로 반환
     private OCRResultDto parseOCRResult(String jsonResponse) throws ParseException, JSONException {
+        // 디버깅을 위한 전체 응답 로그 출력
+        System.out.println("OCR API Response: " + jsonResponse);
+
         JSONObject jsonObject = new JSONObject(jsonResponse);
         JSONArray imagesArray = jsonObject.getJSONArray("images");
+        if (imagesArray.length() == 0) {
+            throw new CustomException("OCR 응답에 이미지 데이터가 없습니다.", 500);
+        }
         JSONObject firstImage = imagesArray.getJSONObject(0);
-        JSONObject receipt = firstImage.getJSONObject("receipt").getJSONObject("result");
+        JSONObject receiptResult = firstImage.getJSONObject("receipt").getJSONObject("result");
 
-        // 날짜 추출
-        JSONObject paymentInfo = receipt.getJSONObject("paymentInfo");
-        JSONObject dateObject = paymentInfo.getJSONObject("date").getJSONObject("formatted");
-        String year = dateObject.getString("year");
-        String month = dateObject.getString("month");
-        String day = dateObject.getString("day");
-        String dateString = year + "-" + month + "-" + day;
-
+        // 1. 날짜 파싱
+        JSONObject paymentInfo = receiptResult.getJSONObject("paymentInfo");
+        String dateString = "";
+        if (paymentInfo.has("date")) {  // date 키 존재 여부 체크
+            Object dateObj = paymentInfo.get("date");
+            if (dateObj instanceof String) {
+                // 날짜가 문자열로 바로 전달되는 경우 (예: "2020-06-16")
+                dateString = (String) dateObj;
+            } else if (dateObj instanceof JSONObject) {
+                JSONObject dateJson = (JSONObject) dateObj;
+                if (dateJson.has("formatted")) {
+                    Object formattedObj = dateJson.get("formatted");
+                    if (formattedObj instanceof String) {
+                        dateString = (String) formattedObj;
+                    } else if (formattedObj instanceof JSONObject) {
+                        JSONObject formattedJson = (JSONObject) formattedObj;
+                        String year = formattedJson.getString("year");
+                        String month = formattedJson.getString("month");
+                        String day = formattedJson.getString("day");
+                        dateString = year + "-" + month + "-" + day;
+                    } else {
+                        throw new CustomException("유효한 날짜 형식이 아닙니다.", 500);
+                    }
+                } else {
+                    // formatted 필드가 없으면 직접 year, month, day 값 사용
+                    String year = dateJson.getString("year");
+                    String month = dateJson.getString("month");
+                    String day = dateJson.getString("day");
+                    dateString = year + "-" + month + "-" + day;
+                }
+            } else {
+                throw new CustomException("유효한 날짜 형식이 아닙니다.", 500);
+            }
+        } else {
+            // date 키가 없는 경우
+            throw new CustomException("OCR 응답에 date 데이터가 없습니다.", 400);
+        }
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date date = sdf.parse(dateString);
 
-        // 상호명 추출
-        String content = receipt.getJSONObject("storeInfo").getJSONObject("name").getString("text");
-
-        // 출금 금액 추출
-        int withdrawal = 0;
-        if (receipt.has("totalPrice") && receipt.getJSONObject("totalPrice").has("price")) {
-            JSONObject totalPrice = receipt.getJSONObject("totalPrice").getJSONObject("price").getJSONObject("formatted");
-            withdrawal = Integer.parseInt(totalPrice.getString("value").replaceAll(",", ""));
+        // 2. 상호명 파싱 (storeInfo.name)
+        JSONObject storeInfo = receiptResult.getJSONObject("storeInfo");
+        String content = "";
+        Object nameObj = storeInfo.get("name");
+        if (nameObj instanceof String) {
+            content = (String) nameObj;
+        } else if (nameObj instanceof JSONObject) {
+            JSONObject nameJson = (JSONObject) nameObj;
+            if (nameJson.has("text")) {
+                content = nameJson.getString("text");
+            } else if (nameJson.has("formatted")) {
+                Object formattedNameObj = nameJson.get("formatted");
+                if (formattedNameObj instanceof String) {
+                    content = (String) formattedNameObj;
+                } else if (formattedNameObj instanceof JSONObject) {
+                    JSONObject formattedNameJson = (JSONObject) formattedNameObj;
+                    if (formattedNameJson.has("value")) {
+                        content = formattedNameJson.getString("value");
+                    } else {
+                        throw new CustomException("유효한 상호명 정보를 찾을 수 없습니다.", 500);
+                    }
+                } else {
+                    throw new CustomException("유효한 상호명 정보를 찾을 수 없습니다.", 500);
+                }
+            } else {
+                throw new CustomException("유효한 상호명 정보를 찾을 수 없습니다.", 500);
+            }
         } else {
-            throw new CustomException("OCR 처리 중 오류가 발생했습니다. 유효한 금액 필드를 찾을 수 없습니다.", 500);
+            throw new CustomException("유효한 상호명 정보를 찾을 수 없습니다.", 500);
+        }
+
+        // 3. 출금 금액 파싱 (totalPrice.price)
+        int withdrawal = 0;
+        if (receiptResult.has("totalPrice") && receiptResult.getJSONObject("totalPrice").has("price")) {
+            JSONObject priceObj = receiptResult.getJSONObject("totalPrice").getJSONObject("price");
+            String priceString = "";
+            if (priceObj.has("value")) {
+                priceString = priceObj.getString("value");
+            } else if (priceObj.has("formatted")) {
+                Object formattedPriceObj = priceObj.get("formatted");
+                if (formattedPriceObj instanceof String) {
+                    priceString = (String) formattedPriceObj;
+                } else if (formattedPriceObj instanceof JSONObject) {
+                    JSONObject formattedPriceJson = (JSONObject) formattedPriceObj;
+                    if (formattedPriceJson.has("value")) {
+                        priceString = formattedPriceJson.getString("value");
+                    } else {
+                        throw new CustomException("유효한 금액 형식이 아닙니다.", 500);
+                    }
+                } else {
+                    throw new CustomException("유효한 금액 형식이 아닙니다.", 500);
+                }
+            } else {
+                throw new CustomException("OCR 응답에 금액 데이터가 없습니다.", 500);
+            }
+            withdrawal = Integer.parseInt(priceString.replaceAll(",", ""));
+        } else {
+            throw new CustomException("OCR 응답에 totalPrice.price 데이터가 없습니다.", 500);
         }
 
         if (withdrawal == 0) {
@@ -208,16 +292,6 @@ public class OCRService {
 
         return new OCRResultDto(date, content, withdrawal);
     }
-
-    private ReceiptDto OcrToRecipt(OCRResultDto ocrResultDto) {
-        ReceiptDto receiptDto = new ReceiptDto();
-        receiptDto.setDate(ocrResultDto.getDate());  // Date 타입으로 설정
-        receiptDto.setContent(ocrResultDto.getContent());
-        receiptDto.setWithdrawal(ocrResultDto.getWithdrawal());
-        return receiptDto;
-    }
-
-
 
     public void uploadOcrReceipt(OCRResultDto ocrResultDto, String userId, UserDetails currentUser) {
         // ReceiptDto를 사용하여 데이터베이스에 저장하는 로직을 여기에 구현

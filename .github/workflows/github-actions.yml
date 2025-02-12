@@ -72,6 +72,7 @@ jobs:
           echo "$PRIVATE_KEY" > /tmp/tomyongji.pem
           chmod 600 /tmp/tomyongji.pem
 
+          # Find the most recent JAR file, excluding systemd and snap directories
           JAR_FILE=$(find /tmp -type f -name "*.jar" ! -path "/tmp/systemd-private*" ! -path "/tmp/snap-private*" -printf "%T+ %p\n" | sort -r | head -n 1 | awk '{print $2}')
           
           scp -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no "$JAR_FILE" ubuntu@13.125.66.151:/home/ubuntu/
@@ -79,11 +80,17 @@ jobs:
           ssh -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no ubuntu@13.125.66.151 << 'EOF'
               pkill -f 'tomyongji-0.0.1-SNAPSHOT.jar' || true
               
-          sudo fallocate -l 2G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab > /dev/null
+              # 기존 스왑 비활성화 및 제거
+              sudo swapoff -a || true
+              sudo rm -f /swapfile || true
               
-          nohup java -jar /home/ubuntu/tomyongji-0.0.1-SNAPSHOT.jar > /dev/null 2>&1 &
+              # 새로운 스왑 파일 설정
+              sudo fallocate -l 2G /swapfile
+              sudo chmod 600 /swapfile
+              sudo mkswap /swapfile
+              sudo swapon /swapfile
+              echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab > /dev/null
+              
+              # 새로운 JAR 파일 실행
+              nohup java -jar /home/ubuntu/tomyongji-0.0.1-SNAPSHOT.jar > /dev/null 2>&1 &
           EOF

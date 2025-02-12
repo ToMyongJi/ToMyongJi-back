@@ -72,12 +72,22 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > /tmp/tomyongji.pem
           chmod 600 /tmp/tomyongji.pem
-      
+          
           JAR_FILE=$(find /tmp -name "*.jar" -type f -printf "%T+ %p\n" | sort -r | head -n 1 | awk '{print $2}')
           
           scp -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no "$JAR_FILE" ubuntu@13.125.66.151:/home/ubuntu/
           
           ssh -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no ubuntu@13.125.66.151 << 'EOF'
               pkill -f 'tomyongji-0.0.1-SNAPSHOT.jar' || true
-              nohup java -jar /home/ubuntu/tomyongji-0.0.1-SNAPSHOT.jar > /dev/null 2>&1 &
+              
+            
+          sudo fallocate -l 2G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+              
+              
+          echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab > /dev/null
+              
+          nohup java -jar /home/ubuntu/tomyongji-0.0.1-SNAPSHOT.jar > /dev/null 2>&1 &
           EOF

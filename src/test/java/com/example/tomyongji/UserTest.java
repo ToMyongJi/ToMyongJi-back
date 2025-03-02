@@ -15,7 +15,11 @@ import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.receipt.entity.College;
 import com.example.tomyongji.receipt.entity.StudentClub;
+import com.example.tomyongji.receipt.repository.CollegeRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
+import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +32,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -49,11 +56,32 @@ public class UserTest {
     private PresidentRepository presidentRepository;
     @Autowired
     private StudentClubRepository studentClubRepository;
+    @Autowired
+    private CollegeRepository collegeRepository;
     private UserRequestDto userRequestDto;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
+    @AfterEach
+    void clear() {
+        new TransactionTemplate(transactionManager).execute(status -> {
+
+            emailVerificationRepository.deleteByEmail("eeeseohyun@gmail.com");
+            clubVerificationRepository.deleteByStudentNum("60222024");
+            memberRepository.deleteAllByStudentNum("60222024");
+            userRepository.deleteAllByStudentNum("60222024");
+            //회장 소속인증용 정보 삭제
+            clubVerificationRepository.deleteByStudentNum("60222025");
+            StudentClub digital = studentClubRepository.findByStudentClubName("디지털콘텐츠학과 학생회");
+            digital.setPresident(null);
+            studentClubRepository.save(digital);
+            presidentRepository.deleteByStudentNum("60222025");
+            return null;
+        });
+    }
     @Test
     @DisplayName("회원가입 통합 테스트")
-    void signUp(){
+    void signUp() {
         //Given
         userRequestDto = UserRequestDto.builder()
                 .userId("tomyongji")
@@ -62,7 +90,7 @@ public class UserTest {
                 .role("STU")
                 .email("eeeseohyun@gmail.com")
                 .collegeName("인공지능소프트웨어융합대학")
-                .studentClubId(26L)
+                .studentClubId(25L)
                 .studentNum("60222024")
                 .build();
         EmailVerification emailVerification = EmailVerification.builder()
@@ -72,16 +100,7 @@ public class UserTest {
                 .build();
         emailVerificationRepository.save(emailVerification);
         emailVerificationRepository.flush();
-        College college = College.builder()
-                .id(6L)
-                .collegeName("인공지능소프트웨어융합대학")
-                .build();
-        StudentClub studentClub = StudentClub.builder()
-                .id(26L)
-                .studentClubName("융합소프트웨어학부 학생회")
-                .Balance(0)
-                .college(college)
-                .build();
+        StudentClub studentClub = studentClubRepository.findByStudentClubName("인공지능소프트웨어융합대학 학생회");
         Member member = Member.builder()
                 .studentNum("60222024")
                 .name("투명지")
@@ -111,37 +130,15 @@ public class UserTest {
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isNotNegative();
-        emailVerificationRepository.deleteAll();
-        clubVerificationRepository.deleteAll();
-        memberRepository.deleteAll();
-        userRepository.deleteAll();
     }
+
+
     @DisplayName("유저 아이디 중복 검사 테스트")
     @Test
     void checkUserIdDuplicate(){
         //Given
-        College college = College.builder()
-                .id(6L)
-                .collegeName("인공지능소프트웨어융합대학")
-                .build();
-        StudentClub studentClub = StudentClub.builder()
-                .id(26L)
-                .studentClubName("ICT융합대학 학생회")
-                .Balance(0)
-                .college(college)
-                .build();
-        User user = User.builder()
-                .id(1L)
-                .userId("tomyongji2024")
-                .name("투명지")
-                .password(encoder.encode("*Tomyongji2024"))
-                .role("STU")
-                .email("eeeseohyun615@gmail.com")
-                .collegeName("인공지능소프트웨어융합대학")
-                .studentClub(studentClub)
-                .studentNum("60222024")
-                .build();
-        String userId = "tomyongji";
+        StudentClub studentClub = studentClubRepository.findByStudentClubName("인공지능소프트웨어융합대학 학생회");
+        String userId = "newId";
         //When
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("userId", userId);
@@ -164,32 +161,8 @@ public class UserTest {
     @Test
     void findUserIdByEmail(){
         //Given
-        College college = College.builder()
-                .id(6L)
-                .collegeName("인공지능소프트웨어융합대학")
-                .build();
-        StudentClub studentClub = StudentClub.builder()
-                .id(26L)
-                .studentClubName("ICT융합대학 학생회")
-                .Balance(0)
-                .college(college)
-                .build();
-        User user = User.builder()
-                .id(1L)
-                .userId("tomyongji")
-                .name("투명지")
-                .password(encoder.encode("*Tomyongji2024"))
-                .role("STU")
-                .email("eeeseohyun@gmail.com")
-                .collegeName("인공지능소프트웨어융합대학")
-                .studentClub(studentClub)
-                .studentNum("60222024")
-                .build();
-        userRepository.save(user);
-        userRepository.flush();
-
         FindIdRequestDto findIdRequestDto = FindIdRequestDto.builder()
-                .email("eeeseohyun@gmail.com")
+                .email("jinhyoung9380@gmail.com")
                 .build();
 
         HttpHeaders headers = new HttpHeaders();
@@ -208,23 +181,13 @@ public class UserTest {
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
-        assertThat(response.getBody().getData()).isEqualTo("tomyongji");
-        userRepository.deleteAll();
+        assertThat(response.getBody().getData()).isEqualTo("jinh9380");
     }
     @DisplayName("부원 소속 인증 테스트")
     @Test
     void VerifyClubMember(){
         //Given
-        College college = College.builder()
-                .id(6L)
-                .collegeName("인공지능소프트웨어융합대학")
-                .build();
-        StudentClub studentClub = StudentClub.builder()
-                .id(26L)
-                .studentClubName("ICT융합대학 학생회")
-                .Balance(0)
-                .college(college)
-                .build();
+        StudentClub studentClub = studentClubRepository.findByStudentClubName("인공지능소프트웨어융합대학 학생회");
         Member member = Member.builder()
                 .studentNum("60222024")
                 .name("투명지")
@@ -234,7 +197,7 @@ public class UserTest {
         memberRepository.flush();
 
         ClubVerifyRequestDto clubVerifyRequestDto = ClubVerifyRequestDto.builder()
-                .clubId(26L)
+                .clubId(25L)
                 .studentNum("60222024")
                 .role("STU")
                 .build();
@@ -256,8 +219,6 @@ public class UserTest {
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo(true);
-        memberRepository.deleteAll();
-        clubVerificationRepository.deleteAll();
     }
     @DisplayName("회장 소속 인증 테스트")
     @Test
@@ -270,23 +231,13 @@ public class UserTest {
         presidentRepository.save(president);
         presidentRepository.flush();
 
-        College college = College.builder()
-                .id(6L)
-                .collegeName("인공지능소프트웨어융합대학")
-                .build();
-
-        StudentClub studentClub = StudentClub.builder()
-                .id(26L)
-                .studentClubName("ICT융합대학 학생회")
-                .Balance(0)
-                .college(college)
-                .president(president)
-                .build();
-        studentClubRepository.save(studentClub);
+        StudentClub digital = studentClubRepository.findByStudentClubName("디지털콘텐츠학과 학생회");
+        digital.setPresident(president);
+        studentClubRepository.save(digital);
         studentClubRepository.flush();
 
         ClubVerifyRequestDto clubVerifyRequestDto = ClubVerifyRequestDto.builder()
-                .clubId(26L)
+                .clubId(27L)
                 .studentNum("60222025")
                 .role("PRESIDENT")
                 .build();
@@ -308,44 +259,15 @@ public class UserTest {
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo(true);
-
-        clubVerificationRepository.deleteAll();
-        studentClub.setPresident(null);
-        studentClubRepository.save(studentClub);
-        presidentRepository.deleteAll();
     }
+
     @DisplayName("로그인")
     @Test
     void login(){
         //Given
-        College college = College.builder()
-                .id(6L)
-                .collegeName("인공지능소프트웨어융합대학")
-                .build();
-
-        StudentClub studentClub = StudentClub.builder()
-                .id(26L)
-                .studentClubName("ICT융합대학 학생회")
-                .Balance(0)
-                .college(college)
-                .build();
-        User user = User.builder()
-                .id(1L)
-                .userId("tomyongji")
-                .name("투명지")
-                .password(encoder.encode("*Tomyongji2024"))
-                .role("STU")
-                .email("eeeseohyun@gmail.com")
-                .collegeName("인공지능소프트웨어융합대학")
-                .studentClub(studentClub)
-                .studentNum("60222024")
-                .build();
-        userRepository.save(user);
-        userRepository.flush();
-
         LoginRequestDto loginRequestDto = LoginRequestDto.builder()
-                .userId("tomyongji")
-                .password("*Tomyongji2024")
+                .userId("jinh9380")
+                .password("Jamespark1380@")
                 .build();
 
         //When
@@ -422,6 +344,6 @@ public class UserTest {
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody()).isNotEmpty();
-        userRepository.deleteAll();
+        userRepository.delete(user);
     }
 }

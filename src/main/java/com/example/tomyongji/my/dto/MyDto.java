@@ -16,5 +16,4 @@ public class MyDto {
     private String college;
     private long studentClubId;
 
-
 }

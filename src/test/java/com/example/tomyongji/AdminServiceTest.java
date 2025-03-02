@@ -26,6 +26,7 @@ import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.CollegeRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.validation.CustomException;
+import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -64,6 +65,8 @@ public class AdminServiceTest {
     PresidentRepository presidentRepository;
     @Mock
     StudentClubRepository studentClubRepository;
+    @Mock
+    ClubVerificationRepository clubVerificationRepository;
     @Mock
     AdminMapper adminMapper;
     @Mock
@@ -442,7 +445,9 @@ public class AdminServiceTest {
                 .build();
         when(memberRepository.findById(memberId)).thenReturn(Optional.of(member));
         when(adminMapper.toMemberDto(member)).thenReturn(memberDto);
-        when(userRepository.findByStudentNum(member.getStudentNum())).thenReturn(user);
+        when(clubVerificationRepository.findByStudentNum(member.getStudentNum())).thenReturn(
+            Collections.emptyList());
+        when(userRepository.findByStudentNum(member.getStudentNum())).thenReturn(null);
 
         //when
         MemberDto response = adminService.deleteMember(memberId);

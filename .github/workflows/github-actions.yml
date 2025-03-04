@@ -75,9 +75,9 @@ jobs:
           # Find the most recent JAR file, excluding systemd and snap directories
           JAR_FILE=$(find /tmp -type f -name "*.jar" ! -path "/tmp/systemd-private*" ! -path "/tmp/snap-private*" -printf "%T+ %p\n" | sort -r | head -n 1 | awk '{print $2}')
           
-          scp -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no "$JAR_FILE" ubuntu@13.125.66.151:/home/ubuntu/
+          scp -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no "$JAR_FILE" ubuntu@15.164.162.164:/home/ubuntu/
           
-          ssh -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no ubuntu@13.125.66.151 << 'EOF'
+          ssh -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no ubuntu@15.164.162.164 << 'EOF'
               pkill -f 'tomyongji-0.0.1-SNAPSHOT.jar' || true
               
               # 기존 스왑 비활성화 및 제거

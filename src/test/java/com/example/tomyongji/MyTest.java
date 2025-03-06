@@ -69,7 +69,7 @@ public class MyTest {
 
         //User 저장: 융합소프트웨어학부 학생회장
         user = userRepository.findByStudentNum("60211665");
-        
+
         //테스트
         System.out.println("유저 ID: " + user.getId());
         userRepository.findAll().forEach(u -> System.out.println("저장된 유저: " + u));

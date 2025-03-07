@@ -35,11 +35,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,7 +51,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
 
@@ -81,7 +82,7 @@ public class UserServiceTest {
     AuthenticationManagerBuilder authenticationManagerBuilder;
 
     UserRequestDto studentRequestDto;
-    User user;
+    com.example.tomyongji.auth.entity.User user;
     College college;
     StudentClub studentClub;
     @BeforeEach
@@ -107,7 +108,7 @@ public class UserServiceTest {
                 .studentClubId(studentClub.getId())
                 .studentNum("60222024")
                 .build();
-        user = User.builder()
+        user = com.example.tomyongji.auth.entity.User.builder()
                 .id(1L)
                 .userId("tomyongji2024")
                 .name("투명지")
@@ -160,9 +161,9 @@ public class UserServiceTest {
         when(clubVerificationRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn((List<ClubVerification>) list);
         when(userMapper.toUser(studentRequestDto,studentClub)).thenReturn(user);
         doAnswer(invocation -> {
-            User savedUser = invocation.getArgument(0);
+            com.example.tomyongji.auth.entity.User savedUser = invocation.getArgument(0);
             return savedUser;
-        }).when(userRepository).save(any(User.class));
+        }).when(userRepository).save(any(com.example.tomyongji.auth.entity.User.class));
 
         doAnswer(invocation -> {
             EmailVerification savedEmailVerification = invocation.getArgument(0);
@@ -393,11 +394,14 @@ public class UserServiceTest {
                         .userId("tomyongji2024")
                         .password("*Tomyongji2024")
                         .build();
+        UserDetails userDetails = (UserDetails) new org.springframework.security.core.userdetails.User("tomyongji2024","*Tomyongji2024", Collections.emptyList());
+
         when(userRepository.findByUserId(loginRequestDto.getUserId())).thenReturn(Optional.of(user));
         Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
+        when(authenticationManagerBuilder.getObject()).thenReturn(authenticationManager);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
-        when(authenticationManagerBuilder.getObject()).thenReturn(authenticationManager);
 
         when(jwtProvider.generateToken(any(Authentication.class), eq(user.getId())))
                 .thenReturn(new JwtToken("bearer","mockJwtToken","")); // JwtToken mock 처리

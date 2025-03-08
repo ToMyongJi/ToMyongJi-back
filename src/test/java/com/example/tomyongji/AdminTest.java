@@ -64,10 +64,10 @@ public class AdminTest {
         HttpEntity<LoginRequestDto> entity = new HttpEntity<>(loginRequest, headers);
 
         ResponseEntity<ApiResponse<JwtToken>> response = restTemplate.exchange(
-            "/api/users/login",
-            HttpMethod.POST,
-            entity,
-            new ParameterizedTypeReference<ApiResponse<JwtToken>>() {}
+                "http://localhost:8080/api/users/login",
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<ApiResponse<JwtToken>>() {}
         );
         System.out.println(response);
         return response.getBody().getData().getAccessToken(); // JWT 토큰 반환
@@ -89,11 +89,11 @@ public class AdminTest {
         uriVariables.put("clubId", clubId);
         //when
         ResponseEntity<ApiResponse<PresidentDto>> response = restTemplate.exchange(
-            "/api/admin/president/{clubId}",
-            HttpMethod.GET,
-            entity,
-            new ParameterizedTypeReference<ApiResponse<PresidentDto>>() {},
-            uriVariables
+                "/api/admin/president/{clubId}",
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<ApiResponse<PresidentDto>>() {},
+                uriVariables
         );
         //then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -107,10 +107,10 @@ public class AdminTest {
         //Given
         StudentClub digital = studentClubRepository.findByStudentClubName("디지털콘텐츠학과 학생회");
         PresidentDto presidentDto = PresidentDto.builder()
-            .name("투명지")
-            .studentNum("60222026")
-            .clubId(digital.getId())
-            .build();
+                .name("투명지")
+                .studentNum("60222026")
+                .clubId(digital.getId())
+                .build();
 
         String token = getAdminToken();
 
@@ -121,10 +121,10 @@ public class AdminTest {
         HttpEntity<PresidentDto> entity = new HttpEntity<>(presidentDto, headers);
         //When
         ResponseEntity<ApiResponse<PresidentDto>> response = restTemplate.exchange(
-            "/api/admin/president",
-            HttpMethod.POST,
-            entity,
-            new ParameterizedTypeReference<ApiResponse<PresidentDto>>() {}
+                "/api/admin/president",
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<ApiResponse<PresidentDto>>() {}
         );
 
         //then
@@ -137,14 +137,14 @@ public class AdminTest {
     @DisplayName("소속 부원 조회 테스트")
     void getMembers(){
         //Given
-        StudentClub studentClub = studentClubRepository.findByStudentClubName("인공지능소프트웨어융합대학 학생회");
+        StudentClub aisoftware = studentClubRepository.findByStudentClubName("인공지능소프트웨어융합대학 학생회");
         Member member = Member.builder()
-            .studentNum("60222024")
-            .name("투명지")
-            .studentClub(studentClub)
-            .build();
+                .studentNum("60222024")
+                .name("투명지")
+                .studentClub(aisoftware)
+                .build();
         memberRepository.save(member);
-        Long clubId = studentClub.getId();
+        Long clubId = aisoftware.getId();
         //When
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("clubId", clubId);
@@ -157,11 +157,11 @@ public class AdminTest {
         HttpEntity<AdminSaveMemberDto> entity = new HttpEntity<>(headers);
 
         ResponseEntity<ApiResponse<List<MemberDto>>> response = restTemplate.exchange(
-            "/api/admin/member/{clubId}",
-            HttpMethod.GET,
-            entity,
-            new ParameterizedTypeReference<ApiResponse<List<MemberDto>>>() {},
-            uriVariables
+                "/api/admin/member/{clubId}",
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<ApiResponse<List<MemberDto>>>() {},
+                uriVariables
         );
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
@@ -174,10 +174,10 @@ public class AdminTest {
         //Given
         StudentClub aisoftware = studentClubRepository.findByStudentClubName("인공지능소프트웨어융합대학 학생회");
         AdminSaveMemberDto adminSaveMemberDto = AdminSaveMemberDto.builder()
-            .name("투명지")
-            .studentNum("60222024")
-            .clubId(aisoftware.getId())
-            .build();
+                .name("투명지")
+                .studentNum("60222024")
+                .clubId(aisoftware.getId())
+                .build();
 
         //When
         String token = getAdminToken();
@@ -189,10 +189,10 @@ public class AdminTest {
 
         //When
         ResponseEntity<ApiResponse<MemberDto>> response = restTemplate.exchange(
-            "/api/admin/member",
-            HttpMethod.POST,
-            entity,
-            new ParameterizedTypeReference<ApiResponse<MemberDto>>() {}
+                "/api/admin/member",
+                HttpMethod.POST,
+                entity,
+                new ParameterizedTypeReference<ApiResponse<MemberDto>>() {}
         );
         assertThat(response.getStatusCode().value()).isEqualTo(201);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
@@ -204,10 +204,10 @@ public class AdminTest {
         //Given
         StudentClub aisoftware = studentClubRepository.findByStudentClubName("인공지능소프트웨어융합대학 학생회");
         Member member = Member.builder()
-            .studentNum("60222024")
-            .name("투명지")
-            .studentClub(aisoftware)
-            .build();
+                .studentNum("60222024")
+                .name("투명지")
+                .studentClub(aisoftware)
+                .build();
         Long memberId = memberRepository.save(member).getId();
         //When
         Map<String, Object> uriVariables = new HashMap<>();
@@ -221,11 +221,11 @@ public class AdminTest {
         HttpEntity<AdminSaveMemberDto> entity = new HttpEntity<>(headers);
 
         ResponseEntity<ApiResponse<MemberDto>> response = restTemplate.exchange(
-            "/api/admin/member/{memberId}",
-            HttpMethod.DELETE,
-            entity,
-            new ParameterizedTypeReference<ApiResponse<MemberDto>>() {},
-            uriVariables
+                "/api/admin/member/{memberId}",
+                HttpMethod.DELETE,
+                entity,
+                new ParameterizedTypeReference<ApiResponse<MemberDto>>() {},
+                uriVariables
         );
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();

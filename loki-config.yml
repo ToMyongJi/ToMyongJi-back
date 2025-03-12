@@ -1,0 +1,28 @@
+auth_enabled: false
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: info
+
+distributor:
+  ring:
+    kvstore:
+      store: inmemory
+      consistency_level: strong
+
+ingester:
+  chunk_idle_period: 15m
+  chunk_retain_period: 1h
+  max_chunk_size: 1048576
+  max_chunk_age: 1h
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/cache
+    resync_interval: 10m
+  filesystem:
+    directory: /loki/chunks
+
+limits_config:
+  max_streams_per_user: 10000

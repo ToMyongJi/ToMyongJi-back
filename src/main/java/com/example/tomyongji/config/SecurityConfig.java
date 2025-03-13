@@ -1,4 +1,4 @@
-package com.example.tomyongji.auth.config;
+package com.example.tomyongji.config;
 import com.example.tomyongji.auth.jwt.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="true" scan="true" scanPeriod="60 seconds">
 
-    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
-
     <!--Environment 내의 프로퍼티들을 개별적으로 설정할 수도 있다.-->
     <springProperty scope="context" name="LOG_LEVEL" source="logging.level.root"/>
     <springProperty scope="context" name="LOG_PATH" source="logging.file.path"/>
-
+    <springProperty scope="context" name="LOG_FILE_NAME" source="logging.file.name"/>
+    <springProperty scope="context" name="ERR_LOG_FILE_NAME" source="logging.file.errname"/>
+    <springProperty scope="context" name="LOG_PATTERN" source="logging.pattern.console"/>
 
     <!-- 로그 파일 경로 및 이름 설정 -->
     <!--    <property name="LOG_PATH" value="logs"/>-->
-    <property name="LOG_FILE_NAME" value="console"/>
-    <property name="ERR_LOG_FILE_NAME" value="err"/>
+<!--    <property name="LOG_FILE_NAME" value="console"/>-->
+<!--    <property name="ERR_LOG_FILE_NAME" value="err"/>-->
 
 
     <!-- 로그 패턴 설정 -->
-    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss} - %-5level - %msg%n"/>
+<!--    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss} - %-5level - %msg%n"/>-->
 
 
     <!-- Console Appender -->
@@ -33,6 +33,7 @@
         <!-- 출력패턴 설정-->
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset> <!-- UTF-8 인코딩 설정 -->
         </encoder>
 
         <!-- Rolling 정책 -->

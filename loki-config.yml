@@ -26,3 +26,13 @@ storage_config:
 
 limits_config:
   max_streams_per_user: 10000
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v11
+      index:
+        prefix: index_
+        period: 24h

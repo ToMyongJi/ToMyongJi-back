@@ -1,4 +1,4 @@
-package com.example.tomyongji.config;
+package com.example.tomyongji.logging;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

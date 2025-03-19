@@ -1,66 +1,203 @@
-2025-03-12 16:13:35 - INFO  - HV000001: Hibernate Validator 8.0.1.Final
-2025-03-12 16:13:35 - INFO  - Starting TomyongjiApplication using Java 17.0.6 with PID 28988 (C:\Users\User\Desktop\Git\ToMyongJi-back\build\classes\java\main started by User in C:\Users\User\Desktop\Git\ToMyongJi-back)
-2025-03-12 16:13:35 - DEBUG - Running with Spring Boot v3.3.2, Spring v6.1.11
-2025-03-12 16:13:35 - INFO  - No active profile set, falling back to 1 default profile: "default"
-2025-03-12 16:13:36 - INFO  - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2025-03-12 16:13:36 - INFO  - Finished Spring Data repository scanning in 228 ms. Found 8 JPA repository interfaces.
-2025-03-12 16:13:37 - INFO  - Tomcat initialized with port 8080 (http)
-2025-03-12 16:13:37 - INFO  - Initializing ProtocolHandler ["http-nio-8080"]
-2025-03-12 16:13:37 - INFO  - Starting service [Tomcat]
-2025-03-12 16:13:37 - INFO  - Starting Servlet engine: [Apache Tomcat/10.1.26]
-2025-03-12 16:13:37 - INFO  - Initializing Spring embedded WebApplicationContext
-2025-03-12 16:13:37 - INFO  - Root WebApplicationContext: initialization completed in 2346 ms
-2025-03-12 16:13:37 - INFO  - HHH000204: Processing PersistenceUnitInfo [name: default]
-2025-03-12 16:13:38 - INFO  - HHH000412: Hibernate ORM core version 6.5.2.Final
-2025-03-12 16:13:38 - INFO  - HHH000026: Second-level cache disabled
-2025-03-12 16:13:38 - INFO  - No LoadTimeWeaver setup: ignoring JPA class transformer
-2025-03-12 16:13:38 - INFO  - HikariPool-1 - Starting...
-2025-03-12 16:13:39 - INFO  - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@6ff8e744
-2025-03-12 16:13:39 - INFO  - HikariPool-1 - Start completed.
-2025-03-12 16:13:40 - WARN  - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2025-03-12 16:13:40 - WARN  - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
-2025-03-12 16:13:41 - INFO  - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2025-03-12 16:13:43 - INFO  - Initialized JPA EntityManagerFactory for persistence unit 'default'
-2025-03-12 16:13:44 - WARN  - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2025-03-12 16:13:44 - INFO  - Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
-2025-03-12 16:13:45 - INFO  - Starting ProtocolHandler ["http-nio-8080"]
-2025-03-12 16:13:45 - INFO  - Tomcat started on port 8080 (http) with context path '/'
-2025-03-12 16:13:45 - INFO  - Started TomyongjiApplication in 10.785 seconds (process running for 11.677)
-2025-03-12 16:13:45 - DEBUG - This is a debug message.
-2025-03-12 16:28:32 - WARN  - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=52s73ms745µs800ns).
-2025-03-12 16:43:38 - INFO  - Closing JPA EntityManagerFactory for persistence unit 'default'
-2025-03-12 16:43:38 - INFO  - HikariPool-1 - Shutdown initiated...
-2025-03-12 16:43:39 - INFO  - HikariPool-1 - Shutdown completed.
-2025-03-12 16:44:14 - INFO  - HV000001: Hibernate Validator 8.0.1.Final
-2025-03-12 16:44:14 - INFO  - Starting TomyongjiApplication using Java 17.0.6 with PID 32336 (C:\Users\User\Desktop\Git\ToMyongJi-back\build\classes\java\main started by User in C:\Users\User\Desktop\Git\ToMyongJi-back)
-2025-03-12 16:44:14 - DEBUG - Running with Spring Boot v3.3.2, Spring v6.1.11
-2025-03-12 16:44:14 - INFO  - No active profile set, falling back to 1 default profile: "default"
-2025-03-12 16:44:15 - INFO  - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2025-03-12 16:44:16 - INFO  - Finished Spring Data repository scanning in 250 ms. Found 8 JPA repository interfaces.
-2025-03-12 16:44:17 - INFO  - Tomcat initialized with port 8080 (http)
-2025-03-12 16:44:17 - INFO  - Initializing ProtocolHandler ["http-nio-8080"]
-2025-03-12 16:44:17 - INFO  - Starting service [Tomcat]
-2025-03-12 16:44:17 - INFO  - Starting Servlet engine: [Apache Tomcat/10.1.26]
-2025-03-12 16:44:17 - INFO  - Initializing Spring embedded WebApplicationContext
-2025-03-12 16:44:17 - INFO  - Root WebApplicationContext: initialization completed in 2912 ms
-2025-03-12 16:44:17 - INFO  - HHH000204: Processing PersistenceUnitInfo [name: default]
-2025-03-12 16:44:17 - INFO  - HHH000412: Hibernate ORM core version 6.5.2.Final
-2025-03-12 16:44:17 - INFO  - HHH000026: Second-level cache disabled
-2025-03-12 16:44:18 - INFO  - No LoadTimeWeaver setup: ignoring JPA class transformer
-2025-03-12 16:44:18 - INFO  - HikariPool-1 - Starting...
-2025-03-12 16:44:19 - INFO  - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@d271a54
-2025-03-12 16:44:19 - INFO  - HikariPool-1 - Start completed.
-2025-03-12 16:44:19 - WARN  - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2025-03-12 16:44:19 - WARN  - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
-2025-03-12 16:44:21 - INFO  - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2025-03-12 16:44:21 - INFO  - Initialized JPA EntityManagerFactory for persistence unit 'default'
-2025-03-12 16:44:22 - WARN  - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2025-03-12 16:44:23 - INFO  - Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
-2025-03-12 16:44:23 - INFO  - Starting ProtocolHandler ["http-nio-8080"]
-2025-03-12 16:44:24 - INFO  - Tomcat started on port 8080 (http) with context path '/'
-2025-03-12 16:44:24 - INFO  - Started TomyongjiApplication in 10.597 seconds (process running for 11.924)
-2025-03-12 16:44:24 - DEBUG - This is a debug message.
-2025-03-12 16:55:42 - WARN  - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1m52s850ms962µs700ns).
-2025-03-12 17:12:18 - INFO  - Closing JPA EntityManagerFactory for persistence unit 'default'
-2025-03-12 17:12:18 - INFO  - HikariPool-1 - Shutdown initiated...
-2025-03-12 17:12:18 - INFO  - HikariPool-1 - Shutdown completed.
+2025-03-19 09:57:50 - INFO  - HV000001: Hibernate Validator 8.0.1.Final
+2025-03-19 09:57:51 - INFO  - Starting TomyongjiApplication using Java 19.0.2 with PID 37444 (C:\Users\User\Desktop\Git\ToMyongJi-back\build\classes\java\main started by User in C:\Users\User\Desktop\Git\ToMyongJi-back)
+2025-03-19 09:57:51 - INFO  - No active profile set, falling back to 1 default profile: "default"
+2025-03-19 09:57:54 - INFO  - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-03-19 09:57:54 - INFO  - Finished Spring Data repository scanning in 493 ms. Found 8 JPA repository interfaces.
+2025-03-19 09:57:56 - INFO  - Tomcat initialized with port 8080 (http)
+2025-03-19 09:57:56 - INFO  - Initializing ProtocolHandler ["http-nio-8080"]
+2025-03-19 09:57:56 - INFO  - Starting service [Tomcat]
+2025-03-19 09:57:56 - INFO  - Starting Servlet engine: [Apache Tomcat/10.1.26]
+2025-03-19 09:57:56 - INFO  - Initializing Spring embedded WebApplicationContext
+2025-03-19 09:57:56 - INFO  - Root WebApplicationContext: initialization completed in 5211 ms
+2025-03-19 09:57:56 - INFO  - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-03-19 09:57:57 - INFO  - HHH000412: Hibernate ORM core version 6.5.2.Final
+2025-03-19 09:57:57 - INFO  - HHH000026: Second-level cache disabled
+2025-03-19 09:57:58 - INFO  - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-03-19 09:57:58 - INFO  - HikariPool-1 - Starting...
+2025-03-19 09:57:59 - INFO  - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@18692e80
+2025-03-19 09:57:59 - INFO  - HikariPool-1 - Start completed.
+2025-03-19 09:57:59 - WARN  - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-03-19 09:57:59 - WARN  - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-03-19 09:58:01 - INFO  - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-03-19 09:58:02 - INFO  - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-03-19 09:58:03 - WARN  - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-03-19 09:58:03 - INFO  - Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2025-03-19 09:58:04 - INFO  - Starting ProtocolHandler ["http-nio-8080"]
+2025-03-19 09:58:04 - INFO  - Tomcat started on port 8080 (http) with context path '/'
+2025-03-19 09:58:04 - INFO  - Started TomyongjiApplication in 15.427 seconds (process running for 16.986)
+2025-03-19 10:04:03 - WARN  - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=4m34s233ms824µs600ns).
+2025-03-19 10:09:40 - INFO  - HV000001: Hibernate Validator 8.0.1.Final
+2025-03-19 10:09:40 - INFO  - Starting TomyongjiApplication using Java 17.0.6 with PID 24912 (C:\Users\User\Desktop\Git\ToMyongJi-back\build\classes\java\main started by User in C:\Users\User\Desktop\Git\ToMyongJi-back)
+2025-03-19 10:09:40 - INFO  - No active profile set, falling back to 1 default profile: "default"
+2025-03-19 10:09:43 - INFO  - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-03-19 10:09:43 - INFO  - Finished Spring Data repository scanning in 456 ms. Found 8 JPA repository interfaces.
+2025-03-19 10:09:45 - INFO  - Tomcat initialized with port 8080 (http)
+2025-03-19 10:09:45 - INFO  - Initializing ProtocolHandler ["http-nio-8080"]
+2025-03-19 10:09:45 - INFO  - Starting service [Tomcat]
+2025-03-19 10:09:45 - INFO  - Starting Servlet engine: [Apache Tomcat/10.1.26]
+2025-03-19 10:09:45 - INFO  - Initializing Spring embedded WebApplicationContext
+2025-03-19 10:09:45 - INFO  - Root WebApplicationContext: initialization completed in 4485 ms
+2025-03-19 10:09:45 - INFO  - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-03-19 10:09:45 - INFO  - HHH000412: Hibernate ORM core version 6.5.2.Final
+2025-03-19 10:09:45 - INFO  - HHH000026: Second-level cache disabled
+2025-03-19 10:09:46 - INFO  - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-03-19 10:09:46 - INFO  - HikariPool-1 - Starting...
+2025-03-19 10:09:47 - INFO  - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@d271a54
+2025-03-19 10:09:47 - INFO  - HikariPool-1 - Start completed.
+2025-03-19 10:09:47 - WARN  - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-03-19 10:09:47 - WARN  - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-03-19 10:09:51 - INFO  - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-03-19 10:09:51 - INFO  - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-03-19 10:09:52 - WARN  - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-03-19 10:09:52 - INFO  - Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2025-03-19 10:09:54 - INFO  - Starting ProtocolHandler ["http-nio-8080"]
+2025-03-19 10:09:54 - WARN  - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2025-03-19 10:09:54 - INFO  - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-03-19 10:09:54 - INFO  - HikariPool-1 - Shutdown initiated...
+2025-03-19 10:09:54 - INFO  - HikariPool-1 - Shutdown completed.
+2025-03-19 10:09:54 - INFO  - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2025-03-19 10:09:54 - ERROR - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8080 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8080 or configure this application to listen on another port.
+
+2025-03-19 10:10:29 - INFO  - HV000001: Hibernate Validator 8.0.1.Final
+2025-03-19 10:10:29 - INFO  - Starting TomyongjiApplication using Java 17.0.6 with PID 13620 (C:\Users\User\Desktop\Git\ToMyongJi-back\build\classes\java\main started by User in C:\Users\User\Desktop\Git\ToMyongJi-back)
+2025-03-19 10:10:29 - INFO  - No active profile set, falling back to 1 default profile: "default"
+2025-03-19 10:10:32 - INFO  - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-03-19 10:10:32 - INFO  - Finished Spring Data repository scanning in 533 ms. Found 8 JPA repository interfaces.
+2025-03-19 10:10:34 - INFO  - Tomcat initialized with port 8080 (http)
+2025-03-19 10:10:34 - INFO  - Initializing ProtocolHandler ["http-nio-8080"]
+2025-03-19 10:10:34 - INFO  - Starting service [Tomcat]
+2025-03-19 10:10:34 - INFO  - Starting Servlet engine: [Apache Tomcat/10.1.26]
+2025-03-19 10:10:34 - INFO  - Initializing Spring embedded WebApplicationContext
+2025-03-19 10:10:34 - INFO  - Root WebApplicationContext: initialization completed in 5062 ms
+2025-03-19 10:10:35 - INFO  - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-03-19 10:10:35 - INFO  - HHH000412: Hibernate ORM core version 6.5.2.Final
+2025-03-19 10:10:35 - INFO  - HHH000026: Second-level cache disabled
+2025-03-19 10:10:36 - INFO  - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-03-19 10:10:36 - INFO  - HikariPool-1 - Starting...
+2025-03-19 10:10:37 - INFO  - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4ab86b2a
+2025-03-19 10:10:37 - INFO  - HikariPool-1 - Start completed.
+2025-03-19 10:10:37 - WARN  - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-03-19 10:10:37 - WARN  - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-03-19 10:10:41 - INFO  - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-03-19 10:10:41 - INFO  - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-03-19 10:10:42 - WARN  - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-03-19 10:10:42 - INFO  - Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2025-03-19 10:10:44 - INFO  - Starting ProtocolHandler ["http-nio-8080"]
+2025-03-19 10:10:44 - INFO  - Tomcat started on port 8080 (http) with context path '/'
+2025-03-19 10:10:44 - INFO  - Started TomyongjiApplication in 15.827 seconds (process running for 17.676)
+2025-03-19 10:11:37 - INFO  - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-03-19 10:11:37 - INFO  - Initializing Servlet 'dispatcherServlet'
+2025-03-19 10:11:37 - INFO  - Completed initialization in 3 ms
+2025-03-19 10:28:32 - INFO  - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-03-19 10:28:32 - INFO  - HikariPool-1 - Shutdown initiated...
+2025-03-19 10:28:32 - INFO  - HikariPool-1 - Shutdown completed.
+2025-03-19 10:29:03 - INFO  - HV000001: Hibernate Validator 8.0.1.Final
+2025-03-19 10:29:03 - INFO  - Starting TomyongjiApplication using Java 17.0.6 with PID 20612 (C:\Users\User\Desktop\Git\ToMyongJi-back\build\classes\java\main started by User in C:\Users\User\Desktop\Git\ToMyongJi-back)
+2025-03-19 10:29:03 - INFO  - No active profile set, falling back to 1 default profile: "default"
+2025-03-19 10:29:06 - INFO  - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-03-19 10:29:07 - INFO  - Finished Spring Data repository scanning in 482 ms. Found 8 JPA repository interfaces.
+2025-03-19 10:29:09 - INFO  - Tomcat initialized with port 8080 (http)
+2025-03-19 10:29:09 - INFO  - Initializing ProtocolHandler ["http-nio-8080"]
+2025-03-19 10:29:09 - INFO  - Starting service [Tomcat]
+2025-03-19 10:29:09 - INFO  - Starting Servlet engine: [Apache Tomcat/10.1.26]
+2025-03-19 10:29:09 - INFO  - Initializing Spring embedded WebApplicationContext
+2025-03-19 10:29:09 - INFO  - Root WebApplicationContext: initialization completed in 5247 ms
+2025-03-19 10:29:09 - INFO  - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-03-19 10:29:10 - INFO  - HHH000412: Hibernate ORM core version 6.5.2.Final
+2025-03-19 10:29:10 - INFO  - HHH000026: Second-level cache disabled
+2025-03-19 10:29:10 - INFO  - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-03-19 10:29:11 - INFO  - HikariPool-1 - Starting...
+2025-03-19 10:29:12 - INFO  - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@1e50eb3f
+2025-03-19 10:29:12 - INFO  - HikariPool-1 - Start completed.
+2025-03-19 10:29:12 - WARN  - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-03-19 10:29:12 - WARN  - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-03-19 10:29:15 - INFO  - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-03-19 10:29:15 - INFO  - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-03-19 10:29:17 - WARN  - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-03-19 10:29:17 - INFO  - Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2025-03-19 10:29:19 - INFO  - Starting ProtocolHandler ["http-nio-8080"]
+2025-03-19 10:29:19 - INFO  - Tomcat started on port 8080 (http) with context path '/'
+2025-03-19 10:29:19 - INFO  - Started TomyongjiApplication in 16.799 seconds (process running for 18.997)
+2025-03-19 10:29:46 - INFO  - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-03-19 10:29:46 - INFO  - Initializing Servlet 'dispatcherServlet'
+2025-03-19 10:29:46 - INFO  - Completed initialization in 3 ms
+2025-03-19 10:33:40 - INFO  - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-03-19 10:33:40 - INFO  - HikariPool-1 - Shutdown initiated...
+2025-03-19 10:33:40 - INFO  - HikariPool-1 - Shutdown completed.
+2025-03-19 10:37:10 - INFO  - HV000001: Hibernate Validator 8.0.1.Final
+2025-03-19 10:37:10 - INFO  - Starting TomyongjiApplication using Java 17.0.6 with PID 22476 (C:\Users\User\Desktop\Git\ToMyongJi-back\build\classes\java\main started by User in C:\Users\User\Desktop\Git\ToMyongJi-back)
+2025-03-19 10:37:10 - INFO  - No active profile set, falling back to 1 default profile: "default"
+2025-03-19 10:37:13 - INFO  - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-03-19 10:37:14 - INFO  - Finished Spring Data repository scanning in 561 ms. Found 8 JPA repository interfaces.
+2025-03-19 10:37:15 - INFO  - Tomcat initialized with port 8080 (http)
+2025-03-19 10:37:15 - INFO  - Initializing ProtocolHandler ["http-nio-8080"]
+2025-03-19 10:37:15 - INFO  - Starting service [Tomcat]
+2025-03-19 10:37:15 - INFO  - Starting Servlet engine: [Apache Tomcat/10.1.26]
+2025-03-19 10:37:15 - INFO  - Initializing Spring embedded WebApplicationContext
+2025-03-19 10:37:15 - INFO  - Root WebApplicationContext: initialization completed in 5144 ms
+2025-03-19 10:37:16 - INFO  - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-03-19 10:37:17 - INFO  - HHH000412: Hibernate ORM core version 6.5.2.Final
+2025-03-19 10:37:17 - INFO  - HHH000026: Second-level cache disabled
+2025-03-19 10:37:18 - INFO  - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-03-19 10:37:18 - INFO  - HikariPool-1 - Starting...
+2025-03-19 10:37:19 - INFO  - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4b56b517
+2025-03-19 10:37:19 - INFO  - HikariPool-1 - Start completed.
+2025-03-19 10:37:19 - WARN  - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-03-19 10:37:19 - WARN  - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-03-19 10:37:21 - INFO  - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-03-19 10:37:22 - INFO  - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-03-19 10:37:23 - WARN  - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-03-19 10:37:23 - INFO  - Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2025-03-19 10:37:25 - INFO  - Starting ProtocolHandler ["http-nio-8080"]
+2025-03-19 10:37:25 - INFO  - Tomcat started on port 8080 (http) with context path '/'
+2025-03-19 10:37:25 - INFO  - Started TomyongjiApplication in 16.046 seconds (process running for 18.297)
+2025-03-19 10:37:33 - INFO  - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-03-19 10:37:33 - INFO  - Initializing Servlet 'dispatcherServlet'
+2025-03-19 10:37:33 - INFO  - Completed initialization in 3 ms
+2025-03-19 10:38:29 - INFO  - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-03-19 10:38:29 - INFO  - HikariPool-1 - Shutdown initiated...
+2025-03-19 10:38:29 - INFO  - HikariPool-1 - Shutdown completed.
+2025-03-19 10:38:44 - INFO  - HV000001: Hibernate Validator 8.0.1.Final
+2025-03-19 10:38:44 - INFO  - Starting TomyongjiApplication using Java 17.0.6 with PID 12416 (C:\Users\User\Desktop\Git\ToMyongJi-back\build\classes\java\main started by User in C:\Users\User\Desktop\Git\ToMyongJi-back)
+2025-03-19 10:38:44 - INFO  - No active profile set, falling back to 1 default profile: "default"
+2025-03-19 10:38:47 - INFO  - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-03-19 10:38:47 - INFO  - Finished Spring Data repository scanning in 375 ms. Found 8 JPA repository interfaces.
+2025-03-19 10:38:48 - INFO  - Tomcat initialized with port 8080 (http)
+2025-03-19 10:38:48 - INFO  - Initializing ProtocolHandler ["http-nio-8080"]
+2025-03-19 10:38:48 - INFO  - Starting service [Tomcat]
+2025-03-19 10:38:48 - INFO  - Starting Servlet engine: [Apache Tomcat/10.1.26]
+2025-03-19 10:38:48 - INFO  - Initializing Spring embedded WebApplicationContext
+2025-03-19 10:38:48 - INFO  - Root WebApplicationContext: initialization completed in 3845 ms
+2025-03-19 10:38:48 - INFO  - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-03-19 10:38:48 - INFO  - HHH000412: Hibernate ORM core version 6.5.2.Final
+2025-03-19 10:38:48 - INFO  - HHH000026: Second-level cache disabled
+2025-03-19 10:38:49 - INFO  - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-03-19 10:38:49 - INFO  - HikariPool-1 - Starting...
+2025-03-19 10:38:50 - INFO  - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@335cdd2
+2025-03-19 10:38:50 - INFO  - HikariPool-1 - Start completed.
+2025-03-19 10:38:50 - WARN  - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-03-19 10:38:50 - WARN  - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-03-19 10:38:52 - INFO  - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-03-19 10:38:52 - INFO  - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-03-19 10:38:54 - WARN  - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-03-19 10:38:54 - INFO  - Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2025-03-19 10:38:55 - INFO  - Starting ProtocolHandler ["http-nio-8080"]
+2025-03-19 10:38:56 - INFO  - Tomcat started on port 8080 (http) with context path '/'
+2025-03-19 10:38:56 - INFO  - Started TomyongjiApplication in 12.995 seconds (process running for 14.911)
+2025-03-19 10:39:25 - INFO  - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-03-19 10:39:25 - INFO  - HikariPool-1 - Shutdown initiated...
+2025-03-19 10:39:25 - INFO  - HikariPool-1 - Shutdown completed.

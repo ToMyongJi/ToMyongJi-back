@@ -69,7 +69,7 @@ public class AdminTest {
         HttpEntity<LoginRequestDto> entity = new HttpEntity<>(loginRequest, headers);
 
         ResponseEntity<ApiResponse<JwtToken>> response = restTemplate.exchange(
-                "/api/users/login",
+                "http://localhost:8080/api/users/login",
                 HttpMethod.POST,
                 entity,
                 new ParameterizedTypeReference<ApiResponse<JwtToken>>() {}
@@ -151,14 +151,15 @@ public class AdminTest {
     @DisplayName("소속 부원 조회 테스트")
     void getMembers(){
         //Given
+
         StudentClub studentClub = studentClubRepository.findByStudentClubName("건축대학 학생회");
         Member member = Member.builder()
                 .studentNum("60222024")
                 .name("투명지")
-                .studentClub(studentClub)
+                .studentClub(aisoftware)
                 .build();
         memberRepository.save(member);
-        Long clubId = studentClub.getId();
+        Long clubId = aisoftware.getId();
         //When
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("clubId", clubId);

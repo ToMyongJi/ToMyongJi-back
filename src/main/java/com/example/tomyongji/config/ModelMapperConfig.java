@@ -1,4 +1,4 @@
-package com.example.tomyongji.auth.config;
+package com.example.tomyongji.config;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;

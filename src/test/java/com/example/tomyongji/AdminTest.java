@@ -12,6 +12,8 @@ import com.example.tomyongji.auth.jwt.JwtToken;
 import com.example.tomyongji.my.dto.AdminSaveMemberDto;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,6 +27,9 @@ import org.springframework.http.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -46,10 +51,10 @@ public class AdminTest {
     @AfterEach
     void clear() {
         new TransactionTemplate(transactionManager).execute(status -> {
-            StudentClub digital = studentClubRepository.findByStudentClubName("디지털콘텐츠학과 학생회");
-            digital.setPresident(null);
-            studentClubRepository.save(digital);
-            presidentRepository.deleteByStudentNum("60222026");
+            StudentClub studentClub = studentClubRepository.findByStudentClubName("건축대학 학생회");
+            studentClub.setPresident(null);
+            studentClubRepository.save(studentClub);
+            presidentRepository.deleteByStudentNum("60222024");
             memberRepository.deleteAllByStudentNum("60222024");
             return null;
         });
@@ -77,8 +82,17 @@ public class AdminTest {
     @DisplayName("학생회장 조회 테스트")
     void getPresident(){
         //Given
-        Long clubId = 25L;
+        Long clubId = 33L;
         String token = getAdminToken();
+
+        President idEmptyPresident = President.builder()
+                .name("투명지")
+                .studentNum("60222024")
+                .build();
+        President president = presidentRepository.save(idEmptyPresident);
+        StudentClub studentClub =studentClubRepository.findById(33L).get();
+        studentClub.setPresident(president);
+        studentClubRepository.save(studentClub);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -98,17 +112,17 @@ public class AdminTest {
         //then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusMessage()).isNotEmpty();
-        assertThat(response.getBody().getData().getClubId()).isEqualTo(25L);
-        assertThat(response.getBody().getData().getStudentNum()).isEqualTo("60211665");
+        assertThat(response.getBody().getData().getClubId()).isEqualTo(33L);
+        assertThat(response.getBody().getData().getStudentNum()).isEqualTo("60222024");
     }
     @Test
     @DisplayName("학생회장 저장 테스트")
     void savePresident(){
         //Given
-        StudentClub digital = studentClubRepository.findByStudentClubName("디지털콘텐츠학과 학생회");
+        StudentClub digital = studentClubRepository.findByStudentClubName("건축대학 학생회");
         PresidentDto presidentDto = PresidentDto.builder()
                 .name("투명지")
-                .studentNum("60222026")
+                .studentNum("60222024")
                 .clubId(digital.getId())
                 .build();
 
@@ -137,7 +151,8 @@ public class AdminTest {
     @DisplayName("소속 부원 조회 테스트")
     void getMembers(){
         //Given
-        StudentClub aisoftware = studentClubRepository.findByStudentClubName("인공지능소프트웨어융합대학 학생회");
+
+        StudentClub studentClub = studentClubRepository.findByStudentClubName("건축대학 학생회");
         Member member = Member.builder()
                 .studentNum("60222024")
                 .name("투명지")
@@ -172,7 +187,7 @@ public class AdminTest {
     @DisplayName("소속 부원 저장 테스트")
     void saveMember(){
         //Given
-        StudentClub aisoftware = studentClubRepository.findByStudentClubName("인공지능소프트웨어융합대학 학생회");
+        StudentClub aisoftware = studentClubRepository.findByStudentClubName("건축대학 학생회");
         AdminSaveMemberDto adminSaveMemberDto = AdminSaveMemberDto.builder()
                 .name("투명지")
                 .studentNum("60222024")
@@ -202,7 +217,7 @@ public class AdminTest {
     @DisplayName("소속 부원 삭제 테스트")
     void deleteMember(){
         //Given
-        StudentClub aisoftware = studentClubRepository.findByStudentClubName("인공지능소프트웨어융합대학 학생회");
+        StudentClub aisoftware = studentClubRepository.findByStudentClubName("건축대학 학생회");
         Member member = Member.builder()
                 .studentNum("60222024")
                 .name("투명지")

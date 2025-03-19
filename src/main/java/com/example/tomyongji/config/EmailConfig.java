@@ -1,4 +1,4 @@
-package com.example.tomyongji.auth.config;
+package com.example.tomyongji.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

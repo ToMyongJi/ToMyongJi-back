@@ -12,8 +12,8 @@ public class TomyongjiApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(TomyongjiApplication.class, args);
-		Logger logger = (Logger) LoggerFactory.getLogger(TomyongjiApplication.class);
-		logger.debug("This is a debug message.");
+//		Logger logger = (Logger) LoggerFactory.getLogger(TomyongjiApplication.class);
+//		logger.debug("This is a debug message.");
 	}
 
 

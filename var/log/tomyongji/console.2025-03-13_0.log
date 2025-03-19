@@ -1,9 +1,0 @@
-2025-03-13 09:03:18 - WARN  - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=12h43m21s968ms337µs600ns).
-2025-03-13 09:54:51 - WARN  - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=13m3s200ms224µs100ns).
-2025-03-13 10:41:33 - WARN  - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=42m41s908ms38µs300ns).
-2025-03-13 10:52:55 - WARN  - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1m51s753ms778µs800ns).
-2025-03-13 11:18:45 - WARN  - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=16m20s110ms441µs500ns).
-2025-03-13 12:20:25 - WARN  - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=44m8s186ms251µs200ns).
-2025-03-13 12:23:09 - INFO  - Closing JPA EntityManagerFactory for persistence unit 'default'
-2025-03-13 12:23:09 - INFO  - HikariPool-1 - Shutdown initiated...
-2025-03-13 12:23:10 - INFO  - HikariPool-1 - Shutdown completed.

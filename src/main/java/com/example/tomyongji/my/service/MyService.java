@@ -122,7 +122,7 @@ public class MyService {
     private void checkMismatchedUser(User user, UserDetails currentUser) {
         User compareUser = userRepository.findByUserId(currentUser.getUsername())
             .orElseThrow(() -> new CustomException(NO_AUTHORIZATION_USER, 400));
-        if (!Objects.equals(compareUser.getId(), user.getId())) { //로그인한 유저와 매개변수의 유저가 같은지 확인
+        if (compareUser != user) { //로그인한 유저와 매개변수의 유저가 같은지 확인
             throw new CustomException(MISMATCHED_USER, 400);
         }
     }

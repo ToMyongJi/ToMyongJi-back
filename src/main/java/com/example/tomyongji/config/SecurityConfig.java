@@ -1,4 +1,4 @@
-package com.example.tomyongji.auth.config;
+package com.example.tomyongji.config;
 import com.example.tomyongji.auth.jwt.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,7 +45,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         // 해당 API에 대해서는 모든 요청을 허가
-                        .requestMatchers("/api/users/**","/swagger-ui/**", "/v3/api-docs/**","/api/receipt/club/{clubId}","/api/club/**","/api/collegesAndClubs").permitAll()
+                        .requestMatchers("/api/users/**","/swagger-ui/**", "/v3/api-docs/**","/api/csv/**","/api/receipt/club/{clubId}","/api/club/**","/api/collegesAndClubs").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/receipt").permitAll()
                         .requestMatchers(HttpMethod.POST,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.PATCH,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")

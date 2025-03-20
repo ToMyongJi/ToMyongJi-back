@@ -30,7 +30,7 @@ public class UserController {
     }
     @Operation(summary = "유저 아이디 중복 검사 api", description = "사용자가 ID 중복검사를 누르면 중복 검사합니다. ")
     @GetMapping("/{userId}")
-    public ApiResponse<Boolean> checkUserIdDuplicate(@PathVariable String userId){
+    public ApiResponse<Boolean> checkUserIdDuplicate(@PathVariable("userId") String userId){
         boolean IsDuplicate = userService.checkUserIdDuplicate(userId);
         if(IsDuplicate==true) { return new ApiResponse(409,"이미 존재하는 아이디입니다.",IsDuplicate);}
         else { return new ApiResponse(200,"아이디 중복검사를 통과하였습니다.",IsDuplicate); }

@@ -31,4 +31,7 @@
 <2025-03-19 10:54:04 - -> 요청: [POST] /api/users/login
 <2025-03-19 10:54:06 - <- 응답: [POST] /api/users/login - 상태 코드: 200
 <2025-03-19 10:54:06 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOiJBRE1JTiIsImlkIjoxODcsImV4cCI6MTc0MjM1Mjg0NX0.fpkh9sdrrXBmOqOgfjLjXOo52uh3BeKg9y5BQ557N5I","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDI5NTQwNDV9.8Ye9e-OsFUcXJhq9yC6SQcFn37l17sE7R4xdRjyVknM"}}
+<2025-03-19 11:01:49 - Closing JPA EntityManagerFactory for persistence unit 'default'
+<2025-03-19 11:01:50 - HikariPool-1 - Shutdown initiated...
+<2025-03-19 11:01:50 - HikariPool-1 - Shutdown completed.
 <

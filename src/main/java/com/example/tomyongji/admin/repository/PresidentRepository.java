@@ -11,6 +11,4 @@ public interface PresidentRepository extends JpaRepository<President, Long> {
 
     Boolean existsByStudentNum(String studentNum);
 
-    void deleteByStudentNum(String studentNum);
-
 }

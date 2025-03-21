@@ -4,9 +4,7 @@ auth_enabled: false
 # Loki 서버의 포트번호
 server:
   http_listen_port: 3100
-  
-limits_config:
-  allow_structured_metadata: false
+
 # Loki 인스턴스의 주소
 common:
   instance_addr: 127.0.0.1

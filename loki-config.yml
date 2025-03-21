@@ -2,63 +2,39 @@ auth_enabled: false
 
 server:
   http_listen_port: 3100
-  grpc_listen_port: 9096
+
+common:
+  path_prefix: /loki  # 기본 디렉토리 설정
 
 ingester:
-  wal:
-    enabled: true
-    dir: /loki/wal
   lifecycler:
-    address: 127.0.0.1
     ring:
       kvstore:
         store: inmemory
       replication_factor: 1
-    final_sleep: 0s
-  chunk_idle_period: 1h       # Any chunk not receiving new logs in this time will be flushed
-  max_chunk_age: 1h           # All chunks will be flushed when they hit this age, default is 1h
-  chunk_target_size: 1048576  # Loki will attempt to build chunks up to 1.5MB, flushing first if chunk_idle_period or max_chunk_age is reached first
-  chunk_retain_period: 30s    # Must be greater than index read cache TTL if using an index cache (Default index read cache TTL is 5m)
-  max_transfer_retries: 0     # Chunk transfers disabled
+  chunk_idle_period: 5m
+  chunk_retain_period: 30s
 
 schema_config:
   configs:
-    - from: 2020-10-24
-      store: tsdb              # 변경: boltdb-shipper -> tsdb
+    - from: 2023-12-01
+      store: boltdb-shipper  # 볼트 DB 사용
       object_store: filesystem
-      schema: v13               # 변경: v11 -> v13
+      schema: v11  # 스키마 버전
       index:
-        prefix: index_
+        prefix: loki_index_
         period: 24h
 
 storage_config:
-  tsdb:
-    active_index_directory: /loki/tsdb-active             # 변경: boltdb-shipper-active -> tsdb-active
-    cache_location: /loki/tsdb-cache                       # 변경: boltdb-shipper-cache -> tsdb-cache
-    cache_ttl: 24h                                         # 유지
-    shared_store: filesystem
+  boltdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/cache
   filesystem:
     directory: /loki/chunks
 
+limits_config:
+  max_global_streams_per_user: 10000
+  allow_structured_metadata: false  # Structured Metadata 비활성화
+
 compactor:
-  working_directory: /loki/tsdb-compactor                  # 변경: boltdb-shipper-compactor -> tsdb-compactor
-  shared_store: filesystem
-
-chunk_store_config:
-  max_look_back_period: 336h # how far data can be queried
-
-table_manager:
-  retention_deletes_enabled: true
-  retention_period: 336h # how long data remains
-
-ruler:
-  storage:
-    type: local
-    local:
-      directory: /loki/rules
-  rule_path: /loki/rules-temp
-  alertmanager_url: http://localhost:9093
-  ring:
-    kvstore:
-      store: inmemory
-  enable_api: true
+  working_directory: /loki/compactor  # Compactor 작업 디렉토리

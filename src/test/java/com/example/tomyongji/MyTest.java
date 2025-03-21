@@ -65,21 +65,32 @@ public class MyTest {
 
     @BeforeEach
     void setup() {
-        StudentClub studentClub = studentClubRepository.findById(25L).orElseThrow(()-> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
+        StudentClub studentClub = studentClubRepository.findById(26L).orElseThrow(()-> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
 
         //User 저장: 융합소프트웨어학부 학생회장
-        user = userRepository.findByStudentNum("60211665");
-
+        user = User.builder()
+            .userId("testUser")
+            .name("test name")
+            .studentNum("60000000")
+            .collegeName("인공지능소프트웨어융합대학")
+            .email("test@example.com")
+            .password("password123")
+            .role("PRESIDENT")
+            .studentClub(studentClub) //저장된 StudentClub 설정
+            .build();
+        userRepository.saveAndFlush(user);
+        
         //테스트
         System.out.println("유저 ID: " + user.getId());
         userRepository.findAll().forEach(u -> System.out.println("저장된 유저: " + u));
         studentClubRepository.findAll().forEach(sc -> System.out.println("저장된 학생회: " + sc));
     }
 
-//    @AfterEach
-//    void reset() {
-//        memberRepository.deleteAll();
-//    }
+    @AfterEach
+    void reset() {
+        userRepository.delete(user);
+        memberRepository.deleteAll();
+    }
 
     @Test
     @DisplayName("유저 정보 조회 흐름 테스트")

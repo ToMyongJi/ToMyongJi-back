@@ -74,7 +74,9 @@ public class ReceiptTest {
 
     @BeforeEach
     void setup() {
-        user = userRepository.findByStudentNum("60211665");
+        user = userRepository.findByStudentNum("60000000");
+        user.setPassword(passwordEncoder.encode("testPresident123!"));
+        userRepository.saveAndFlush(user);
         //currentUser = new UserDetails(user);
 
         //SecurityContextHolder에 인증 정보 설정
@@ -84,11 +86,11 @@ public class ReceiptTest {
     }
 
 
-//    @AfterEach
-//    void reset() {
-//        receiptRepository.deleteAll();
-//        //SecurityContextHolder.clearContext();
-//    }
+    @AfterEach
+    void reset() {
+        receiptRepository.deleteAll();
+        //SecurityContextHolder.clearContext();
+    }
 
 
     private String getPresidentToken() {

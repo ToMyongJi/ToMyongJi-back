@@ -60,7 +60,7 @@ services:
     image: prom/prometheus:latest
     restart: always
     volumes:
-      - ./conf/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./etc/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'

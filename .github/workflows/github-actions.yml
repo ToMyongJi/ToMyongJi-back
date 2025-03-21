@@ -88,7 +88,34 @@ jobs:
             mkdir -p /home/ubuntu/loki-data
             mkdir -p /home/ubuntu/prometheus-data
             echo "Directories created successfully."
-
+            
+      - name: Copy config to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST_PROD }}
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_KEY }}
+          source: ./loki-config.yml
+          target: /etc/loki/
+          
+      - name: Copy config to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST_PROD }}
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_KEY }}
+          source: ./promtail-config.yml
+          target: /etc/promtail/
+          
+      - name: Copy config to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST_PROD }}
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_KEY }}
+          source: /prometheus.yml
+          target: /etc/prometheus/
+          
       - name: Deploy to prod
         uses: appleboy/ssh-action@master
         with:

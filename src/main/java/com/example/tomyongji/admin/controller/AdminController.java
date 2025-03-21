@@ -25,7 +25,7 @@ public class AdminController {
 
     @Operation(summary = "학생회장 조회 api", description = "학생회 아이디를 통해 특정 학생회의 회장을 조회합니다.")
     @GetMapping("/president/{clubId}")
-    public ApiResponse<PresidentDto> getPresident(@PathVariable Long clubId) {
+    public ApiResponse<PresidentDto> getPresident(@PathVariable("clubId") Long clubId) {
         PresidentDto presidentDto = adminService.getPresident(clubId);
         return new ApiResponse<>(200, "학생회장 조회에 성공했습니다.", presidentDto);
     }
@@ -47,7 +47,7 @@ public class AdminController {
 
     @Operation(summary = "소속 부원 조회 api", description = "학생회 아이디로 소속 부원을 조회합니다.")
     @GetMapping("/member/{clubId}")
-    public ApiResponse<List<MemberDto>> getMembers(@PathVariable Long clubId) {
+    public ApiResponse<List<MemberDto>> getMembers(@PathVariable("clubId") Long clubId) {
         List<MemberDto> users =  adminService.getMembers(clubId);
         return new ApiResponse<>(200, "소속 부원 조회에 성공했습니다.", users);
     }
@@ -63,7 +63,7 @@ public class AdminController {
 
     @Operation(summary = "소속 부원 삭제 api", description = "소속 부원 아이디로 소속 부원을 삭제합니다.")
     @DeleteMapping("/member/{memberId}")
-    public ApiResponse<MemberDto> deleteMember(@PathVariable Long memberId) {
+    public ApiResponse<MemberDto> deleteMember(@PathVariable("memberId") Long memberId) {
         MemberDto memberDto = adminService.deleteMember(memberId);
         return new ApiResponse<>(200, "소속 부원 삭제에 성공했습니다.", memberDto);
     }

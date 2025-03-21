@@ -24,13 +24,18 @@ storage_config:
 
 limits_config:
   max_streams_per_user: 10000
+  allow_structured_metadata: false  # Structured Metadata 비활성화
 
 schema_config:
   configs:
     - from: 2024-01-01
-      store: boltdb-shipper
+      store: tsdb  # tsdb로 변경
       object_store: filesystem
-      schema: v11
+      schema: v13  # schema를 v13으로 변경
       index:
         prefix: index_
         period: 24h
+
+compactor:
+  working_directory: /loki/compactor  # 컴팩터 작업 디렉토리 추가
+

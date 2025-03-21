@@ -113,7 +113,7 @@ jobs:
           host: ${{ secrets.HOST_PROD }}
           username: ubuntu
           key: ${{ secrets.PRIVATE_KEY }}
-          source: /prometheus.yml
+          source: ./prometheus.yml
           target: /home/ubuntu/etc/prometheus/
           
       - name: Deploy to prod

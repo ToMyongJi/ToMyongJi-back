@@ -45,7 +45,6 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-
       - name: Docker build & push to prod
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -78,6 +77,12 @@ jobs:
           source: ./nginx/conf.d/nginx.conf
           target: /home/ubuntu/
 
+      - name: Create directories for Loki and Prometheus data
+        run: |
+          ssh -i ${{ secrets.PRIVATE_KEY }} ubuntu@${{ secrets.HOST_PROD }} << 'EOF'
+            mkdir -p /home/ubuntu/loki-data
+            mkdir -p /home/ubuntu/prometheus-data
+          EOF
 
       - name: Deploy to prod
         uses: appleboy/ssh-action@master
@@ -93,5 +98,5 @@ jobs:
             echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
             
             cd /home/ubuntu/
-            sudo docker-compose pull  # 변경된 이미지를 가져옴
-            sudo docker-compose up -d  # 컨테이너를 백그라운드에서 실행
+            sudo docker-compose pull  # 최신 이미지 가져오기
+            sudo docker-compose up -d  # 컨테이너 백그라운드에서 실행

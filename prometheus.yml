@@ -1,0 +1,23 @@
+global:
+  # 타겟으로부터의 수집 주기
+  scrape_interval: 15s
+  # rule evaluation 주기 (prometheus 는 rule 을 통해 time series 를 만들고 alert 를 생성한다.)
+  evaluation_interval: 15s
+
+# target별로 범주들을 묶고, 범주별로 수집 주기나 룰들을 유동적으로 설정
+scrape_configs:
+  - job_name: 'spring_boot_service_1'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      # actuator 요청을 보낼 위치 (ex : ['192.168.0.3:9090']), metrics_path 와 결합합니다.
+      - targets: ['host.docker.internal:8080']
+        labels:
+          # 인스턴스 이름 지정
+          instance: 'service_1'
+
+#  - job_name: 'spring_boot_service_2'
+#    metrics_path: '/actuator/prometheus'
+#    static_configs:
+#      - targets: ['host.docker.internal:8080']
+#        labels:
+#          instance: 'service_2'

@@ -39,7 +39,7 @@ services:
       - "3100:3100"
     restart: always
     volumes:
-      - ./loki-config.yml:/etc/loki/loki-config.yml
+      - ./etc/loki/loki-config.yml:/etc/loki/loki-config.yml
       - ./loki-data:/loki
     command: -config.file=/etc/loki/loki-config.yml
 
@@ -50,7 +50,7 @@ services:
       - "9080:9080"
     restart: always
     volumes:
-      - ./promtail-config.yml:/etc/promtail/promtail-config.yml
+      - ./etc/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml
       - ./var/log/:/var/log
     command: -config.file=/etc/promtail/promtail-config.yml
 
@@ -60,7 +60,7 @@ services:
     image: prom/prometheus:latest
     restart: always
     volumes:
-      - ./etc/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'

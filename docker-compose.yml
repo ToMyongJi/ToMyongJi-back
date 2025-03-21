@@ -67,6 +67,11 @@ services:
     ports:
       - "9090:9090"
 
+volumes:
+  grafana-data:   # 이 부분을 추가하여 grafana 데이터 볼륨을 정의
+  loki-data:
+  prometheus-data:
+    
 networks:
   app_network:  # 사용자 정의 네트워크 정의
     driver: bridge

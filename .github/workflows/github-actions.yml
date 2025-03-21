@@ -78,11 +78,16 @@ jobs:
           target: /home/ubuntu/
 
       - name: Create directories for Loki and Prometheus data
-        run: |
-          ssh -i ${{ secrets.PRIVATE_KEY }} ubuntu@${{ secrets.HOST_PROD }} << 'EOF'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_PROD }}
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            echo "Creating directories for Loki and Prometheus data..."
             mkdir -p /home/ubuntu/loki-data
             mkdir -p /home/ubuntu/prometheus-data
-          EOF
+            echo "Directories created successfully."
 
       - name: Deploy to prod
         uses: appleboy/ssh-action@master

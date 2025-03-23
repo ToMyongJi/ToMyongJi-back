@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -128,15 +129,20 @@ public class ReceiptService {
         return receiptMapper.toReceiptDto(receipt);
     }
 
-    public ReceiptDto updateReceipt(ReceiptDto receiptDto) {
+    public ReceiptDto updateReceipt(ReceiptDto receiptDto, UserDetails currentUser) {
         //영수증 조회
         Receipt existingReceipt = receiptRepository.findById(receiptDto.getReceiptId())
             .orElseThrow(() -> new CustomException(NOT_FOUND_RECEIPT, 400));
 
-        //유효성 검증
-        validateReceiptDtoForUpdate(receiptDto);
-
         StudentClub studentClub = existingReceipt.getStudentClub();
+
+        //영수증의 학생회와 접속한 유저의 학생회 비교
+        checkClub(studentClub, currentUser);
+
+        int updatedDeposit = receiptDto.getDeposit();
+        int updatedWithdrawal = receiptDto.getWithdrawal();
+
+        validateReceiptUpdateValues(updatedDeposit, updatedWithdrawal, receiptDto.getContent());
 
         //기존 잔액 복원
         int previousAdjustment = existingReceipt.getDeposit() - existingReceipt.getWithdrawal();
@@ -149,11 +155,11 @@ public class ReceiptService {
         if (receiptDto.getContent() != null) {
             existingReceipt.setContent(receiptDto.getContent());
         }
-        existingReceipt.setDeposit(receiptDto.getDeposit());
-        existingReceipt.setWithdrawal(receiptDto.getWithdrawal());
+        existingReceipt.setDeposit(updatedDeposit);
+        existingReceipt.setWithdrawal(updatedWithdrawal);
 
         //새 잔액 반영
-        int newAdjustment = receiptDto.getDeposit() - receiptDto.getWithdrawal();
+        int newAdjustment = updatedDeposit - updatedWithdrawal;
         studentClub.setBalance(studentClub.getBalance() + newAdjustment);
 
         studentClubRepository.save(studentClub);
@@ -162,6 +168,17 @@ public class ReceiptService {
         return receiptMapper.toReceiptDto(existingReceipt);
     }
 
+    private void validateReceiptUpdateValues(Integer deposit, Integer withdrawal, String content) {
+        // 입출금 값 검증: 둘 다 0이거나 둘 다 0이 아니면 예외 발생
+        if ((deposit == 0 && withdrawal == 0) || (deposit != 0 && withdrawal != 0)) {
+            throw new CustomException(DUPLICATED_FLOW, 400);
+        }
+
+        // content가 전달되었으면(즉, null이 아니면) 빈 문자열이 아닌지 검증
+        if (content != null && content.trim().isEmpty()) {
+            throw new CustomException(EMPTY_CONTENT, 400);
+        }
+    }
 
     private List<ReceiptDto> receiptDtoList(List<Receipt> receipts) {
         List<ReceiptDto> receiptDtoList = new ArrayList<>();
@@ -178,13 +195,6 @@ public class ReceiptService {
         }
         if (receiptDto.getContent() == null || receiptDto.getContent().trim().isEmpty()) {
             throw new CustomException(EMPTY_CONTENT, 400);
-        }
-    }
-
-    private void validateReceiptDtoForUpdate(ReceiptDto receiptDto) {
-        if ((receiptDto.getDeposit() == 0 && receiptDto.getWithdrawal() == 0) ||
-            (receiptDto.getDeposit() != 0 && receiptDto.getWithdrawal() != 0)) {
-            throw new CustomException(DUPLICATED_FLOW, 400);
         }
     }
 

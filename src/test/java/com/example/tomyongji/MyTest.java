@@ -267,8 +267,9 @@ public class MyTest {
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
         assertThat(body.getStatusMessage()).isEqualTo("소속 부원 조회에 성공했습니다.");
-        assertThat(body.getData().get(0).getStudentNum()).isEqualTo("60000001");
-        assertThat(body.getData().get(1).getStudentNum()).isEqualTo("60000002");
+        //테스트를 위해 미리 넣어둔 부원이 0번을 차지하여 1번부터 확인
+        assertThat(body.getData().get(1).getStudentNum()).isEqualTo("60000001");
+        assertThat(body.getData().get(2).getStudentNum()).isEqualTo("60000002");
 
         //테스트 완료 후 삭제
         memberRepository.delete(member1);

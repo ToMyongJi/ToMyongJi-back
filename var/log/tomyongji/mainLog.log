@@ -1,34 +1,82 @@
-2025-03-19 10:53:47 - HV000001: Hibernate Validator 8.0.1.Final
-<2025-03-19 10:53:47 - Starting TomyongjiApplication using Java 17.0.6 with PID 16648 (C:\Users\User\Desktop\Git\ToMyongJi-back\build\classes\java\main started by User in C:\Users\User\Desktop\Git\ToMyongJi-back)
-<2025-03-19 10:53:47 - No active profile set, falling back to 1 default profile: "default"
-<2025-03-19 10:53:50 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-<2025-03-19 10:53:50 - Finished Spring Data repository scanning in 442 ms. Found 8 JPA repository interfaces.
-<2025-03-19 10:53:51 - Tomcat initialized with port 8080 (http)
-<2025-03-19 10:53:51 - Initializing ProtocolHandler ["http-nio-8080"]
-<2025-03-19 10:53:51 - Starting service [Tomcat]
-<2025-03-19 10:53:51 - Starting Servlet engine: [Apache Tomcat/10.1.26]
-<2025-03-19 10:53:52 - Initializing Spring embedded WebApplicationContext
-<2025-03-19 10:53:52 - Root WebApplicationContext: initialization completed in 4378 ms
-<2025-03-19 10:53:52 - HHH000204: Processing PersistenceUnitInfo [name: default]
-<2025-03-19 10:53:52 - HHH000412: Hibernate ORM core version 6.5.2.Final
-<2025-03-19 10:53:52 - HHH000026: Second-level cache disabled
-<2025-03-19 10:53:53 - No LoadTimeWeaver setup: ignoring JPA class transformer
-<2025-03-19 10:53:53 - HikariPool-1 - Starting...
-<2025-03-19 10:53:53 - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@335cdd2
-<2025-03-19 10:53:53 - HikariPool-1 - Start completed.
-<2025-03-19 10:53:54 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-<2025-03-19 10:53:54 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
-<2025-03-19 10:53:56 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-<2025-03-19 10:53:56 - Initialized JPA EntityManagerFactory for persistence unit 'default'
-<2025-03-19 10:53:57 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-<2025-03-19 10:53:57 - Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
-<2025-03-19 10:53:59 - Starting ProtocolHandler ["http-nio-8080"]
-<2025-03-19 10:53:59 - Tomcat started on port 8080 (http) with context path '/'
-<2025-03-19 10:53:59 - Started TomyongjiApplication in 12.439 seconds (process running for 14.152)
-<2025-03-19 10:54:04 - Initializing Spring DispatcherServlet 'dispatcherServlet'
-<2025-03-19 10:54:04 - Initializing Servlet 'dispatcherServlet'
-<2025-03-19 10:54:04 - Completed initialization in 3 ms
-<2025-03-19 10:54:04 - -> 요청: [POST] /api/users/login
-<2025-03-19 10:54:06 - <- 응답: [POST] /api/users/login - 상태 코드: 200
-<2025-03-19 10:54:06 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOiJBRE1JTiIsImlkIjoxODcsImV4cCI6MTc0MjM1Mjg0NX0.fpkh9sdrrXBmOqOgfjLjXOo52uh3BeKg9y5BQ557N5I","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDI5NTQwNDV9.8Ye9e-OsFUcXJhq9yC6SQcFn37l17sE7R4xdRjyVknM"}}
+2025-03-24 00:07:45 - -> 요청: [POST] /api/users/clubVerify
+<2025-03-24 00:07:45 - <- 응답: [POST] /api/users/clubVerify - 상태 코드: 200
+<2025-03-24 00:07:45 - 응답 바디: {"statusCode":200,"statusMessage":"소속인증을 성공적으로 마쳤습니다.","data":true}
+<2025-03-24 00:07:49 - -> 요청: [POST] /api/users/emailCheck
+<2025-03-24 00:07:54 - <- 응답: [POST] /api/users/emailCheck - 상태 코드: 200
+<2025-03-24 00:07:54 - 응답 바디: 1Bu95bbc
+<2025-03-24 00:08:01 - -> 요청: [POST] /api/users/verifyCode
+<2025-03-24 00:08:01 - <- 응답: [POST] /api/users/verifyCode - 상태 코드: 200
+<2025-03-24 00:08:01 - 응답 바디: {"statusCode":200,"statusMessage":"이메일 인증이 성공적으로 이루어졌습니다","data":true}
+<2025-03-24 00:08:09 - -> 요청: [POST] /api/users/signup
+<2025-03-24 00:08:09 - <- 응답: [POST] /api/users/signup - 상태 코드: 400
+<2025-03-24 00:08:09 - 응답 바디: {"statusCode":400,"message":"단과대를 찾을 수 없습니다."}
+<2025-03-24 00:08:14 - -> 요청: [POST] /api/users/signup
+<2025-03-24 00:08:14 - <- 응답: [POST] /api/users/signup - 상태 코드: 400
+<2025-03-24 00:08:14 - 응답 바디: {"statusCode":400,"message":"이미 등록된 유저 정보입니다."}
+<2025-03-24 00:09:40 - -> 요청: [POST] /api/users/signup
+<2025-03-24 00:09:40 - <- 응답: [POST] /api/users/signup - 상태 코드: 400
+<2025-03-24 00:09:40 - 응답 바디: {"statusCode":400,"message":"이미 등록된 유저 정보입니다."}
+<2025-03-24 00:09:59 - -> 요청: [POST] /api/users/login
+<2025-03-24 00:09:59 - <- 응답: [POST] /api/users/login - 상태 코드: 400
+<2025-03-24 00:09:59 - 응답 바디: {"statusCode":400,"message":"자격 증명에 실패하였습니다."}
+<2025-03-24 00:13:10 - -> 요청: [POST] /api/users/signup
+<2025-03-24 00:13:10 - <- 응답: [POST] /api/users/signup - 상태 코드: 400
+<2025-03-24 00:13:10 - 응답 바디: {"statusCode":400,"message":"이미 등록된 유저 정보입니다."}
+<2025-03-24 00:13:53 - -> 요청: [POST] /api/users/signup
+<2025-03-24 00:13:53 - <- 응답: [POST] /api/users/signup - 상태 코드: 400
+<2025-03-24 00:13:53 - 응답 바디: {"statusCode":400,"message":"이미 등록된 유저 정보입니다."}
+<2025-03-24 00:14:12 - -> 요청: [POST] /api/users/signup
+<2025-03-24 00:14:12 - <- 응답: [POST] /api/users/signup - 상태 코드: 400
+<2025-03-24 00:14:12 - 응답 바디: {"statusCode":400,"message":"이미 등록된 유저 정보입니다."}
+<2025-03-24 00:17:14 - -> 요청: [POST] /api/users/login
+<2025-03-24 00:17:14 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 00:17:14 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOiJBRE1JTiIsImlkIjoxODcsImV4cCI6MTc0Mjc0NjYzNH0.31wUdfk6PD5L5z9MUnpKsGIt-2k-C0qOMil6Lfw1g9w","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNDc4MzR9.lGn7W2tiXluTxWVerYT4bgX6wL7SFKMlc_5fBqU_R1M"}}
+<2025-03-24 00:17:15 - -> 요청: [POST] /api/users/login
+<2025-03-24 00:17:15 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 00:17:15 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOiJBRE1JTiIsImlkIjoxODcsImV4cCI6MTc0Mjc0NjYzNX0.k21Df0wyoBgZoKox1ye4NMXHBvmuVlTVLUE_fuRPIa8","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNDc4MzV9.T6X7vNcKMFeoJ4Pw9JoP6wIUAQbV_TCZWU7vbJMtO74"}}
+<2025-03-24 00:17:15 - -> 요청: [POST] /api/users/login
+<2025-03-24 00:17:15 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 00:17:15 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOiJBRE1JTiIsImlkIjoxODcsImV4cCI6MTc0Mjc0NjYzNX0.k21Df0wyoBgZoKox1ye4NMXHBvmuVlTVLUE_fuRPIa8","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNDc4MzV9.T6X7vNcKMFeoJ4Pw9JoP6wIUAQbV_TCZWU7vbJMtO74"}}
+<2025-03-24 00:17:16 - -> 요청: [POST] /api/users/login
+<2025-03-24 00:17:16 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 00:17:16 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOiJBRE1JTiIsImlkIjoxODcsImV4cCI6MTc0Mjc0NjYzNn0.yGknw5S0oxJlgsJv8pd5_q2lh8MW2kuSUia1p4_Revc","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNDc4MzZ9.qcgHGdY3oDMaGRzhTEUy-2Okh7u8XZ9KgaKSxy70yUE"}}
+<2025-03-24 00:17:16 - -> 요청: [POST] /api/users/login
+<2025-03-24 00:17:16 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 00:17:16 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOiJBRE1JTiIsImlkIjoxODcsImV4cCI6MTc0Mjc0NjYzNn0.yGknw5S0oxJlgsJv8pd5_q2lh8MW2kuSUia1p4_Revc","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNDc4MzZ9.qcgHGdY3oDMaGRzhTEUy-2Okh7u8XZ9KgaKSxy70yUE"}}
+<2025-03-24 00:18:11 - -> 요청: [POST] /api/users/emailCheck
+<2025-03-24 00:18:15 - <- 응답: [POST] /api/users/emailCheck - 상태 코드: 200
+<2025-03-24 00:18:15 - 응답 바디: k88ZC0tm
+<2025-03-24 00:18:23 - -> 요청: [POST] /api/users/verifyCode
+<2025-03-24 00:18:23 - <- 응답: [POST] /api/users/verifyCode - 상태 코드: 200
+<2025-03-24 00:18:23 - 응답 바디: {"statusCode":200,"statusMessage":"이메일 인증이 성공적으로 이루어졌습니다","data":true}
+<2025-03-24 00:18:26 - -> 요청: [POST] /api/users/signup
+<2025-03-24 00:18:27 - <- 응답: [POST] /api/users/signup - 상태 코드: 200
+<2025-03-24 00:18:27 - 응답 바디: {"statusCode":200,"statusMessage":"회원가입에 성공하셨습니다. 사용자 index id: 316","data":316}
+<2025-03-24 00:19:23 - -> 요청: [POST] /api/users/login
+<2025-03-24 00:19:24 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 00:19:24 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqaW5oOTM4MCIsImF1dGgiOiJQUkVTSURFTlQiLCJpZCI6MzE3LCJleHAiOjE3NDI3NDY3NjR9.0JEXbfezWA5kw8VLyq0Vl-28qM_oloxUJLS7OC9cQwE","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNDc5NjR9.528qjZr5-_4hBbLgZr-wv0T60v42cbpmLsJrg6ub4Us"}}
+<2025-03-24 00:19:24 - -> 요청: [POST] /api/users/login
+<2025-03-24 00:19:25 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 00:19:25 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqaW5oOTM4MCIsImF1dGgiOiJQUkVTSURFTlQiLCJpZCI6MzE4LCJleHAiOjE3NDI3NDY3NjV9.tAwAu11wxPiWI_GwVyw62U7rpKbA6qDKK9RH6Nu9gmA","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNDc5NjV9.Isi6ZbiiAullCJlOBUTuR1280ObDvtLSjv4TyrLMkVI"}}
+<2025-03-24 00:19:29 - -> 요청: [POST] /api/users/login
+<2025-03-24 00:19:29 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 00:19:29 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqaW5oOTM4MCIsImF1dGgiOiJQUkVTSURFTlQiLCJpZCI6MzE5LCJleHAiOjE3NDI3NDY3Njl9.pK9ioUwF7Qt37XCXy9KqylkD0K2GMQFTns0kgve5zI0","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNDc5Njl9.0m2zgYBykTj6nIVc2ScfK_0e6zn4l5xKt6go7sAgdsA"}}
+<2025-03-24 00:19:30 - -> 요청: [POST] /api/users/login
+<2025-03-24 00:19:30 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 00:19:30 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqaW5oOTM4MCIsImF1dGgiOiJQUkVTSURFTlQiLCJpZCI6MzIwLCJleHAiOjE3NDI3NDY3NzB9.hibp2iN7wkTLqeXcQRLfyQ1KzM1AhOPbCjT9Jzx0Tu0","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNDc5NzB9.LmbQyV4bTy08w_PBJ-vGFbqQpO7e91iISNVaPz4h6sw"}}
+<2025-03-24 00:19:54 - -> 요청: [POST] /api/users/login
+<2025-03-24 00:19:54 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 00:19:54 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqaW5oOTM4MCIsImF1dGgiOiJQUkVTSURFTlQiLCJpZCI6MzIxLCJleHAiOjE3NDI3NDY3OTR9.As8jlsVbARqV1Firs3tvMwdzs61T-FKazkM68_eGtNM","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNDc5OTR9.L7ZfftFZpz7aPXalTUIGiFBKsBQwJunBq3ZD5v_bViE"}}
+<2025-03-24 00:29:51 - -> 요청: [POST] /api/users/login
+<2025-03-24 00:29:51 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 00:29:51 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzamluOTM4MCIsImF1dGgiOiJTVFUiLCJpZCI6MzE2LCJleHAiOjE3NDI3NDczOTF9.AlTDd7VEnL9dz5AmyfbwW4jCVFt-UY8qsOsbs3M_VVQ","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNDg1OTF9.BMHkU1NYUTqbg_l-SDIMBVh6M4w3xEddC0oeZrzh8Ts"}}
+<2025-03-24 00:30:20 - -> 요청: [POST] /api/ocr/upload/jinh9380
+<2025-03-24 00:30:20 - <- 응답: [POST] /api/ocr/upload/jinh9380 - 상태 코드: 400
+<2025-03-24 00:30:20 - 응답 바디: {"statusCode":400,"message":"Current request is not a multipart request"}
+<2025-03-24 00:30:50 - -> 요청: [POST] /api/receipt
+<2025-03-24 00:30:50 - <- 응답: [POST] /api/receipt - 상태 코드: 201
+<2025-03-24 00:30:50 - 응답 바디: {"statusCode":201,"statusMessage":"영수증을 성공적으로 작성했습니다.","data":{"receiptId":45,"date":"2025-03-23T15:00:00.000+00:00","content":"스마트시스템공과대학 영수증 테스트","deposit":1000,"withdrawal":0}}
+<2025-03-24 00:32:07 - -> 요청: [PUT] /api/receipt
+<2025-03-24 00:32:08 - <- 응답: [PUT] /api/receipt - 상태 코드: 200
+<2025-03-24 00:32:08 - 응답 바디: {"statusCode":200,"statusMessage":"영수증을 성공적으로 수정했습니다.","data":{"receiptId":45,"date":"2025-03-24","content":"스마트시스템공과대학 영수증 테스트","deposit":2000,"withdrawal":0}}
 <

@@ -156,10 +156,10 @@ public class AdminTest {
         Member member = Member.builder()
                 .studentNum("60222024")
                 .name("투명지")
-                .studentClub(aisoftware)
+                .studentClub(studentClub)
                 .build();
         memberRepository.save(member);
-        Long clubId = aisoftware.getId();
+        Long clubId = studentClub.getId();
         //When
         Map<String, Object> uriVariables = new HashMap<>();
         uriVariables.put("clubId", clubId);

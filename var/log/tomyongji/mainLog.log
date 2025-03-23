@@ -79,4 +79,55 @@
 <2025-03-24 00:32:07 - -> 요청: [PUT] /api/receipt
 <2025-03-24 00:32:08 - <- 응답: [PUT] /api/receipt - 상태 코드: 200
 <2025-03-24 00:32:08 - 응답 바디: {"statusCode":200,"statusMessage":"영수증을 성공적으로 수정했습니다.","data":{"receiptId":45,"date":"2025-03-24","content":"스마트시스템공과대학 영수증 테스트","deposit":2000,"withdrawal":0}}
+<2025-03-24 01:48:43 - HV000001: Hibernate Validator 8.0.1.Final
+<2025-03-24 01:48:43 - Starting TomyongjiApplication using Java 17 with PID 29484 (C:\Users\jinhy\tomyongji\out\production\classes started by jinhy in C:\Users\jinhy\tomyongji)
+<2025-03-24 01:48:43 - No active profile set, falling back to 1 default profile: "default"
+<2025-03-24 01:48:44 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+<2025-03-24 01:48:44 - Finished Spring Data repository scanning in 81 ms. Found 8 JPA repository interfaces.
+<2025-03-24 01:48:45 - Tomcat initialized with port 8080 (http)
+<2025-03-24 01:48:45 - Initializing ProtocolHandler ["http-nio-8080"]
+<2025-03-24 01:48:45 - Starting service [Tomcat]
+<2025-03-24 01:48:45 - Starting Servlet engine: [Apache Tomcat/10.1.26]
+<2025-03-24 01:48:45 - Initializing Spring embedded WebApplicationContext
+<2025-03-24 01:48:45 - Root WebApplicationContext: initialization completed in 1690 ms
+<2025-03-24 01:48:45 - HHH000204: Processing PersistenceUnitInfo [name: default]
+<2025-03-24 01:48:45 - HHH000412: Hibernate ORM core version 6.5.2.Final
+<2025-03-24 01:48:45 - HHH000026: Second-level cache disabled
+<2025-03-24 01:48:45 - No LoadTimeWeaver setup: ignoring JPA class transformer
+<2025-03-24 01:48:45 - HikariPool-1 - Starting...
+<2025-03-24 01:48:46 - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@57515944
+<2025-03-24 01:48:46 - HikariPool-1 - Start completed.
+<2025-03-24 01:48:46 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+<2025-03-24 01:48:46 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+<2025-03-24 01:48:47 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+<2025-03-24 01:48:49 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+<2025-03-24 01:48:49 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+<2025-03-24 01:48:49 - Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+<2025-03-24 01:48:50 - Starting ProtocolHandler ["http-nio-8080"]
+<2025-03-24 01:48:50 - Tomcat started on port 8080 (http) with context path '/'
+<2025-03-24 01:48:50 - Started TomyongjiApplication in 7.526 seconds (process running for 8.136)
+<2025-03-24 01:49:34 - Initializing Spring DispatcherServlet 'dispatcherServlet'
+<2025-03-24 01:49:34 - Initializing Servlet 'dispatcherServlet'
+<2025-03-24 01:49:34 - Completed initialization in 1 ms
+<2025-03-24 01:49:34 - -> 요청: [POST] /api/users/login
+<2025-03-24 01:49:34 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 01:49:34 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqaW5oOTM4MCIsImF1dGgiOiJQUkVTSURFTlQiLCJpZCI6MzIyLCJleHAiOjE3NDI3NTIxNzR9.Hbhk6Kssl4SrUM_8Mk--CaTisNK0vrb0HG0gamQu4C8","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNTMzNzR9.5oJnsBX63K90fKtUq6ElxftDSO3tppGy6qQ0lhafkS0"}}
+<2025-03-24 01:49:37 - -> 요청: [POST] /api/users/login
+<2025-03-24 01:49:38 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 01:49:38 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqaW5oOTM4MCIsImF1dGgiOiJQUkVTSURFTlQiLCJpZCI6MzIzLCJleHAiOjE3NDI3NTIxNzh9.WG4jrfhesDtKCwo2lvivJuMaYHy1dG_YCg7om3eAOG4","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNTMzNzh9.GWF9OPJ4A2DnY3gD8VhewhdvGF08VFLeJSHpezeGer4"}}
+<2025-03-24 01:49:41 - -> 요청: [POST] /api/users/login
+<2025-03-24 01:49:41 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 01:49:41 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqaW5oOTM4MCIsImF1dGgiOiJQUkVTSURFTlQiLCJpZCI6MzI0LCJleHAiOjE3NDI3NTIxODF9.DU_NOF88Ov68lbLwKEl1KOj35e8dzhL0Q0T7wpUqm74","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNTMzODF9.mmgBHeaT6XH5uNzYYjSK93DgHwdBqsjwDFWpDpjFo2Q"}}
+<2025-03-24 01:49:44 - -> 요청: [POST] /api/users/login
+<2025-03-24 01:49:44 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 01:49:44 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqaW5oOTM4MCIsImF1dGgiOiJQUkVTSURFTlQiLCJpZCI6MzI1LCJleHAiOjE3NDI3NTIxODR9.kPnDHVnNdOS8iThJ4MtRmO19koM5A1BqY6JIWkwQ7rE","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNTMzODR9.XhrXzqLXdATLNH-S1C5s35Y3x9gfHvGZAKUp958u_c4"}}
+<2025-03-24 01:50:24 - -> 요청: [POST] /api/users/login
+<2025-03-24 01:50:24 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 01:50:24 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqaW5oOTM4MCIsImF1dGgiOiJQUkVTSURFTlQiLCJpZCI6MzI5LCJleHAiOjE3NDI3NTIyMjR9.RMHODwyY_lUtLiyX7hU3mVU_me_rCNAzQK3aeScyJiU","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNTM0MjR9._FkLxdQYghpAdMuX0yuG8fBihSLX63TEYZ4bUWeYHk8"}}
+<2025-03-24 01:50:28 - -> 요청: [POST] /api/users/login
+<2025-03-24 01:50:28 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 01:50:28 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqaW5oOTM4MCIsImF1dGgiOiJQUkVTSURFTlQiLCJpZCI6MzMwLCJleHAiOjE3NDI3NTIyMjh9.F2BbBl0Ag5eweensEBW0mhcTE_95HKJCMY9W8dRrHo0","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNTM0Mjh9.PYTbyqYG10EjXp66Ab6TkrD6UEdPV6x7i0Os1aWTWf0"}}
+<2025-03-24 01:50:34 - -> 요청: [POST] /api/users/login
+<2025-03-24 01:50:34 - <- 응답: [POST] /api/users/login - 상태 코드: 200
+<2025-03-24 01:50:34 - 응답 바디: {"statusCode":200,"statusMessage":"토큰을 성공적으로 발행했습니다.","data":{"grantType":"Bearer","accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqaW5oOTM4MCIsImF1dGgiOiJQUkVTSURFTlQiLCJpZCI6MzMyLCJleHAiOjE3NDI3NTIyMzR9.yONVdTpj19Cj3S2ADJp4M0P6JXHK5cyaO_wLLaLjeZs","refreshToken":"eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3NDMzNTM0MzR9.Yd4JEz-dA5lC-jOLLDlNDyCIO89kk_K-jE6g7r6uZRE"}}
 <

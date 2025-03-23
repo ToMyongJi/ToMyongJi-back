@@ -183,7 +183,7 @@ public class ReceiptTest {
     }
 
     @Test
-    @DisplayName("영수증 작성 흐름 테스트")
+    @DisplayName("특정 영수증 작성 흐름 테스트")
     void testSaveReceiptFlow() {
         //Given
         String userId = user.getUserId();
@@ -343,42 +343,45 @@ public class ReceiptTest {
         assertThat(body.getData().getReceiptId()).isEqualTo(receiptId);
     }
 
-//    @Test
-//    @DisplayName("영수증 수정 흐름 테스트")
-//    void testUpdateReceiptFlow() {
-//        //Given
-//        Receipt receipt = Receipt.builder()
-//            .content("영수증 테스트")
-//            .deposit(1000)
-//            .studentClub(user.getStudentClub())
-//            .build();
-//        receiptRepository.save(receipt);
-//        ReceiptDto receiptCreateDto = ReceiptDto.builder()
-//            .receiptId(receipt.getId())
-//            .date(new Date())
-//            .content("수정된 내용")
-//            .deposit(2000)
-//            .build();
-//
-//        //When, Then
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//        HttpEntity<ReceiptDto> entity = new HttpEntity<>(receiptCreateDto, headers);
-//
-//        ResponseEntity<ApiResponse<ReceiptDto>> response = restTemplate.exchange(
-//            "/api/receipt",
-//            HttpMethod.PATCH,
-//            entity,
-//            new ParameterizedTypeReference<ApiResponse<ReceiptDto>>() {}
-//        );
-//        //Then
-//        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-//        ApiResponse<ReceiptDto> body = response.getBody();
-//        assertNotNull(body);
-//        assertThat(body.getStatusCode()).isEqualTo(201);
-//        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 수정했습니다.");
-//        assertThat(body.getData().getContent()).isEqualTo(receiptCreateDto.getContent());
-//    }
+    @Test
+    @DisplayName("특정 영수증 수정 흐름 테스트")
+    void testUpdateReceiptFlow() {
+        //Given
+        String token = getToken();
+        Receipt receipt = Receipt.builder()
+            .content("영수증 테스트")
+            .deposit(1000)
+            .studentClub(user.getStudentClub())
+            .build();
+        receiptRepository.save(receipt);
+        ReceiptDto receiptUpdateDto = ReceiptDto.builder()
+            .receiptId(receipt.getId())
+            .date(new Date())
+            .content("수정된 내용")
+            .deposit(2000)
+            .build();
+
+        //When, Then
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(token);
+
+        HttpEntity<ReceiptDto> entity = new HttpEntity<>(receiptUpdateDto, headers);
+        ResponseEntity<ApiResponse<ReceiptDto>> response = restTemplate.exchange(
+            "/api/receipt",
+            HttpMethod.PUT,
+            entity,
+            new ParameterizedTypeReference<ApiResponse<ReceiptDto>>() {}
+        );
+        //Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        ApiResponse<ReceiptDto> body = response.getBody();
+        assertNotNull(body);
+        assertThat(body.getStatusCode()).isEqualTo(200);
+        assertThat(body.getData().getContent()).isEqualTo(receiptUpdateDto.getContent());
+        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 수정했습니다.");
+        assertThat(body.getData().getContent()).isEqualTo(receiptUpdateDto.getContent());
+    }
 
     @Test
     @DisplayName("모든 대학 조회 흐름 테스트")

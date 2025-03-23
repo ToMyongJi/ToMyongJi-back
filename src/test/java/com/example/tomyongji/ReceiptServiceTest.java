@@ -441,52 +441,158 @@ public class ReceiptServiceTest {
         verify(receiptRepository).findById(receiptId);
     }
 
-//    @Test
-//    @DisplayName("영수증 수정 성공")
-//    void updateReceipt_Success() {
-//        //Given
-//        Long existingId = receipt.getId();
-//        ReceiptDto updateDto = ReceiptDto.builder()
-//            .receiptId(existingId)
-//            .date(receipt.getDate())
-//            .content("수정된 내용")
-//            .deposit(4500)
-//            .build();
-//
-//        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
-//        when(receiptMapper.toReceiptDto(receipt)).thenReturn(updateDto);
-//        //When
-//        ReceiptDto result = receiptService.updateReceipt(updateDto);
-//        //Then
-//        assertNotNull(result);
-//        assertEquals(result.getContent(), "수정된 내용");
-//        assertEquals(result.getDeposit(), 4500);
-//        verify(receiptRepository).findById(existingId);
-//        verify(studentClubRepository).save(studentClub);
-//        verify(receiptRepository).save(receipt);
-//    }
-//
-//    @Test
-//    @DisplayName("영수증 조회 실패로 인한 영수증 수정 실패")
-//    void updateReceipt_NotFoundReceipt() {
-//        Long wrongReceiptId = 999L;
-//        ReceiptDto receiptDtoWithWrongId = ReceiptDto.builder()
-//                .receiptId(wrongReceiptId)
-//                    .content("테스트")
-//                        .deposit(1000)
-//                            .build();
-//        when(receiptRepository.findById(wrongReceiptId)).thenReturn(Optional.empty());
-//        //When
-//        CustomException exception = assertThrows(CustomException.class,
-//            () -> receiptService.updateReceipt(receiptDtoWithWrongId));
-//        //Then
-//        assertEquals(400, exception.getErrorCode());
-//        assertEquals(NOT_FOUND_RECEIPT, exception.getMessage());
-//        verify(receiptRepository).findById(wrongReceiptId);
-//    }
+    @Test
+    @DisplayName("특정 영수증 내역 수정 성공")
+    void updateReceipt_SuccessForUpdatingContent() {
+        //Given
+        Long existingId = receipt.getId();
+        ReceiptDto updateDto = ReceiptDto.builder()
+            .receiptId(receipt.getId())
+            .date(receipt.getDate())
+            .content("수정된 내용")
+            .deposit(receipt.getDeposit())
+            .build();
 
+        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
+        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
+        when(receiptMapper.toReceiptDto(receipt)).thenReturn(updateDto);
+        //When
+        ReceiptDto result = receiptService.updateReceipt(updateDto, currentUser);
+        //Then
+        assertNotNull(result);
+        assertEquals(result.getContent(), "수정된 내용");
+        assertEquals(result.getDeposit(), 1000);
+        verify(receiptRepository).findById(existingId);
+        verify(studentClubRepository).save(studentClub);
+        verify(receiptRepository).save(receipt);
+    }
+    @Test
+    @DisplayName("특정 영수증 금액 수정 성공")
+    void updateReceipt_SuccessForUpdatingFlow() {
+        //Given
+        Long existingId = receipt.getId();
+        ReceiptDto updateDto = ReceiptDto.builder()
+            .receiptId(receipt.getId())
+            .date(receipt.getDate())
+            .content(receipt.getContent())
+            .deposit(4500)
+            .build();
 
-    //Given
-    //When
-    //Then
+        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
+        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
+        when(receiptMapper.toReceiptDto(receipt)).thenReturn(updateDto);
+        //When
+        ReceiptDto result = receiptService.updateReceipt(updateDto, currentUser);
+        //Then
+        assertNotNull(result);
+        assertEquals(result.getContent(), receipt.getContent());
+        assertEquals(result.getDeposit(), 4500);
+        verify(receiptRepository).findById(existingId);
+        verify(studentClubRepository).save(studentClub);
+        verify(receiptRepository).save(receipt);
+    }
+
+    @Test
+    @DisplayName("영수증 조회 실패로 인한 영수증 수정 실패")
+    void updateReceipt_NotFoundReceipt() {
+        Long wrongReceiptId = 999L;
+        ReceiptDto receiptDtoWithWrongId = ReceiptDto.builder()
+                .receiptId(wrongReceiptId)
+                    .content("테스트")
+                        .deposit(1000)
+                            .build();
+        when(receiptRepository.findById(wrongReceiptId)).thenReturn(Optional.empty());
+        //When
+        CustomException exception = assertThrows(CustomException.class,
+            () -> receiptService.updateReceipt(receiptDtoWithWrongId, currentUser));
+        //Then
+        assertEquals(400, exception.getErrorCode());
+        assertEquals(NOT_FOUND_RECEIPT, exception.getMessage());
+        verify(receiptRepository).findById(wrongReceiptId);
+    }
+
+    @Test
+    @DisplayName("타소속의 접근으로 인한 특정 영수증 생성 실패")
+    void updateReceipt_NoAuthorizationBelonging() {
+        //Given
+        Long existingId = receipt.getId();
+        ReceiptDto updateDto = ReceiptDto.builder()
+            .receiptId(receipt.getId())
+            .date(receipt.getDate())
+            .content("수정된 내용")
+            .deposit(receipt.getDeposit())
+            .build();
+        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
+        when(userRepository.findByUserId(anotherCurrentUser.getUsername())).thenReturn(Optional.of(anotherUser));
+        //When
+        CustomException exception = assertThrows(CustomException.class,
+            () -> receiptService.updateReceipt(updateDto, anotherCurrentUser));
+        //Then
+        assertEquals(400, exception.getErrorCode());
+        assertEquals(NO_AUTHORIZATION_BELONGING, exception.getMessage());
+        verify(receiptRepository).findById(existingId);
+    }
+
+    @Test
+    @DisplayName("입출금 모두 작성으로 인한 영수증 생성 실패")
+    void updateReceipt_DuplicatedFlow() {
+        //Given
+        Long existingId = receipt.getId();
+        ReceiptDto receiptDtoWithDuplicatedFlow = ReceiptDto.builder()
+            .receiptId(receipt.getId())
+            .content(receipt.getContent())
+            .deposit(1000)
+            .withdrawal(1000)
+            .build();
+        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
+        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
+        //When, Then
+        CustomException exception = assertThrows(CustomException.class, () -> receiptService.updateReceipt(
+            receiptDtoWithDuplicatedFlow, currentUser));
+
+        assertEquals(400, exception.getErrorCode());
+        assertEquals(DUPLICATED_FLOW, exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("입출금 모두 공백으로 인한 영수증 생성 실패")
+    void updateReceipt_EmptyFlow() {
+        //Given
+        Long existingId = receipt.getId();
+        ReceiptDto receiptDtoWithEmptyFlow = ReceiptDto.builder()
+            .receiptId(receipt.getId())
+            .content(receipt.getContent())
+            .deposit(0)
+            .withdrawal(0)
+            .build();
+        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
+        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
+        //When, Then
+        CustomException exception = assertThrows(CustomException.class, () -> receiptService.updateReceipt(
+            receiptDtoWithEmptyFlow, currentUser));
+
+        assertEquals(400, exception.getErrorCode());
+        assertEquals(DUPLICATED_FLOW, exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("영수증 내용 공백으로 인한 영수증 생성 실패")
+    void updateReceipt_EmptyContent() {
+        //Given
+        Long existingId = receipt.getId();
+        ReceiptDto updateDto = ReceiptDto.builder()
+            .receiptId(receipt.getId())
+            .date(receipt.getDate())
+            .content(" ")
+            .deposit(receipt.getDeposit())
+            .build();
+        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
+        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
+        //When, Then
+        CustomException exception = assertThrows(CustomException.class, () -> receiptService.updateReceipt(
+            updateDto, currentUser));
+
+        assertEquals(400, exception.getErrorCode());
+        assertEquals(EMPTY_CONTENT, exception.getMessage());
+    }
 }

@@ -52,7 +52,7 @@ services:
     restart: always
     volumes:
       - ./etc/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml
-      - ./var/log/:/var/log
+      - /var/log/:/var/log
     command: -config.file=/etc/promtail/promtail-config.yml
     depends_on:
       - loki

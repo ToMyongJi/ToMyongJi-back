@@ -58,7 +58,21 @@ jobs:
           username: ubuntu
           key: ${{ secrets.PRIVATE_KEY }}
           script: echo 'SSH connection successful'
-
+          
+      - name: Ensure correct permissions on loki directory
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_PROD }}
+          username: ubuntu
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            sudo chmod -R +r /home/ubuntu/etc/loki/  # 디렉토리와 파일에 읽기 권한 부여
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/etc/loki/  # 소유권을 ubuntu로 변경
+            sudo chmod -R +r /home/ubuntu/etc/promtail/  # 디렉토리와 파일에 읽기 권한 부여
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/etc/promtail/  # 소유권을 ubuntu로 변경
+            sudo chmod -R +r /home/ubuntu/etc/prometheus/  # 디렉토리와 파일에 읽기 권한 부여
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/etc/prometheus/  # 소유권을 ubuntu로 변경
+            
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@master
         with:

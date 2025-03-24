@@ -1,35 +1,23 @@
-# 사용자 인증 활성화 여부
 auth_enabled: false
 
-# Loki 서버의 포트번호
 server:
   http_listen_port: 3100
 
-# Loki 인스턴스의 주소
 common:
-  instance_addr: 127.0.0.1
-  path_prefix: /var/loki
+  path_prefix: /loki
   storage:
-    filesystem:  # 파일시스템 기반 저장소를 사용
-      chunks_directory: /var/loki/chunks
-      rules_directory: /var/loki/rules
+    filesystem:
+      chunks_directory: /tmp/loki/chunks
+      rules_directory: /tmp/loki/rules
+
   replication_factor: 1
   ring:
     kvstore:
       store: inmemory
 
-# 쿼리 범위에 대한 설정
-query_range:
-  results_cache:
-    cache:
-      embedded_cache:
-        enabled: true
-        max_size_mb: 100
-
-# Loki의 스키마 설정
 schema_config:
   configs:
-    - from: 2020-10-24
+    - from: 2020-10-12
       store: tsdb
       object_store: filesystem
       schema: v13
@@ -38,4 +26,7 @@ schema_config:
         period: 24h
 
 ruler:
-  alertmanager_url: http://localhost:9093
+  storage:
+    type: local
+    local:
+      directory: /tmp/loki/rules

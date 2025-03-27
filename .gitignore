@@ -35,3 +35,5 @@ out/
 
 ### VS Code ###
 .vscode/
+var/log/tomyongji/*.log
+LOG_PATH_IS_UNDEFINED/*.log

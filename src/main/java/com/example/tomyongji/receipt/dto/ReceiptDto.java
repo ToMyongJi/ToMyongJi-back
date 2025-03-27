@@ -27,14 +27,4 @@ public class ReceiptDto {
 
     private int deposit;
     private int withdrawal;
-
-//    public Receipt toEntity() {
-//        return Receipt.builder()
-//                .date(this.date)
-//                .id(this.receiptId)
-//                .content(this.content)
-//                .deposit(this.deposit)
-//                .withdrawal(this.withdrawal)
-//                .build();
-//    }
 }

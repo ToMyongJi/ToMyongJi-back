@@ -45,11 +45,14 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         // 해당 API에 대해서는 모든 요청을 허가
-                        .requestMatchers("/api/users/**","/swagger-ui/**", "/v3/api-docs/**","/api/csv/**","/api/receipt/club/{clubId}","/api/club/**","/api/collegesAndClubs").permitAll()
+                        .requestMatchers("/api/users/**","/swagger-ui/**", "/v3/api-docs/**","/api/csv/**","/api/club/**","/api/collegesAndClubs").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/receipt").permitAll()
                         .requestMatchers(HttpMethod.POST,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.PATCH,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.GET,"/api/receipt/{receiptId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/receipt/club/{clubId}/student").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/receipt/club/{userId}").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.DELETE,"/api/receipt/{receiptId}").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers("/api/csv/upload/{userIndexId}","/api/ocr/upload/{userId}","/api/my/{id}").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers("/api/my/members","/api/my/members/{id}","/api/my/members/{deletedStudentNum}").hasAnyRole("PRESIDENT","ADMIN")

@@ -66,9 +66,16 @@ public class ReceiptController {
 
 
     @Operation(summary = "특정 학생회 영수증 조회 api", description = "학생회 아이디를 통해 특정 학생회의 영수증을 조회합니다.")
-    @GetMapping("/club/{clubId}") //특정 학생회 영수증 조회
-    public ApiResponse<ReceiptByStudentClubDto> getReceiptsByClub(@PathVariable("clubId") Long clubId) {
-        ReceiptByStudentClubDto receipts = receiptService.getReceiptsByClub(clubId);
+    @GetMapping("/club/{userId}") //특정 학생회 영수증 조회
+    public ApiResponse<ReceiptByStudentClubDto> getReceiptsByClub(@PathVariable("userId") String userId, @AuthenticationPrincipal UserDetails currentUser) {
+        ReceiptByStudentClubDto receipts = receiptService.getReceiptsByClub(userId, currentUser);
+        return new ApiResponse<>(200, "해당 학생회의 영수증들을 성공적으로 조회했습니다.", receipts); // 200 OK
+    }
+
+    @Operation(summary = "특정 학생회 영수증 조회 일반 학생용 api", description = "학생회 아이디를 통해 특정 학생회의 영수증을 조회합니다.")
+    @GetMapping("/club/{clubId}/student") //특정 학생회 영수증 조회
+    public ApiResponse<List<ReceiptDto>> getReceiptsByClubForStudent(@PathVariable("clubId") Long clubId) {
+        List<ReceiptDto> receipts = receiptService.getReceiptsByClubForStudent(clubId);
         return new ApiResponse<>(200, "해당 학생회의 영수증들을 성공적으로 조회했습니다.", receipts); // 200 OK
     }
 
@@ -79,6 +86,8 @@ public class ReceiptController {
         ReceiptDto receipt = receiptService.getReceiptById(receiptId);
         return new ApiResponse<>(200, "영수증을 성공적으로 조회했습니다.", receipt);
     }
+
+
 
 
     @Operation(summary = "영수증 삭제 api", description = "영수증 아이디를 통해 특정 영수증을 삭제합니다.")

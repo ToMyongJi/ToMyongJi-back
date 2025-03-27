@@ -86,10 +86,14 @@ public class ReceiptService {
         List<Receipt> receipts = receiptRepository.findAll();
         return receiptDtoList(receipts);
     }
-    public ReceiptByStudentClubDto getReceiptsByClub(Long clubId) {
+    public ReceiptByStudentClubDto getReceiptsByClub(String userId, UserDetails currentUser) {
 
-        StudentClub studentClub = studentClubRepository.findById(clubId)
-            .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
+        User user = userRepository.findByUserId(userId)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
+
+        StudentClub studentClub = user.getStudentClub();
+
+        checkClub(studentClub, currentUser);
 
         List<Receipt> receipts = receiptRepository.findAllByStudentClub(studentClub);
 
@@ -100,6 +104,18 @@ public class ReceiptService {
         receiptByStudentClubDto.setBalance(studentClub.getBalance());
         return receiptByStudentClubDto;
     }
+
+    public List<ReceiptDto> getReceiptsByClubForStudent(Long clubId) {
+        StudentClub studentClub = studentClubRepository.findById(clubId)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
+
+        List<Receipt> receipts = receiptRepository.findAllByStudentClub(studentClub);
+
+        return receipts.stream()
+            .map(receiptMapper::toReceiptDto)
+            .collect(Collectors.toList());
+    }
+
     public ReceiptDto getReceiptById(Long receiptId) {
         Receipt receipt = receiptRepository.findById(receiptId)
             .orElseThrow(() -> new CustomException(NOT_FOUND_RECEIPT, 400));

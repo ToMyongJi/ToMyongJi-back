@@ -5,7 +5,7 @@ on:
     branches:
       - dev
 
-permissions:  
+permissions:
   contents: read
 
 jobs:
@@ -79,18 +79,18 @@ jobs:
           
           ssh -i /tmp/tomyongji.pem -o StrictHostKeyChecking=no ubuntu@15.164.162.164 << 'EOF'
               pkill -f 'tomyongji-0.0.1-SNAPSHOT.jar' || true
-              
+          
               # 기존 스왑 비활성화 및 제거
               sudo swapoff -a || true
               sudo rm -f /swapfile || true
-              
+          
               # 새로운 스왑 파일 설정
               sudo fallocate -l 2G /swapfile
               sudo chmod 600 /swapfile
               sudo mkswap /swapfile
               sudo swapon /swapfile
               echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab > /dev/null
-              
+          
               # 새로운 JAR 파일 실행
               nohup java -jar /home/ubuntu/tomyongji-0.0.1-SNAPSHOT.jar > /dev/null 2>&1 &
           EOF

@@ -243,18 +243,20 @@ public class ReceiptTest {
     @DisplayName("특정 학생회 영수증 조회 흐름 테스트")
     void testGetReceiptsByClubFlow() throws Exception {
         //Given
-        Long clubId = user.getStudentClub().getId();
+        String userId = user.getUserId();
+        String token = getToken();
 
         //When, Then
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Object> entity = new HttpEntity<>(null, headers);
+        headers.setBearerAuth(token);
 
+        HttpEntity<Object> entity = new HttpEntity<>(null, headers);
         Map<String, Object> uriVariables = new HashMap<>();
-        uriVariables.put("clubId", clubId);
+        uriVariables.put("userId", userId);
 
         ResponseEntity<ApiResponse<ReceiptByStudentClubDto>> response = restTemplate.exchange(
-            "/api/receipt/club/{clubId}",
+            "/api/receipt/club/{userId}",
             HttpMethod.GET,
             entity,
             new ParameterizedTypeReference<ApiResponse<ReceiptByStudentClubDto>>() {},
@@ -263,6 +265,35 @@ public class ReceiptTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         ApiResponse<ReceiptByStudentClubDto> body = response.getBody();
+        assertNotNull(body);
+        assertThat(body.getStatusCode()).isEqualTo(200);
+        assertThat(body.getStatusMessage()).isEqualTo("해당 학생회의 영수증들을 성공적으로 조회했습니다.");
+    }
+
+    @Test
+    @DisplayName("특정 학생회 영수증 조회 학생용 흐름 테스트")
+    void testGetReceiptsByClubForStudentFlow() throws Exception {
+        //Given
+        Long clubId = user.getStudentClub().getId();
+
+        //When, Then
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Object> entity = new HttpEntity<>(null, headers);
+        Map<String, Object> uriVariables = new HashMap<>();
+        uriVariables.put("clubId", clubId);
+
+        ResponseEntity<ApiResponse<List<ReceiptDto>>> response = restTemplate.exchange(
+            "/api/receipt/club/{clubId}/student",
+            HttpMethod.GET,
+            entity,
+            new ParameterizedTypeReference<ApiResponse<List<ReceiptDto>>>() {},
+            uriVariables
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        ApiResponse<List<ReceiptDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
         assertThat(body.getStatusMessage()).isEqualTo("해당 학생회의 영수증들을 성공적으로 조회했습니다.");

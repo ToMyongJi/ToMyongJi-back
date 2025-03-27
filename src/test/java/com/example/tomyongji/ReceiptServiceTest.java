@@ -168,7 +168,7 @@ public class ReceiptServiceTest {
     void savaReceipt_NoAuthorizationBelonging() {
         //Given
         when(userRepository.findByUserId(receiptCreateDto.getUserId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
+        when(userRepository.findByUserId(anotherUser.getUserId())).thenReturn(Optional.of(anotherUser));
         //When
         CustomException exception = assertThrows(CustomException.class,
             () -> receiptService.createReceipt(receiptCreateDto, anotherCurrentUser));
@@ -287,6 +287,85 @@ public class ReceiptServiceTest {
     @DisplayName("특정 학생회 영수증 조회 성공")
     void getReceiptsByClub_Success() {
         //Given
+        String userId = user.getUserId();
+        Receipt receipt1 = Receipt.builder()
+            .id(2L)
+            .content("영수증 테스트1")
+            .deposit(2000)
+            .studentClub(studentClub)
+            .build();
+        Receipt receipt2 = Receipt.builder()
+            .id(3L)
+            .content("영수증 테스트2")
+            .deposit(3000)
+            .studentClub(studentClub)
+            .build();
+        List<Receipt> receiptList = List.of(receipt1, receipt2);
+        ReceiptDto receiptDto1 = ReceiptDto.builder()
+            .receiptId(2L)
+            .content("영수증 테스트1")
+            .deposit(2000)
+            .build();
+        ReceiptDto receiptDto2 = ReceiptDto.builder()
+            .receiptId(3L)
+            .content("영수증 테스트2")
+            .deposit(3000)
+            .build();
+        List<ReceiptDto> receiptDtoList = List.of(receiptDto1, receiptDto2);
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(
+            Optional.of(user));
+        when(receiptRepository.findAllByStudentClub(studentClub)).thenReturn(receiptList);
+        when(receiptMapper.toReceiptDto(receipt1)).thenReturn(receiptDto1);
+        when(receiptMapper.toReceiptDto(receipt2)).thenReturn(receiptDto2);
+        //When
+        ReceiptByStudentClubDto result = receiptService.getReceiptsByClub(userId, currentUser);
+        //Then
+        assertNotNull(result);
+        assertEquals(result.getReceiptList().get(0), receiptDto1);
+        assertEquals(result.getReceiptList().get(1), receiptDto2);
+        verify(userRepository).findByUserId(userId);
+        verify(receiptRepository).findAllByStudentClub(studentClub);
+    }
+
+    @Test
+    @DisplayName("유저 조회 실패로 인한 특정 학생회 영수증 조회 실패")
+    void getReceiptsByClub_NotFoundStudentClub() {
+        //Given
+        String wrongUserId= "wrongUserId";
+
+        when(userRepository.findByUserId(wrongUserId)).thenReturn(Optional.of(user));
+        //When, Then
+        CustomException exception = assertThrows(CustomException.class,
+            () -> receiptService.getReceiptsByClub(wrongUserId, currentUser));
+
+        assertEquals(400, exception.getErrorCode());
+        assertEquals(NOT_FOUND_USER, exception.getMessage());
+        verify(userRepository).findByUserId(wrongUserId);
+    }
+
+    @Test
+    @DisplayName("타소속 접근으로 인한 특정 학생회 영수증 조회 실패")
+    void getReceiptsByClub_NoAuthorizationBelonging() {
+        //Given
+        String userId = user.getUserId();
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(userRepository.findByUserId(anotherUser.getUserId())).thenReturn(Optional.of(anotherUser));
+        //When, Then
+        CustomException exception = assertThrows(CustomException.class,
+            () -> receiptService.getReceiptsByClub(userId, anotherCurrentUser));
+
+        assertEquals(400, exception.getErrorCode());
+        assertEquals(NO_AUTHORIZATION_BELONGING, exception.getMessage());
+        verify(userRepository).findByUserId(userId);
+    }
+
+    @Test
+    @DisplayName("특정 학생회 영수증 조회 학생용 성공")
+    void getReceiptsByClubForStudent_Success() {
+        //Given
         Long clubId = studentClub.getId();
         Receipt receipt1 = Receipt.builder()
             .id(2L)
@@ -318,29 +397,28 @@ public class ReceiptServiceTest {
         when(receiptMapper.toReceiptDto(receipt1)).thenReturn(receiptDto1);
         when(receiptMapper.toReceiptDto(receipt2)).thenReturn(receiptDto2);
         //When
-        ReceiptByStudentClubDto result = receiptService.getReceiptsByClub(clubId);
+        List<ReceiptDto> result = receiptService.getReceiptsByClubForStudent(clubId);
         //Then
         assertNotNull(result);
-        assertEquals(result.getReceiptList().get(0), receiptDto1);
-        assertEquals(result.getReceiptList().get(1), receiptDto2);
+        assertEquals(result.get(0), receiptDto1);
+        assertEquals(result.get(1), receiptDto2);
         verify(studentClubRepository).findById(clubId);
         verify(receiptRepository).findAllByStudentClub(studentClub);
     }
 
     @Test
-    @DisplayName("학생회 조회 실패로 인한 특정 학생회 영수증 조회 실패")
-    void getReceiptsByClub_NotFoundStudentClub() {
+    @DisplayName("학생회 조회 실패로 인한 특정 학생회 영수증 조회 학생용 실패")
+    void getReceiptsByClubForStudent_NotFoundStudentClub() {
         //Given
-        Long wrongClubId = 999L;
+        Long clubId = 999L;
 
-        when(studentClubRepository.findById(wrongClubId)).thenReturn(Optional.empty());
+        when(studentClubRepository.findById(clubId)).thenReturn(Optional.empty());
         //When, Then
         CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.getReceiptsByClub(wrongClubId));
-
+            () -> receiptService.getReceiptsByClubForStudent(clubId));
         assertEquals(400, exception.getErrorCode());
         assertEquals(NOT_FOUND_STUDENT_CLUB, exception.getMessage());
-        verify(studentClubRepository).findById(wrongClubId);
+        verify(studentClubRepository).findById(clubId);
     }
 
     @Test

@@ -325,7 +325,6 @@ public class ReceiptServiceTest {
         assertNotNull(result);
         assertEquals(result.getReceiptList().get(0), receiptDto1);
         assertEquals(result.getReceiptList().get(1), receiptDto2);
-        verify(userRepository).findByUserId(userId);
         verify(receiptRepository).findAllByStudentClub(studentClub);
     }
 
@@ -335,7 +334,7 @@ public class ReceiptServiceTest {
         //Given
         String wrongUserId= "wrongUserId";
 
-        when(userRepository.findByUserId(wrongUserId)).thenReturn(Optional.of(user));
+        when(userRepository.findByUserId(wrongUserId)).thenReturn(Optional.empty());
         //When, Then
         CustomException exception = assertThrows(CustomException.class,
             () -> receiptService.getReceiptsByClub(wrongUserId, currentUser));

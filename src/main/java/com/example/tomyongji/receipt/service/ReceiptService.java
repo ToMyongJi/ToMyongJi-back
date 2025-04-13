@@ -86,9 +86,9 @@ public class ReceiptService {
         List<Receipt> receipts = receiptRepository.findAll();
         return receiptDtoList(receipts);
     }
-    public ReceiptByStudentClubDto getReceiptsByClub(String userId, UserDetails currentUser) {
+    public ReceiptByStudentClubDto getReceiptsByClub(Long id, UserDetails currentUser) {
 
-        User user = userRepository.findByUserId(userId)
+        User user = userRepository.findById(id)
             .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
 
         StudentClub studentClub = user.getStudentClub();

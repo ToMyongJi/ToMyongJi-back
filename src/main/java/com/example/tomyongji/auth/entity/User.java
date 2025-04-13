@@ -17,6 +17,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(unique = true)
     @NotBlank(message="사용자 아이디는 필수 입력값입니다")
     private String userId;
     @NotBlank(message="이름은 필수 입력값입니다")

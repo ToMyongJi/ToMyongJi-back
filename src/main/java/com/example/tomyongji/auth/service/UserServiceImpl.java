@@ -29,6 +29,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
@@ -52,6 +53,7 @@ public class UserServiceImpl implements UserService {
     private final JwtProvider jwtProvider;
     private final UserMapper userMapper;
     @Override
+    @Transactional
     public Long signUp(UserRequestDto userRequestDto) {
         // 각 학생회, 대학이 존재하는지 확인
         College college = collegeRepository.findByCollegeName(userRequestDto.getCollegeName())

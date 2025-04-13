@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -65,9 +66,16 @@ public class ReceiptController {
 
 
     @Operation(summary = "특정 학생회 영수증 조회 api", description = "학생회 아이디를 통해 특정 학생회의 영수증을 조회합니다.")
-    @GetMapping("/club/{clubId}") //특정 학생회 영수증 조회
-    public ApiResponse<ReceiptByStudentClubDto> getReceiptsByClub(@PathVariable("clubId") Long clubId) {
-        ReceiptByStudentClubDto receipts = receiptService.getReceiptsByClub(clubId);
+    @GetMapping("/club/{userId}") //특정 학생회 영수증 조회
+    public ApiResponse<ReceiptByStudentClubDto> getReceiptsByClub(@PathVariable("userId") String userId, @AuthenticationPrincipal UserDetails currentUser) {
+        ReceiptByStudentClubDto receipts = receiptService.getReceiptsByClub(userId, currentUser);
+        return new ApiResponse<>(200, "해당 학생회의 영수증들을 성공적으로 조회했습니다.", receipts); // 200 OK
+    }
+
+    @Operation(summary = "특정 학생회 영수증 조회 일반 학생용 api", description = "학생회 아이디를 통해 특정 학생회의 영수증을 조회합니다.")
+    @GetMapping("/club/{clubId}/student") //특정 학생회 영수증 조회
+    public ApiResponse<List<ReceiptDto>> getReceiptsByClubForStudent(@PathVariable("clubId") Long clubId) {
+        List<ReceiptDto> receipts = receiptService.getReceiptsByClubForStudent(clubId);
         return new ApiResponse<>(200, "해당 학생회의 영수증들을 성공적으로 조회했습니다.", receipts); // 200 OK
     }
 
@@ -80,6 +88,8 @@ public class ReceiptController {
     }
 
 
+
+
     @Operation(summary = "영수증 삭제 api", description = "영수증 아이디를 통해 특정 영수증을 삭제합니다.")
     @DeleteMapping("/{receiptId}") //특정 영수증 삭제
     public ApiResponse<ReceiptDto> deleteReceipt(@PathVariable("receiptId") Long receiptId, @AuthenticationPrincipal UserDetails currentUser) {
@@ -88,9 +98,9 @@ public class ReceiptController {
     }
 
     @Operation(summary = "영수증 수정 api", description = "영수증 아이디를 통해 특정 영수증을 수정합니다.")
-    @PatchMapping //특정 영수증 수정
-    public ApiResponse<ReceiptDto> updateReceipt(@RequestBody ReceiptDto receiptDto) {
-        ReceiptDto updatedReceipt = receiptService.updateReceipt(receiptDto);
+    @PutMapping //특정 영수증 수정
+    public ApiResponse<ReceiptDto> updateReceipt(@RequestBody ReceiptDto receiptDto, @AuthenticationPrincipal UserDetails currentUser) {
+        ReceiptDto updatedReceipt = receiptService.updateReceipt(receiptDto, currentUser);
         return new ApiResponse<>(200, "영수증을 성공적으로 수정했습니다.", updatedReceipt);
     }
 }

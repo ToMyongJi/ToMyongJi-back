@@ -10,4 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
     List<Receipt> findAllByStudentClub(StudentClub studentClub);
     boolean existsByDateAndContent(Date date, String content);
+    void deleteAllByStudentClub(StudentClub studentClub);
+
+    List<Receipt> findByStudentClubAndDateBetween(StudentClub studentClub, Date startDate, Date endDate);
 }

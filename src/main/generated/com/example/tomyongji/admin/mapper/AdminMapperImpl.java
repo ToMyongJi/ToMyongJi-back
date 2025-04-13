@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2024-12-30T18:11:46+0900",
+    date = "2025-03-23T20:39:11+0900",
     comments = "version: 1.5.0.Final, compiler: javac, environment: Java 17 (Oracle Corporation)"
 )
 @Component
@@ -25,12 +25,12 @@ public class AdminMapperImpl implements AdminMapper {
             return null;
         }
 
-        PresidentDto presidentDto = new PresidentDto();
+        PresidentDto.PresidentDtoBuilder presidentDto = PresidentDto.builder();
 
-        presidentDto.setStudentNum( president.getStudentNum() );
-        presidentDto.setName( president.getName() );
+        presidentDto.studentNum( president.getStudentNum() );
+        presidentDto.name( president.getName() );
 
-        return presidentDto;
+        return presidentDto.build();
     }
 
     @Override
@@ -39,12 +39,12 @@ public class AdminMapperImpl implements AdminMapper {
             return null;
         }
 
-        President president = new President();
+        President.PresidentBuilder president = President.builder();
 
-        president.setStudentNum( presidentDto.getStudentNum() );
-        president.setName( presidentDto.getName() );
+        president.studentNum( presidentDto.getStudentNum() );
+        president.name( presidentDto.getName() );
 
-        return president;
+        return president.build();
     }
 
     @Override
@@ -128,6 +128,7 @@ public class AdminMapperImpl implements AdminMapper {
 
         Member.MemberBuilder member = Member.builder();
 
+        member.id( saveMemberDto.getId() );
         member.studentNum( saveMemberDto.getStudentNum() );
         member.name( saveMemberDto.getName() );
 

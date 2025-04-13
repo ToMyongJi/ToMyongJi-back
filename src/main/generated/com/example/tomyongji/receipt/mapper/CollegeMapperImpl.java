@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2024-12-30T18:11:46+0900",
+    date = "2025-03-23T20:39:11+0900",
     comments = "version: 1.5.0.Final, compiler: javac, environment: Java 17 (Oracle Corporation)"
 )
 @Component
@@ -19,13 +19,13 @@ public class CollegeMapperImpl implements CollegeMapper {
             return null;
         }
 
-        CollegeDto collegeDto = new CollegeDto();
+        CollegeDto.CollegeDtoBuilder collegeDto = CollegeDto.builder();
 
         if ( college.getId() != null ) {
-            collegeDto.setCollegeId( college.getId() );
+            collegeDto.collegeId( college.getId() );
         }
-        collegeDto.setCollegeName( college.getCollegeName() );
+        collegeDto.collegeName( college.getCollegeName() );
 
-        return collegeDto;
+        return collegeDto.build();
     }
 }

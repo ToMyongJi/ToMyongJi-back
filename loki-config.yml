@@ -1,38 +1,32 @@
 auth_enabled: false
+
 server:
   http_listen_port: 3100
-  grpc_listen_port: 9096
-  log_level: info
 
-distributor:
+common:
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /tmp/loki/chunks
+      rules_directory: /tmp/loki/rules
+
+  replication_factor: 1
   ring:
     kvstore:
       store: inmemory
-      consistency_level: strong
-
-ingester:
-  chunk_idle_period: 15m
-  chunk_retain_period: 1h
-  max_chunk_size: 1048576
-  max_chunk_age: 1h
-
-storage_config:
-  boltdb_shipper:
-    active_index_directory: /loki/index
-    cache_location: /loki/cache
-    resync_interval: 10m
-  filesystem:
-    directory: /loki/chunks
-
-limits_config:
-  max_streams_per_user: 10000
 
 schema_config:
   configs:
-    - from: 2024-01-01
-      store: boltdb-shipper
+    - from: 2020-10-12
+      store: tsdb
       object_store: filesystem
-      schema: v11
+      schema: v13
       index:
         prefix: index_
         period: 24h
+
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /tmp/loki/rules

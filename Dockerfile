@@ -1,9 +1,5 @@
-FROM openjdk:17-alpine
+FROM openjdk:17-jdk
 
-ARG JAR_FILE=/build/libs/tomyongji-0.0.1-SNAPSHOT.jar
+COPY build/libs/tomyongji-0.0.1-SNAPSHOT.jar app.jar
 
-COPY ${JAR_FILE} tomyongji.jar
-
-ENTRYPOINT ["java","-jar","-Dspring.profiles.active=prod", "tomyongji.jar"]
-
-
+ENTRYPOINT ["java", "-jar", "/app.jar"]

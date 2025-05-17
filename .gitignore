@@ -37,3 +37,7 @@ out/
 .vscode/
 var/log/tomyongji/*.log
 LOG_PATH_IS_UNDEFINED/*.log
+
+# 내 로컬 테스트용 Docker 설정 무시
+Dockerfile
+docker-compose.yml

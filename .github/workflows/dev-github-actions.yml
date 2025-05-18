@@ -74,6 +74,3 @@ jobs:
             docker pull ${{ secrets.DEV_DOCKER_USERNAME }}/tomyongji:latest
             docker-compose down
             docker-compose up -d
-
-
-

@@ -41,3 +41,6 @@ LOG_PATH_IS_UNDEFINED/*.log
 # 내 로컬 테스트용 Docker 설정 무시
 Dockerfile
 docker-compose.yml
+
+# 내 깃허브에서 git actions가 수행되지 않도록 함
+.github/workflows/dev-github-actions.yml

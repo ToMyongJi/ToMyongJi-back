@@ -25,6 +25,9 @@ jobs:
       - name: Build Spring Boot JAR without tests
         run: ./gradlew build -x test
 
+      - name: Debug check docker username
+        run: echo "DOCKER_USERNAME=${{ secrets.DEV_DOCKER_USERNAME }}"
+
       - name: Build Docker image
         run: docker build -t ${{ secrets.DEV_DOCKER_USERNAME }}/tomyongji:latest .
 
@@ -51,7 +54,6 @@ jobs:
           source: nginx/conf.d/nginx.conf
           target: /home/ubuntu/nginx-https/conf.d/
 
-      # ✅ EC2에 application.properties 생성
       - name: Create application.properties on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -72,5 +74,6 @@ jobs:
             docker pull ${{ secrets.DEV_DOCKER_USERNAME }}/tomyongji:latest
             docker-compose down
             docker-compose up -d
+
 
 

@@ -242,7 +242,7 @@ public class ReceiptTest {
     @DisplayName("특정 학생회 영수증 조회 흐름 테스트")
     void testGetReceiptsByClubFlow() throws Exception {
         //Given
-        String userId = user.getUserId();
+        Long id = user.getId();
         String token = getToken();
 
         //When, Then
@@ -252,10 +252,10 @@ public class ReceiptTest {
 
         HttpEntity<Object> entity = new HttpEntity<>(null, headers);
         Map<String, Object> uriVariables = new HashMap<>();
-        uriVariables.put("userId", userId);
+        uriVariables.put("id", id);
 
         ResponseEntity<ApiResponse<ReceiptByStudentClubDto>> response = restTemplate.exchange(
-            "/api/receipt/club/{userId}",
+            "/api/receipt/club/{id}",
             HttpMethod.GET,
             entity,
             new ParameterizedTypeReference<ApiResponse<ReceiptByStudentClubDto>>() {},

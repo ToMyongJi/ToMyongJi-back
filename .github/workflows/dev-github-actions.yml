@@ -19,8 +19,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Build Spring Boot JAR
-        run: ./gradlew clean bootJar
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build Spring Boot JAR without tests
+        run: ./gradlew build -x test
 
       - name: Build Docker image
         run: docker build -t ${{ secrets.DEV_DOCKER_USERNAME }}/tomyongji:latest .

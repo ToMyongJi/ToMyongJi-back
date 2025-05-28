@@ -98,10 +98,6 @@ dependencies {
 
 	implementation 'org.mapstruct:mapstruct:1.5.0.Final'
 
-	//모니터링 의존성
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'io.micrometer:micrometer-registry-prometheus'
-
 
 }
 

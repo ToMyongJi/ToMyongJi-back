@@ -22,6 +22,7 @@ public class ErrorMsg {
     public static final String INCORRECT_ROLE_VALUE="Role의 값이 올바르지 않습니다.";
     public static final String ERROR_SEND_EMAIL = "이메일 전송 중 오류가 발생했습니다.";
     public static final String EMPTY_BODY = "Body가 비어있습니다.";
+    public static final String PARSING_ERROR = "PDF 파싱 중 오류가 발생했습니다.";
     public static final String NOT_FOUND_INCODING = "지원하지 않는 인코딩 방식입니다.";
 
 }

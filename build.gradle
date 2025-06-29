@@ -98,7 +98,8 @@ dependencies {
 
 	implementation 'org.mapstruct:mapstruct:1.5.0.Final'
 
-
+	//PDF 파싱
+	implementation 'org.apache.pdfbox:pdfbox:2.0.30'
 }
 
 tasks.named('test') {

@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/api/receipt").permitAll()
                         .requestMatchers(HttpMethod.POST,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.PATCH,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
+                        .requestMatchers(HttpMethod.POST,"/api/breakdown/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.GET,"/api/receipt/{receiptId}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/receipt/club/{clubId}/student").permitAll()
@@ -57,8 +58,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/csv/upload/{userIndexId}","/api/ocr/upload/{userId}","/api/my/{id}").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers("/api/my/members","/api/my/members/{id}","/api/my/members/{deletedStudentNum}").hasAnyRole("PRESIDENT","ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        //pdf 파일 업로드 테스트 임시 경로 추가
-                        .requestMatchers("/api/users/**","/swagger-ui/**", "/v3/api-docs/**","/api/csv/**","/api/club/**","/api/collegesAndClubs","/api/breakdown/**").permitAll()
                         .anyRequest().denyAll())
 //                        .anyRequest().permitAll())
                 // JWT 인증을 위하여 직접 구현한 필터를 UsernamePasswordAuthenticationFilter 전에 실행

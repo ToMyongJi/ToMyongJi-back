@@ -27,11 +27,11 @@ public class BreakDownController {
     @Operation(summary = "PDF 거래내역서 파싱 api", description = "PDF 파일을 업로드하여 거래내역을 파싱합니다.")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/parse")
-    public ApiResponse<BreakDownDto.PdfParseResult> parsePdfFile(
+    public ApiResponse<BreakDownDto> parsePdfFile(
             @RequestPart("file") MultipartFile file,
             @AuthenticationPrincipal UserDetails currentUser) throws Exception {
 
-        BreakDownDto.PdfParseResult result = breakDownService.parsePdf(file, currentUser);
+        BreakDownDto result = breakDownService.parsePdf(file, currentUser);
         return new ApiResponse<>(200, "PDF 파싱을 성공적으로 완료했습니다.", result);
     }
 }

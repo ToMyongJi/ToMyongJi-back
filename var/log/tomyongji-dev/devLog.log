@@ -1,0 +1,35 @@
+2025-06-29 15:57:43 - HV000001: Hibernate Validator 8.0.1.Final
+<2025-06-29 15:57:43 - Starting TomyongjiApplication using Java 17.0.14 with PID 38472 (C:\Users\wjddn\IdeaProjects\ToMyongJi-back\build\classes\java\main started by wjddn in C:\Users\wjddn\IdeaProjects\ToMyongJi-back)
+<2025-06-29 15:57:43 - No active profile set, falling back to 1 default profile: "default"
+<2025-06-29 15:57:47 - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+<2025-06-29 15:57:47 - Finished Spring Data repository scanning in 177 ms. Found 8 JPA repository interfaces.
+<2025-06-29 15:57:48 - Tomcat initialized with port 8080 (http)
+<2025-06-29 15:57:48 - Initializing ProtocolHandler ["http-nio-8080"]
+<2025-06-29 15:57:48 - Starting service [Tomcat]
+<2025-06-29 15:57:48 - Starting Servlet engine: [Apache Tomcat/10.1.26]
+<2025-06-29 15:57:48 - Initializing Spring embedded WebApplicationContext
+<2025-06-29 15:57:48 - Root WebApplicationContext: initialization completed in 4960 ms
+<2025-06-29 15:57:49 - HHH000204: Processing PersistenceUnitInfo [name: default]
+<2025-06-29 15:57:49 - HHH000412: Hibernate ORM core version 6.5.2.Final
+<2025-06-29 15:57:50 - HHH000026: Second-level cache disabled
+<2025-06-29 15:57:51 - No LoadTimeWeaver setup: ignoring JPA class transformer
+<2025-06-29 15:57:51 - HikariPool-1 - Starting...
+<2025-06-29 15:57:52 - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@684f7f1c
+<2025-06-29 15:57:52 - HikariPool-1 - Start completed.
+<2025-06-29 15:57:52 - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+<2025-06-29 15:57:52 - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+<2025-06-29 15:57:56 - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+<2025-06-29 15:57:56 - Initialized JPA EntityManagerFactory for persistence unit 'default'
+<2025-06-29 15:57:58 - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+<2025-06-29 15:57:58 - Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+<2025-06-29 15:57:59 - Exposing 16 endpoints beneath base path '/actuator'
+<2025-06-29 15:58:01 - Starting ProtocolHandler ["http-nio-8080"]
+<2025-06-29 15:58:01 - Tomcat started on port 8080 (http) with context path '/'
+<2025-06-29 15:58:01 - Started TomyongjiApplication in 19.133 seconds (process running for 20.883)
+<2025-06-29 15:58:02 - Initializing Spring DispatcherServlet 'dispatcherServlet'
+<2025-06-29 15:58:02 - Initializing Servlet 'dispatcherServlet'
+<2025-06-29 15:58:02 - Completed initialization in 3 ms
+<2025-06-29 16:00:04 - Closing JPA EntityManagerFactory for persistence unit 'default'
+<2025-06-29 16:00:04 - HikariPool-1 - Shutdown initiated...
+<2025-06-29 16:00:04 - HikariPool-1 - Shutdown completed.
+<

@@ -26,5 +26,5 @@ public class ErrorMsg {
     public static final String PARSING_TRANSACTION_ERROR = "PDF 거래내역 파싱 중 오류가 발생했습니다.";
     public static final String EMPTY_FILE = "PDF 파일이 존재하지 않습니다.";
     public static final String NOT_FOUND_INCODING = "지원하지 않는 인코딩 방식입니다.";
-
+    public static final String NOT_FOUND_BREAKDOWN = "거래내역서를 찾을 수 없습니다.";
 }

@@ -49,7 +49,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/api/receipt").permitAll()
                         .requestMatchers(HttpMethod.POST,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.PATCH,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
-                        .requestMatchers(HttpMethod.POST,"/api/breakdown/**").permitAll()
+                        //breakDown 권한 설정
+                        .requestMatchers(HttpMethod.POST,"/api/breakdown/**").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.GET,"/api/receipt/{receiptId}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/receipt/club/{clubId}/student").permitAll()

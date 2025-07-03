@@ -1,9 +1,4 @@
 package com.example.tomyongji.admin.service;
-
-import static com.example.tomyongji.validation.ErrorMsg.EXISTING_USER;
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_MEMBER;
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
-
 import com.example.tomyongji.admin.dto.MemberDto;
 import com.example.tomyongji.admin.dto.PresidentDto;
 import com.example.tomyongji.admin.entity.Member;
@@ -17,8 +12,18 @@ import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.my.dto.AdminSaveMemberDto;
 import com.example.tomyongji.my.dto.SaveMemberDto;
+import com.example.tomyongji.receipt.dto.BreakDownDto;
+import com.example.tomyongji.receipt.dto.ReceiptDto;
+import com.example.tomyongji.receipt.entity.BreakDown;
+import com.example.tomyongji.receipt.entity.Receipt;
 import com.example.tomyongji.receipt.entity.StudentClub;
+import com.example.tomyongji.receipt.entity.TempReceipt;
+import com.example.tomyongji.receipt.mapper.BreakDownMapper;
+import com.example.tomyongji.receipt.mapper.ReceiptMapper;
+import com.example.tomyongji.receipt.repository.BreakDownRepository;
+import com.example.tomyongji.receipt.repository.ReceiptRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
+import com.example.tomyongji.receipt.repository.TempReceiptRepository;
 import com.example.tomyongji.validation.CustomException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +33,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.example.tomyongji.validation.ErrorMsg.*;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +47,12 @@ public class AdminService {
     private final EmailVerificationRepository emailVerificationRepository;
     private final AdminMapper adminMapper;
     private final ClubVerificationRepository clubVerificationRepository;
+    private final BreakDownRepository breakDownRepository;
+    private final BreakDownMapper breakDownMapper;
+    private final ReceiptMapper receiptMapper;
+    private final TempReceiptRepository tempReceiptRepository;
+    private final ReceiptRepository receiptRepository;
+
 
     public PresidentDto getPresident(Long clubId) {
         Optional<StudentClub> studentClub = studentClubRepository.findById(clubId);
@@ -105,6 +118,7 @@ public class AdminService {
         return members.stream().map(adminMapper::toMemberDto).collect(Collectors.toList());
     }
 
+
     public MemberDto saveMember(AdminSaveMemberDto memberDto) {
         if (memberRepository.existsByStudentNum(memberDto.getStudentNum())) {
             throw new CustomException(EXISTING_USER, 400);  // 중복 학번 예외 처리
@@ -144,5 +158,71 @@ public class AdminService {
         //등록된 멤버 정보도 삭제
         memberRepository.deleteById(memberId);
         return memberDto;
+    }
+
+
+    public List<BreakDownDto> getAllBreakDowns() {
+        return breakDownRepository.findAll()
+                .stream()
+                .map(breakDownMapper::toBreakDownDto)
+                .collect(Collectors.toList());
+    }
+
+    public BreakDownDto getBreakDown(Long id) {
+        BreakDown breakDown = breakDownRepository.findById(id)
+                .orElseThrow(() -> new CustomException(NOT_FOUND_BREAKDOWN, 400));
+
+        return breakDownMapper.toBreakDownDto(breakDown);
+    }
+
+    @Transactional
+    public List<ReceiptDto> approveBreakDown(Long breakDownId) {
+        BreakDown breakDown = breakDownRepository.findById(breakDownId)
+                .orElseThrow(() -> new CustomException(NOT_FOUND_BREAKDOWN, 400));
+
+        List<TempReceipt> tempReceiptList = tempReceiptRepository.findAllByBreakDownId(breakDownId);
+
+        StudentClub studentClub = breakDown.getStudentClub();
+        List<Receipt> receiptList = new ArrayList<>();
+        List<ReceiptDto> receiptDtoList = new ArrayList<>();
+
+        for (TempReceipt tempReceipt : tempReceiptList) {
+            int amount = tempReceipt.getAmount();
+            int deposit = 0;
+            int withdrawal = 0;
+
+            if(amount > 0) {
+                deposit = amount;
+            } else {
+                withdrawal = amount;
+            }
+            Receipt receipt = Receipt.builder()
+                    .date(tempReceipt.getDate())
+                    .content(tempReceipt.getContents())
+                    .deposit(deposit)
+                    .withdrawal(withdrawal)
+                    .verification(true)
+                    .studentClub(studentClub)
+                    .build();
+
+            receiptList.add(receipt);
+            receiptDtoList.add(receiptMapper.toReceiptDto(receipt));
+        }
+        receiptRepository.saveAll(receiptList);
+
+        int countReceipt = receiptRepository.countByStudentClub(studentClub);
+        int countVerificatedReceipt = receiptRepository.countByStudentClubAndVerificationTrue(studentClub);
+
+        double ratio = countVerificatedReceipt/countReceipt;
+
+        if (ratio > 0.3) {
+            studentClub.setVerification(true);
+            studentClubRepository.save(studentClub);
+        }
+
+        tempReceiptRepository.deleteByBreakDownId(breakDownId);
+        breakDownRepository.delete(breakDown);
+
+        return receiptDtoList;
     }
 }

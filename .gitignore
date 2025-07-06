@@ -44,3 +44,14 @@ docker-compose.yml
 
 # 내 깃허브에서 git actions가 수행되지 않도록 함
 .github/workflows/dev-github-actions.yml
+
+# MapStruct 등 애노테이션 프로세서가 생성하는 소스
+# src/main 바로 아래 generated 폴더를 무시
+/src/main/generated/
+
+# Gradle 기본 생성 폴더(안전하게 추가)
+build/generated-sources/
+build/generated/
+
+# var/log/tomyongji-dev/*.log
+var/log/tomyongji-dev/*.log

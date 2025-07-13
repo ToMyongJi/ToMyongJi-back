@@ -2,6 +2,7 @@ package com.example.tomyongji.receipt.controller;
 
 import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.receipt.dto.BreakDownDto;
+import com.example.tomyongji.receipt.dto.ReceiptDto;
 import com.example.tomyongji.receipt.service.BreakDownService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,7 +32,8 @@ public class BreakDownController {
             @RequestPart("file") MultipartFile file,
             @AuthenticationPrincipal UserDetails currentUser) throws Exception {
 
-        BreakDownDto result = breakDownService.parsePdf(file, currentUser);
-        return new ApiResponse<>(200, "PDF 파싱을 성공적으로 완료했습니다.", result);
+        BreakDownDto breakDownDto = breakDownService.parsePdf(file, currentUser);
+        breakDownService.fetchAndProcessDocument(breakDownDto);
+        return new ApiResponse<>(200, "PDF 파싱을 성공적으로 완료했습니다.", breakDownDto);
     }
 }

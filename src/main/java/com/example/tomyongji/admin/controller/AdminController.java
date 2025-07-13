@@ -5,9 +5,6 @@ import com.example.tomyongji.admin.dto.MemberDto;
 import com.example.tomyongji.admin.dto.PresidentDto;
 import com.example.tomyongji.admin.service.AdminService;
 import com.example.tomyongji.my.dto.AdminSaveMemberDto;
-import com.example.tomyongji.receipt.dto.BreakDownDto;
-import com.example.tomyongji.receipt.dto.ReceiptDto;
-import com.example.tomyongji.receipt.entity.BreakDown;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -69,26 +66,5 @@ public class AdminController {
     public ApiResponse<MemberDto> deleteMember(@PathVariable("memberId") Long memberId) {
         MemberDto memberDto = adminService.deleteMember(memberId);
         return new ApiResponse<>(200, "소속 부원 삭제에 성공했습니다.", memberDto);
-    }
-
-    @Operation(summary = "거래내역서 승인 요청 전체 조회 api", description = "거래내역서 승인 요청 전체를 조회합니다.")
-    @GetMapping("/breakdowns")
-    public ApiResponse<List<BreakDownDto>> getAllBreakDowns() {
-        List<BreakDownDto> breakDownDtoList = adminService.getAllBreakDowns();
-        return new ApiResponse<>(200, "거래 내역서 승인 요청 전체 조회에 성공했습니다.", breakDownDtoList);
-    }
-
-    @Operation(summary = "특정 거래내역서 승인 요청 조회 api", description = "거래내역서 아이디를 통해 승인 요청을 조회합니다.")
-    @GetMapping("/breakdowns/{breakDownId}")
-    public ApiResponse<BreakDownDto> getBreakDown(@PathVariable("breakDownId") Long breakDownId) {
-        BreakDownDto breakDownDto = adminService.getBreakDown(breakDownId);
-        return new ApiResponse<>(200, "특정 거래 내역서 승인 요청 조회에 성공했습니다.", breakDownDto);
-    }
-
-    @Operation(summary = "거래내역서 승인 api", description = "거래내역서 아이디를 통해 영수증 업로드를 승인합니다.")
-    @PostMapping("/breakdowns/approval/{breakDownId}")
-    public ApiResponse<List<ReceiptDto>> approveBreakDown(@PathVariable("breakDownId") Long breakDownId) {
-        List<ReceiptDto> receiptDtoList = adminService.approveBreakDown(breakDownId);
-        return new ApiResponse<>(200, "영수증 업로드를 승인에 승인했습니다.", receiptDtoList);
     }
 }

@@ -1,13 +1,18 @@
 package com.example.tomyongji.receipt.dto;
 
-import lombok.Data;
-
 import java.util.Date;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class BreakDownDto {
-    private Long id;
-    private Date issueDate;
+    private String issueDate;
     private String issueNumber;
-    private String studentClubName;
+    private Long studentClubId;
+
 }

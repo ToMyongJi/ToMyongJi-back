@@ -37,6 +37,11 @@ public class LoggingInterceptor implements HandlerInterceptor {
     }
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+
+        if (!(request instanceof ContentCachingRequestWrapper)) {
+            return;
+        }
+
         ContentCachingRequestWrapper requestWrapper = (ContentCachingRequestWrapper) request;
         ContentCachingResponseWrapper responseWrapper = (ContentCachingResponseWrapper) response;
 

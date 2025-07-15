@@ -34,6 +34,4 @@ public interface ReceiptMapper {
     // ReceiptDto to ReceiptCreateDto
     ReceiptCreateDto toReceiptCreateDto(ReceiptDto receiptDto);
 
-
-
 }

@@ -14,5 +14,4 @@ public class BreakDownDto {
     private String issueDate;
     private String issueNumber;
     private Long studentClubId;
-
 }

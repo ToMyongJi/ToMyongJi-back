@@ -14,6 +14,5 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
     int countByStudentClub(StudentClub studentClub);
     int countByStudentClubAndVerificationTrue(StudentClub studentClub);
 
-
     List<Receipt> findByStudentClubAndDateBetween(StudentClub studentClub, Date startDate, Date endDate);
 }

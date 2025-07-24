@@ -16,16 +16,15 @@ import com.example.tomyongji.auth.repository.ClubVerificationRepository;
 import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.my.dto.AdminSaveMemberDto;
-import com.example.tomyongji.my.dto.SaveMemberDto;
 import com.example.tomyongji.receipt.entity.StudentClub;
+import com.example.tomyongji.receipt.mapper.ReceiptMapper;
+import com.example.tomyongji.receipt.repository.ReceiptRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.validation.CustomException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +39,9 @@ public class AdminService {
     private final EmailVerificationRepository emailVerificationRepository;
     private final AdminMapper adminMapper;
     private final ClubVerificationRepository clubVerificationRepository;
+    private final ReceiptMapper receiptMapper;
+    private final ReceiptRepository receiptRepository;
+
 
     public PresidentDto getPresident(Long clubId) {
         Optional<StudentClub> studentClub = studentClubRepository.findById(clubId);
@@ -104,6 +106,7 @@ public class AdminService {
         List<Member> members = memberRepository.findByStudentClub(studentClub.get());
         return members.stream().map(adminMapper::toMemberDto).collect(Collectors.toList());
     }
+
 
     public MemberDto saveMember(AdminSaveMemberDto memberDto) {
         if (memberRepository.existsByStudentNum(memberDto.getStudentNum())) {

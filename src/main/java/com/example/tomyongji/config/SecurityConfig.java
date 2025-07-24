@@ -44,11 +44,15 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagementConfigurer -> sessionManagementConfigurer
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
+                    // actuator 헬스체크와 Prometheus 엔드포인트는 인증 없이 허용
+                        .requestMatchers("/actuator/health", "/actuator/prometheus").permitAll()
                         // 해당 API에 대해서는 모든 요청을 허가
                         .requestMatchers("/api/users/**","/swagger-ui/**", "/v3/api-docs/**","/api/csv/**","/api/club/**","/api/collegesAndClubs").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/receipt").permitAll()
                         .requestMatchers(HttpMethod.POST,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.PATCH,"/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
+                        //breakDown 권한 설정
+                        .requestMatchers(HttpMethod.POST,"/api/breakdown/**").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/receipt").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.GET,"/api/receipt/{receiptId}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/receipt/club/{clubId}/student").permitAll()

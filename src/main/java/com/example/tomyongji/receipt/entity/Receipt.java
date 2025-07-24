@@ -31,6 +31,9 @@ public class Receipt {
     private String content;
     private int deposit;
     private int withdrawal;
+
+    private boolean verification = false;
+
     @ManyToOne
     @JsonBackReference
     private StudentClub studentClub;

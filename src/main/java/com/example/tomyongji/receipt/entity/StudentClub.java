@@ -36,6 +36,8 @@ public class StudentClub {
 
     private int Balance;
 
+    private boolean verification = false;
+
     @ManyToOne
     @JsonBackReference
     @JoinColumn(name = "college_id")

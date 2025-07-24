@@ -1,79 +1,28 @@
+version: '3'
+
 services:
-  app:
-    image: eeeseohyun/tomyongji
-    environment:
-      - PORT=8080
-    container_name: tomyongji_app
-    volumes:
-      - /var/log/tomyongji:/var/log/tomyongji
-    ports:
-      - "8080:8080"  # 컨테이너의 8080 포트를 호스트의 8080 포트와 연결
-    networks:
-      - app_network  # 여기서 'app_network'로 변경
   nginx:
     image: nginx:latest
-    container_name: tomyongji-nginx
     ports:
-      - "80:80"     # HTTP 포트
-      - "443:443"   # HTTPS 포트
+      - "80:80"
+      - "443:443"
     volumes:
-      - ./nginx/conf.d/nginx.conf:/etc/nginx/conf.d/default.conf
-      - /etc/letsencrypt:/etc/letsencrypt
-    networks:
-      - app_network  # 여기서 'app_network'로 변경
-
-  grafana:
-    container_name: grafana
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    restart: always
-    volumes:
-      - grafana-data:/grafana-data
+      - ./conf.d:/etc/nginx/conf.d
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
     depends_on:
-      - prometheus
+      - spring
 
-  loki:
-    container_name: loki
-    image: grafana/loki:latest
-    ports:
-      - "3100:3100"
-    restart: always
+  spring:
+    image: jinhyoung9380/tomyongji:latest
+    expose:
+      - "8080"
     volumes:
-      - ./etc/loki/loki-config.yml:/etc/loki/loki-config.yml
-      - ./loki-data:/tmp/loki
-    command: -config.file=/etc/loki/loki-config.yml -config.expand-env=true
+      - ./application.properties:/app/config/application.properties
+    command: [ "java", "-jar", "/app.jar", "--spring.config.location=file:/app/config/application.properties" ]
 
-  promtail:
-    container_name: promtail
-    image: grafana/promtail:latest
-    ports:
-      - "9080:9080"
-    restart: always
+  certbot:
+    image: certbot/certbot
     volumes:
-      - ./etc/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml
-      - /var/log/:/var/log
-    command: -config.file=/etc/promtail/promtail-config.yml
-    depends_on:
-      - loki
-
-  prometheus:
-    container_name: prometheus
-    image: prom/prometheus:latest
-    restart: always
-    volumes:
-      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./prometheus-data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-    ports:
-      - "9090:9090"
-
-volumes:
-  grafana-data:   # 이 부분을 추가하여 grafana 데이터 볼륨을 정의
-  loki-data:
-  prometheus-data:
-
-networks:
-  app_network:  # 사용자 정의 네트워크 정의
-    driver: bridge
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt

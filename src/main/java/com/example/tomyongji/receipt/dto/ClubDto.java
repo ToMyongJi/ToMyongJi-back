@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class ClubDto {
     private long studentClubId;
     private String studentClubName;
+    private boolean verification;
 }

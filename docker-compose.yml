@@ -1,45 +1,79 @@
-version: '2.4'
-
 services:
-  spring:
-    image: jinhyoung9380/tomyongji:latest
-    ports:
-      - "8080:8080"
-
-    # ⬇⬇ 임시 우회: Actuator CPU 메트릭 바인더 OFF
+  app:
+    image: eeeseohyun/tomyongji
     environment:
-      - MANAGEMENT_METRICS_BINDERS_PROCESSOR_ENABLED=false
-
-    # 부팅 지연 대비 헬스체크 여유 확대 + curl 없을 때 wget로 대체
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || wget -qO- http://localhost:8080/actuator/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
-      start_period: 60s
-
-    restart: unless-stopped
-
+      - PORT=8080
+    container_name: tomyongji_app
+    volumes:
+      - /var/log/tomyongji:/var/log/tomyongji
+    ports:
+      - "8080:8080"  # 컨테이너의 8080 포트를 호스트의 8080 포트와 연결
+    networks:
+      - app_network  # 여기서 'app_network'로 변경
   nginx:
     image: nginx:latest
-    depends_on:
-      spring:
-        condition: service_healthy
+    container_name: tomyongji-nginx
     ports:
-      - "80:80"
-      - "443:443"
+      - "80:80"     # HTTP 포트
+      - "443:443"   # HTTPS 포트
     volumes:
-      - ./conf.d:/etc/nginx/conf.d
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
-    restart: unless-stopped
+      - ./nginx/conf.d/nginx.conf:/etc/nginx/conf.d/default.conf
+      - /etc/letsencrypt:/etc/letsencrypt
+    networks:
+      - app_network  # 여기서 'app_network'로 변경
 
-  certbot:
-    image: certbot/certbot
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    restart: always
     volumes:
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
-    entrypoint: >
-      sh -c "while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h; done"
-    restart: unless-stopped
+      - grafana-data:/grafana-data
+    depends_on:
+      - prometheus
 
+  loki:
+    container_name: loki
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    restart: always
+    volumes:
+      - ./etc/loki/loki-config.yml:/etc/loki/loki-config.yml
+      - ./loki-data:/tmp/loki
+    command: -config.file=/etc/loki/loki-config.yml -config.expand-env=true
+
+  promtail:
+    container_name: promtail
+    image: grafana/promtail:latest
+    ports:
+      - "9080:9080"
+    restart: always
+    volumes:
+      - ./etc/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml
+      - /var/log/:/var/log
+    command: -config.file=/etc/promtail/promtail-config.yml
+    depends_on:
+      - loki
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    restart: always
+    volumes:
+      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+
+volumes:
+  grafana-data:   # 이 부분을 추가하여 grafana 데이터 볼륨을 정의
+  loki-data:
+  prometheus-data:
+
+networks:
+  app_network:  # 사용자 정의 네트워크 정의
+    driver: bridge

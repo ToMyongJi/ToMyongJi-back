@@ -1,3 +1,4 @@
+name: tomyongji-main
 services:
   app:
     image: eeeseohyun/tomyongji

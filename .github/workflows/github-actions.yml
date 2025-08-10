@@ -1,0 +1,106 @@
+name: Unified CI/CD for Dev and Prod
+
+on:
+  push:
+    branches: [ main, dev ]
+
+jobs:
+  CI-CD:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # --- 1. 브랜치에 따라 환경별 변수 설정 ---
+      - name: Set environment variables
+        id: vars
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "CONFIG_PATH=config/prod" >> $GITHUB_OUTPUT
+            echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
+            echo "DOCKER_PASSWORD_SECRET=${{ secrets.DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
+            echo "HOST=${{ secrets.HOST_PROD }}" >> $GITHUB_OUTPUT
+            echo "KEY=${{ secrets.PRIVATE_KEY }}" >> $GITHUB_OUTPUT
+            echo "PROPERTIES_SECRET=${{ secrets.APPLICATION_PROPERTIES }}" >> $GITHUB_OUTPUT
+            echo "APP_DIR=/home/ubuntu/tomyongji-prod" >> $GITHUB_OUTPUT
+          else
+            echo "CONFIG_PATH=config/dev" >> $GITHUB_OUTPUT
+            echo "DOCKER_USERNAME=${{ secrets.DEV_DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
+            echo "DOCKER_PASSWORD_SECRET=${{ secrets.DEV_DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
+            echo "HOST=${{ secrets.DEV_EC2_HOST }}" >> $GITHUB_OUTPUT
+            echo "KEY=${{ secrets.DEV_SSH_KEY }}" >> $GITHUB_OUTPUT
+            echo "PROPERTIES_SECRET=${{ secrets.DEV_APPLICATION_PROPERTIES }}" >> $GITHUB_OUTPUT
+            echo "APP_DIR=/home/ubuntu/tomyongji-dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Create application.properties for build
+        run: |
+          mkdir -p ./src/main/resources
+          echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > ./src/main/resources/application.properties
+
+      - name: Build with Gradle
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build -x test
+
+      # --- 2. 환경에 맞는 Dockerfile로 이미지 빌드 및 푸시 ---
+      - name: Docker build and push
+        run: |
+          echo "${{ steps.vars.outputs.DOCKER_PASSWORD_SECRET }}" | docker login -u "${{ steps.vars.outputs.DOCKER_USERNAME }}" --password-stdin
+          # app 이미지 빌드 및 푸시
+          docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest -f ./${{ steps.vars.outputs.CONFIG_PATH }}/app.Dockerfile .
+          docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest
+          # nginx 이미지 빌드 및 푸시 (필요 시)
+          docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest -f ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.Dockerfile .
+          docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest
+
+
+      # --- 3. 필요한 모든 설정 파일을 EC2 서버에 복사 ---
+      - name: Copy configuration files to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          source: "./${{ steps.vars.outputs.CONFIG_PATH }}/*"
+          target: "${{ steps.vars.outputs.APP_DIR }}"
+          strip_components: 2
+
+      # --- 4. EC2 서버에 배포 ---
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          script: |
+            # 서버에 배포 디렉토리 생성
+            APP_DIR=${{ steps.vars.outputs.APP_DIR }}
+            mkdir -p $APP_DIR
+
+            # application.properties 생성 (scp로 복사해도 됨)
+            echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > $APP_DIR/application.properties
+
+            # 스왑 메모리 설정 (main 브랜치에서만 필요 시)
+            if [ "${{ github.ref_name }}" = "main" ]; then
+              if ! swapon -s | grep -q /swapfile; then
+                sudo fallocate -l 1G /swapfile
+                sudo chmod 600 /swapfile
+                sudo mkswap /swapfile
+                sudo swapon /swapfile
+                echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+              fi
+            fi
+
+            # 서비스 실행
+            cd $APP_DIR
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d --build

@@ -21,17 +21,33 @@ jobs:
             echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
             echo "DOCKER_PASSWORD_SECRET=${{ secrets.DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
             echo "HOST=${{ secrets.HOST_PROD }}" >> $GITHUB_OUTPUT
-            echo "KEY=${{ secrets.PRIVATE_KEY }}" >> $GITHUB_OUTPUT
-            echo "PROPERTIES_SECRET=${{ secrets.APPLICATION_PROPERTIES }}" >> $GITHUB_OUTPUT
             echo "APP_DIR=/home/ubuntu/tomyongji-prod" >> $GITHUB_OUTPUT
+            {
+              echo 'KEY<<EOF'
+              echo "${{ secrets.PRIVATE_KEY }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+            {
+              echo 'PROPERTIES_SECRET<<EOF'
+              echo "${{ secrets.APPLICATION_PROPERTIES }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
           else
             echo "CONFIG_PATH=config/dev" >> $GITHUB_OUTPUT
             echo "DOCKER_USERNAME=${{ secrets.DEV_DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
             echo "DOCKER_PASSWORD_SECRET=${{ secrets.DEV_DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
             echo "HOST=${{ secrets.DEV_EC2_HOST }}" >> $GITHUB_OUTPUT
-            echo "KEY=${{ secrets.DEV_SSH_KEY }}" >> $GITHUB_OUTPUT
-            echo "PROPERTIES_SECRET=${{ secrets.DEV_APPLICATION_PROPERTIES }}" >> $GITHUB_OUTPUT
             echo "APP_DIR=/home/ubuntu/tomyongji-dev" >> $GITHUB_OUTPUT
+            {
+              echo 'KEY<<EOF'
+              echo "${{ secrets.DEV_SSH_KEY }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+            {
+              echo 'PROPERTIES_SECRET<<EOF'
+              echo "${{ secrets.DEV_APPLICATION_PROPERTIES }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
           fi
 
       - name: Set up JDK 17

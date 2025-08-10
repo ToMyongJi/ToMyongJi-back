@@ -89,7 +89,7 @@ jobs:
           target: "${{ steps.vars.outputs.APP_DIR }}"
           strip_components: 2
 
-      # --- 4. EC2 서버에 배포 ---
+      # --- 4. EC2 서버에 최종 배포 ---
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
@@ -97,12 +97,11 @@ jobs:
           username: ubuntu
           key: ${{ steps.vars.outputs.KEY }}
           script: |
-            # 서버에 배포 디렉토리 생성
-            APP_DIR=${{ steps.vars.outputs.APP_DIR }}
-            mkdir -p $APP_DIR
+            # 설정한 앱 디렉토리로 이동
+            cd ${{ steps.vars.outputs.APP_DIR }}
 
-            # application.properties 생성 (scp로 복사해도 됨)
-            echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > $APP_DIR/application.properties
+            # application.properties 생성
+            echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > ./application.properties
 
             # 스왑 메모리 설정 (main 브랜치에서만 필요 시)
             if [ "${{ github.ref_name }}" = "main" ]; then
@@ -115,8 +114,16 @@ jobs:
               fi
             fi
 
-            # 서비스 실행
-            cd $APP_DIR
-            docker-compose pull
-            docker-compose down
-            docker-compose up -d --build
+            # --- 👇 여기가 최종 수정된 서비스 실행 부분입니다 👇 ---
+            
+            # 1. 기존에 실행 중이던 컨테이너를 먼저 내립니다. (안전한 재시작을 위함)
+            sudo docker-compose down
+
+            # 2. Docker Hub에서 방금 빌드한 최신 이미지를 받아옵니다.
+            sudo docker-compose pull
+
+            # 3. 새로운 이미지로 서비스를 시작합니다.
+            sudo docker-compose up -d
+
+            # 4. 사용하지 않는 오래된 Docker 이미지를 정리하여 디스크 공간을 확보합니다.
+            sudo docker image prune -f

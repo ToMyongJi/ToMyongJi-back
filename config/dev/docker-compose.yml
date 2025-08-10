@@ -35,7 +35,7 @@ services:
     # 아래 경로는 docker-compose.yml 파일 기준 상대 경로입니다.
     # 즉, config/dev/conf.d/ 를 의미합니다.
     volumes:
-      - ./conf.d:/etc/nginx/conf.d
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
     restart: unless-stopped

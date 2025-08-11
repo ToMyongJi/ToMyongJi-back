@@ -93,8 +93,10 @@ jobs:
           key: ${{ steps.vars.outputs.KEY }}
           script: |
             # 배포용 메인 폴더 및 certbot 관련 폴더들을 미리 생성합니다.
-            mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/www
-            mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/conf
+            sudo mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/www
+            sudo mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/conf
+            # 이 폴더 전체의 소유권을 ubuntu에게 부여합니다. (가장 중요)
+            sudo chown -R ubuntu:ubuntu ${{ steps.vars.outputs.APP_DIR }}
 
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@master

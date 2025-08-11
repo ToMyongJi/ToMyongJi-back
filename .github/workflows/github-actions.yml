@@ -15,8 +15,8 @@ jobs:
           clean: 'true' # <-- 이 한 줄을 추가해주세요.
       - name: Force sync with remote branch
         run: |
-          git fetch origin dev
-          git reset --hard origin/dev
+          git fetch origin ${{ github.ref_name }}
+          git reset --hard origin/${{ github.ref_name }}
 
       # --- 1. 브랜치에 따라 환경별 변수 설정 ---
       - name: Set environment variables
@@ -83,8 +83,15 @@ jobs:
           docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest -f ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.Dockerfile .
           docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest
 
+      # --- 👇 이 디버깅 스텝을 추가해주세요 👇 ---
+      - name: DEBUG - Verify source files before copy
+        run: |
+          echo "--- Listing contents of ${{ steps.vars.outputs.CONFIG_PATH }} directory ---"
+          ls -l ./${{ steps.vars.outputs.CONFIG_PATH }}
+          echo "--- Displaying content of source nginx.conf ---"
+          cat ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf
 
-            # --- 3. 필요한 모든 설정 파일을 EC2 서버의 APP_DIR에 복사 ---
+      # --- 3. 필요한 모든 설정 파일을 EC2 서버의 APP_DIR에 복사 ---
       - name: Create directories on server
         uses: appleboy/ssh-action@master
         with:
@@ -131,8 +138,8 @@ jobs:
             ./${{ steps.vars.outputs.CONFIG_PATH }}/prometheus.yml
           target: "${{ steps.vars.outputs.APP_DIR }}"
 
-      # --- 4. EC2 서버에 최종 배포 ---
-      - name: Deploy to EC2
+      # --- 4. EC2 서버에 최종 배포 (CCTV 설치 버전) ---
+      - name: Deploy to EC2 with Forensic Logging
         uses: appleboy/ssh-action@master
         with:
           host: ${{ steps.vars.outputs.HOST }}
@@ -140,10 +147,16 @@ jobs:
           key: ${{ steps.vars.outputs.KEY }}
           script: |
             APP_DIR=${{ steps.vars.outputs.APP_DIR }}
-            cd $APP_DIR
+            echo "--- SCRIPT START ---"
+            echo "Working in directory: $APP_DIR"
+            
+            # CCTV 1: scp로 복사된 nginx.conf 파일 내용 확인
+            echo "--- [CCTV 1] Verifying content of nginx.conf received from scp... ---"
+            cat $APP_DIR/nginx.conf || echo "CRITICAL ERROR: nginx.conf was not found in APP_DIR!"
+            echo "--- [CCTV 1] End of nginx.conf content ---"
 
             # application.properties 생성
-            echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > ./application.properties
+            echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > $APP_DIR/application.properties
 
             # 스왑 메모리 설정 (main 브랜치에서만 필요 시)
             if [ "${{ github.ref_name }}" = "main" ]; then
@@ -157,9 +170,20 @@ jobs:
             fi
 
             # 서비스 재시작
+            cd $APP_DIR
+            echo "--- Running docker-compose commands... ---"
             sudo docker-compose down
             sudo docker-compose pull
             sudo docker-compose up -d
-
-            # 사용하지 않는 Docker 이미지 정리
-            sudo docker image prune -f
+            echo "--- Waiting 10 seconds for services to stabilize... ---"
+            sleep 10
+            
+            # CCTV 2: 최종 컨테이너 상태 확인
+            echo "--- [CCTV 2] Final container status... ---"
+            sudo docker-compose ps
+            
+            # CCTV 3: Nginx 시작 로그 확인
+            echo "--- [CCTV 3] Checking nginx logs for startup errors... ---"
+            sudo docker-compose logs nginx
+            
+            echo "--- SCRIPT END ---"

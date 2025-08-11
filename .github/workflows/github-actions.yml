@@ -125,19 +125,26 @@ jobs:
             ./${{ steps.vars.outputs.CONFIG_PATH }}/prometheus.yml
           target: "${{ steps.vars.outputs.APP_DIR }}"
 
-      # --- 4. EC2 서버에 최종 배포 ---
-      - name: Deploy to EC2
+      # --- 4. EC2 서버에 최종 배포 (CCTV 설치 버전) ---
+      - name: Deploy to EC2 with Forensic Logging
         uses: appleboy/ssh-action@master
         with:
           host: ${{ steps.vars.outputs.HOST }}
           username: ubuntu
           key: ${{ steps.vars.outputs.KEY }}
           script: |
-            # 설정한 앱 디렉토리로 이동
-            cd ${{ steps.vars.outputs.APP_DIR }}
+            APP_DIR=${{ steps.vars.outputs.APP_DIR }}
+            echo "--- SCRIPT START ---"
+            echo "Working in directory: $APP_DIR"
+            
+            # CCTV 1: scp로 복사된 nginx.conf 파일 내용 확인
+            echo "--- [CCTV 1] Verifying content of nginx.conf received from scp... ---"
+            # || true는 파일이 없을 경우 스크립트가 멈추는 것을 방지합니다.
+            cat $APP_DIR/nginx.conf || echo "CRITICAL ERROR: nginx.conf was not found in APP_DIR!"
+            echo "--- [CCTV 1] End of nginx.conf content ---"
 
             # application.properties 생성
-            echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > ./application.properties
+            echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > $APP_DIR/application.properties
 
             # 스왑 메모리 설정 (main 브랜치에서만 필요 시)
             if [ "${{ github.ref_name }}" = "main" ]; then
@@ -150,16 +157,27 @@ jobs:
               fi
             fi
 
-            # --- 👇 여기가 최종 수정된 서비스 실행 부분입니다 👇 ---
+            # 서비스 재시작
+            cd $APP_DIR
             
-            # 1. 기존에 실행 중이던 컨테이너를 먼저 내립니다. (안전한 재시작을 위함)
+            echo "--- Running docker-compose down... ---"
             sudo docker-compose down
-
-            # 2. Docker Hub에서 방금 빌드한 최신 이미지를 받아옵니다.
+            
+            echo "--- Running docker-compose pull... ---"
             sudo docker-compose pull
-
-            # 3. 새로운 이미지로 서비스를 시작합니다.
+            
+            echo "--- Running docker-compose up -d... ---"
             sudo docker-compose up -d
-
-            # 4. 사용하지 않는 오래된 Docker 이미지를 정리하여 디스크 공간을 확보합니다.
-            sudo docker image prune -f
+            
+            echo "--- Waiting 10 seconds for services to stabilize... ---"
+            sleep 10
+            
+            # CCTV 2: 최종 컨테이너 상태 확인
+            echo "--- [CCTV 2] Final container status... ---"
+            sudo docker-compose ps
+            
+            # CCTV 3: Nginx 시작 로그 확인
+            echo "--- [CCTV 3] Checking nginx logs for startup errors... ---"
+            sudo docker-compose logs nginx
+            
+            echo "--- SCRIPT END ---"

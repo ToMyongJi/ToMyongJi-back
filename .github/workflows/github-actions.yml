@@ -12,13 +12,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          clean: 'true' # <-- 이 한 줄을 추가해주세요.
+          clean: 'true'
+
       - name: Force sync with remote branch
         run: |
           git fetch origin ${{ github.ref_name }}
           git reset --hard origin/${{ github.ref_name }}
 
-      # --- 1. 브랜치에 따라 환경별 변수 설정 ---
       - name: Set environment variables
         id: vars
         run: |
@@ -72,37 +72,23 @@ jobs:
           chmod +x ./gradlew
           ./gradlew build -x test
 
-      # --- 2. 환경에 맞는 Dockerfile로 이미지 빌드 및 푸시 ---
       - name: Docker build and push
         run: |
           echo "${{ steps.vars.outputs.DOCKER_PASSWORD_SECRET }}" | docker login -u "${{ steps.vars.outputs.DOCKER_USERNAME }}" --password-stdin
-          # app 이미지 빌드 및 푸시
           docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest -f ./${{ steps.vars.outputs.CONFIG_PATH }}/app.Dockerfile .
           docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest
-          # nginx 이미지 빌드 및 푸시 (필요 시)
           docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest -f ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.Dockerfile .
           docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest
 
-      # --- 👇 이 디버깅 스텝을 추가해주세요 👇 ---
-      - name: DEBUG - Verify source files before copy
-        run: |
-          echo "--- Listing contents of ${{ steps.vars.outputs.CONFIG_PATH }} directory ---"
-          ls -l ./${{ steps.vars.outputs.CONFIG_PATH }}
-          echo "--- Displaying content of source nginx.conf ---"
-          cat ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf
-
-      # --- 3. 필요한 모든 설정 파일을 EC2 서버의 APP_DIR에 복사 ---
-      - name: Create directories on server
+      - name: Create directories and Set permissions on server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ steps.vars.outputs.HOST }}
           username: ubuntu
           key: ${{ steps.vars.outputs.KEY }}
           script: |
-            # 배포용 메인 폴더 및 certbot 관련 폴더들을 미리 생성합니다.
             sudo mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/www
             sudo mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/conf
-            # 이 폴더 전체의 소유권을 ubuntu에게 부여합니다. (가장 중요)
             sudo chown -R ubuntu:ubuntu ${{ steps.vars.outputs.APP_DIR }}
 
       - name: Copy docker-compose.yml to server
@@ -114,22 +100,14 @@ jobs:
           source: "./${{ steps.vars.outputs.CONFIG_PATH }}/docker-compose.yml"
           target: "${{ steps.vars.outputs.APP_DIR }}"
 
-      # 1. Runner에서 nginx.conf 파일 내용을 읽어서 변수에 저장합니다.
-      - name: Read nginx.conf file content
-        id: nginx_file
-        uses: juliangruber/read-file-action@v1
-        with:
-          path: "./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf"
-
-      # 2. ssh-action을 이용해 변수 내용을 서버에 직접 파일로 씁니다.
-      - name: Create nginx.conf on server
-        uses: appleboy/ssh-action@master
+      - name: Copy nginx.conf to server
+        uses: appleboy/scp-action@master
         with:
           host: ${{ steps.vars.outputs.HOST }}
           username: ubuntu
-          -key: ${{ steps.vars.outputs.KEY }}
-          script: |
-            echo "${{ steps.nginx_file.outputs.content }}" > ${{ steps.vars.outputs.APP_DIR }}/nginx.conf
+          key: ${{ steps.vars.outputs.KEY }}
+          source: "./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf"
+          target: "${{ steps.vars.outputs.APP_DIR }}"
 
       - name: Copy monitoring configs to server (prod only)
         if: github.ref_name == 'main'
@@ -138,7 +116,6 @@ jobs:
           host: ${{ steps.vars.outputs.HOST }}
           username: ubuntu
           key: ${{ steps.vars.outputs.KEY }}
-          # prod 환경에 필요한 모든 모니터링 설정 파일을 복사합니다.
           source: |
             ./${{ steps.vars.outputs.CONFIG_PATH }}/docker-compose.monitoring.yml
             ./${{ steps.vars.outputs.CONFIG_PATH }}/loki-config.yml
@@ -146,8 +123,7 @@ jobs:
             ./${{ steps.vars.outputs.CONFIG_PATH }}/prometheus.yml
           target: "${{ steps.vars.outputs.APP_DIR }}"
 
-      # --- 4. EC2 서버에 최종 배포 (CCTV 설치 버전) ---
-      - name: Deploy to EC2 with Forensic Logging
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
           host: ${{ steps.vars.outputs.HOST }}
@@ -155,18 +131,10 @@ jobs:
           key: ${{ steps.vars.outputs.KEY }}
           script: |
             APP_DIR=${{ steps.vars.outputs.APP_DIR }}
-            echo "--- SCRIPT START ---"
-            echo "Working in directory: $APP_DIR"
-            
-            # CCTV 1: scp로 복사된 nginx.conf 파일 내용 확인
-            echo "--- [CCTV 1] Verifying content of nginx.conf received from scp... ---"
-            cat $APP_DIR/nginx.conf || echo "CRITICAL ERROR: nginx.conf was not found in APP_DIR!"
-            echo "--- [CCTV 1] End of nginx.conf content ---"
+            cd $APP_DIR
 
-            # application.properties 생성
-            echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > $APP_DIR/application.properties
+            echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > ./application.properties
 
-            # 스왑 메모리 설정 (main 브랜치에서만 필요 시)
             if [ "${{ github.ref_name }}" = "main" ]; then
               if ! swapon -s | grep -q /swapfile; then
                 sudo fallocate -l 1G /swapfile
@@ -177,21 +145,8 @@ jobs:
               fi
             fi
 
-            # 서비스 재시작
-            cd $APP_DIR
-            echo "--- Running docker-compose commands... ---"
             sudo docker-compose down
             sudo docker-compose pull
             sudo docker-compose up -d
-            echo "--- Waiting 10 seconds for services to stabilize... ---"
-            sleep 10
-            
-            # CCTV 2: 최종 컨테이너 상태 확인
-            echo "--- [CCTV 2] Final container status... ---"
-            sudo docker-compose ps
-            
-            # CCTV 3: Nginx 시작 로그 확인
-            echo "--- [CCTV 3] Checking nginx logs for startup errors... ---"
-            sudo docker-compose logs nginx
-            
-            echo "--- SCRIPT END ---"
+
+            sudo docker image prune -f

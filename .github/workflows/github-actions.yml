@@ -78,16 +78,50 @@ jobs:
           docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest
 
 
-      # --- 3. 필요한 모든 설정 파일을 EC2 서버에 복사 ---
-      - name: Copy configuration files to server
+            # --- 3. 필요한 모든 설정 파일을 EC2 서버의 APP_DIR에 복사 ---
+      - name: Create directories on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          script: |
+            # 배포용 메인 폴더 및 certbot 관련 폴더들을 미리 생성합니다.
+            mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/www
+            mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/conf
+
+      - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@master
         with:
           host: ${{ steps.vars.outputs.HOST }}
           username: ubuntu
           key: ${{ steps.vars.outputs.KEY }}
-          source: "./${{ steps.vars.outputs.CONFIG_PATH }}/*"
+          source: "./${{ steps.vars.outputs.CONFIG_PATH }}/docker-compose.yml"
           target: "${{ steps.vars.outputs.APP_DIR }}"
-          strip_components: 2
+
+      - name: Copy nginx.conf to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          source: "./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf"
+          target: "${{ steps.vars.outputs.APP_DIR }}"
+
+      - name: Copy monitoring configs to server (prod only)
+        if: github.ref_name == 'main'
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          # prod 환경에 필요한 모든 모니터링 설정 파일을 복사합니다.
+          source: |
+            ./${{ steps.vars.outputs.CONFIG_PATH }}/docker-compose.monitoring.yml
+            ./${{ steps.vars.outputs.CONFIG_PATH }}/loki-config.yml
+            ./${{ steps.vars.outputs.CONFIG_PATH }}/promtail-config.yml
+            ./${{ steps.vars.outputs.CONFIG_PATH }}/prometheus.yml
+          target: "${{ steps.vars.outputs.APP_DIR }}"
 
       # --- 4. EC2 서버에 최종 배포 ---
       - name: Deploy to EC2

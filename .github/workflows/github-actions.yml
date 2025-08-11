@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          clean: 'true' # <-- 이 한 줄을 추가해주세요.
 
       # --- 1. 브랜치에 따라 환경별 변수 설정 ---
       - name: Set environment variables

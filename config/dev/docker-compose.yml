@@ -2,13 +2,7 @@ version: '2.4'
 
 services:
   spring:
-    # 'build' 설정을 통해 이미지를 직접 빌드합니다.
-    build:
-      # 빌드 컨텍스트는 프로젝트 최상위 폴더입니다.
-      context: ../../
-      # 사용할 Dockerfile을 명시합니다.
-      dockerfile: ./config/dev/app.Dockerfile
-    # 빌드된 이미지에 부여할 이름입니다.
+    # Docker Hub에서 받아올 이미지 정보만 남깁니다.
     image: jinhyoung9380/tomyongji:dev
     ports:
       - "8080:8080"
@@ -21,19 +15,14 @@ services:
     restart: unless-stopped
 
   nginx:
-    build:
-      context: ../../
-      dockerfile: ./config/dev/nginx.Dockerfile
-    # 빌드된 Nginx 이미지에 부여할 이름입니다.
-    image: tomyongji-nginx:dev
+    # Docker Hub에서 받아올 이미지 정보만 남깁니다.
+    image: jinhyoung9380/tomyongji-nginx:dev # dev 환경용 nginx 이미지 이름
     depends_on:
       spring:
         condition: service_healthy
     ports:
       - "80:80"
       - "443:443"
-    # 아래 경로는 docker-compose.yml 파일 기준 상대 경로입니다.
-    # 즉, config/dev/conf.d/ 를 의미합니다.
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./certbot/www:/var/www/certbot
@@ -41,7 +30,6 @@ services:
     restart: unless-stopped
 
   certbot:
-    # 이 서비스는 이미지를 직접 빌드하지 않으므로 변경이 없습니다.
     image: certbot/certbot
     volumes:
       - ./certbot/www:/var/www/certbot

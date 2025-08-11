@@ -2,8 +2,8 @@ version: '2.4'
 
 services:
   spring:
-    # Docker Hub에서 받아올 이미지 정보만 남깁니다.
-    image: jinhyoung9380/tomyongji:dev
+    # Docker Hub에서 받아올 이미지의 태그를 :latest로 수정합니다.
+    image: jinhyoung9380/tomyongji:latest
     ports:
       - "8080:8080"
     healthcheck:
@@ -15,8 +15,8 @@ services:
     restart: unless-stopped
 
   nginx:
-    # Docker Hub에서 받아올 이미지 정보만 남깁니다.
-    image: jinhyoung9380/tomyongji-nginx:dev # dev 환경용 nginx 이미지 이름
+    # Nginx 이미지의 태그도 :latest로 수정하고, 사용자 이름도 추가합니다.
+    image: jinhyoung9380/tomyongji-nginx:latest
     depends_on:
       spring:
         condition: service_healthy

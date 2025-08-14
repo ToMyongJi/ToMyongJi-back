@@ -113,11 +113,13 @@ jobs:
         with:
           host: ${{ steps.vars.outputs.HOST }}
           username: ubuntu
-          key: ${{ steps.vars.outputs.KEY }} # 이전의 -key 오타가 없도록 주의!
+          key: ${{ steps.vars.outputs.KEY }}
           script: |
-            echo "Forcibly overwriting nginx.conf on server..."
-            # 변수 내용을 파일에 덮어씁니다.
-            echo "${{ steps.nginx_file.outputs.content }}" > ${{ steps.vars.outputs.APP_DIR }}/nginx.conf
+            echo "Forcibly overwriting nginx.conf on server using cat/heredoc..."
+            # Heredoc을 사용해 변수 내용을 확장(해석)하지 않고 그대로 파일에 씁니다.
+            cat <<'EOF' > ${{ steps.vars.outputs.APP_DIR }}/nginx.conf
+            ${{ steps.nginx_file.outputs.content }}
+            EOF
             echo "Overwrite complete."
 
       - name: Copy monitoring configs to server (prod only)

@@ -100,7 +100,14 @@ jobs:
           source: "./${{ steps.vars.outputs.CONFIG_PATH }}/docker-compose.yml"
           target: "${{ steps.vars.outputs.APP_DIR }}"
 
-      - name: Copy nginx.conf to server
+      # --- nginx.conf 복사 전/후를 모두 기록하는 최종 디버깅 스텝 ---
+
+      - name: DEBUG - Verify nginx.conf content BEFORE copy
+        run: |
+          echo "--- Verifying file content in the runner before sending ---"
+          cat ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf
+
+      - name: Copy nginx.conf to server (The Suspect)
         uses: appleboy/scp-action@master
         with:
           host: ${{ steps.vars.outputs.HOST }}
@@ -108,6 +115,16 @@ jobs:
           key: ${{ steps.vars.outputs.KEY }}
           source: "./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf"
           target: "${{ steps.vars.outputs.APP_DIR }}"
+
+      - name: DEBUG - Verify nginx.conf content AFTER copy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          script: |
+            echo "--- Verifying file content on the server AFTER receiving ---"
+            cat ${{ steps.vars.outputs.APP_DIR }}/nginx.conf
 
       - name: Copy monitoring configs to server (prod only)
         if: github.ref_name == 'main'

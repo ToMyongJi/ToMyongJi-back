@@ -18,6 +18,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.util.Calendar;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -35,20 +37,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Service
+@RequiredArgsConstructor
 public class CSVService {
-    private ReceiptRepository receiptRepository;
-    private UserRepository userRepository;
+    //테스트 코드 오류로 인한 RequiredArgsConstructor 사용 -> 08/14 회의 후 기본 생성자를 사용해야만 하는 이유가 있다면 롤백 후 테스트 코드 수정
+    private final ReceiptRepository receiptRepository;
+    private final UserRepository userRepository;
     private static final Logger LOGGER = Logger.getLogger(ReceiptService.class.getName());
-
-    @Autowired
-    public CSVService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    @Autowired
-    public void ReceiptService(ReceiptRepository receiptRepository) {
-        this.receiptRepository = receiptRepository;
-    }
 
     @Transactional
     public List<Receipt> loadDataFromCSV(MultipartFile file, long userIndexId, UserDetails currentUser) {

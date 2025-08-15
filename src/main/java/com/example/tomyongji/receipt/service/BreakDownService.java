@@ -123,9 +123,7 @@ public class BreakDownService {
             if (tds.size() < 5) continue;
 
             Date parsedDate = fmt.parse(tds.get(0).text());
-            int amt = Integer.parseInt(
-                tds.get(2).text().replace(",", "")
-            );
+            int amt = Integer.parseInt(tds.get(2).text().replace(",", ""));
             int deposit    = amt > 0 ? amt : 0;
             int withdrawal = amt < 0 ? Math.abs(amt) : 0;
             String content = tds.get(4).text();
@@ -139,8 +137,13 @@ public class BreakDownService {
                 .verification(true)
                 .build()
             );
+
+            //잔액 업데이트
+            int balanceAdjustment = deposit - withdrawal;
+            club.setBalance(club.getBalance() + balanceAdjustment);
         }
         receiptRepository.saveAll(receipts);
+        studentClubRepository.save(club);
 
         double verificationRatio = (double) receiptRepository.countByStudentClubAndVerificationTrue(club)/receiptRepository.countByStudentClub(club);
         if(verificationRatio > 0.3){

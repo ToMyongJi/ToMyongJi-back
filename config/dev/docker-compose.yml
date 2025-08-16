@@ -28,15 +28,15 @@ services:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
     restart: unless-stopped
-    command: >
-      sh -c "
-        echo 'Waiting for SSL certificate...';
-        while ! test -f /etc/letsencrypt/live/tomyongji-dev.shop/fullchain.pem; do
-          sleep 5;
-        done;
-        echo 'Certificate found! Starting Nginx...';
-        nginx -g 'daemon off;'
-      "
+#    command: >
+#      sh -c "
+#        echo 'Waiting for SSL certificate...';
+#        while ! test -f /etc/letsencrypt/live/tomyongji-dev.shop/fullchain.pem; do
+#          sleep 5;
+#        done;
+#        echo 'Certificate found! Starting Nginx...';
+#        nginx -g 'daemon off;'
+#      "
 
   certbot:
     image: certbot/certbot

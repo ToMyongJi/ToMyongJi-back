@@ -123,7 +123,7 @@ jobs:
           script: |
             cat <<'EOF' > ${{ steps.vars.outputs.APP_DIR }}/nginx.conf
             ${{ steps.nginx_file.outputs.content }}
-            EO
+            EOF
 
       - name: Copy monitoring configs to server (prod only)
         if: github.ref_name == 'main'

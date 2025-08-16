@@ -1,24 +1,26 @@
 version: '2.4'
 
 services:
-  spring:
-    # Docker Hub에서 받아올 이미지의 태그를 :latest로 수정합니다.
+  app:
     image: jinhyoung9380/tomyongji:latest
+    container_name: tomyongji-dev-app
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || wget -qO- http://localhost:8080/actuator/health || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 15
       start_period: 60s
     restart: unless-stopped
+    networks:
+      - app_network
 
   nginx:
-    # Nginx 이미지의 태그도 :latest로 수정하고, 사용자 이름도 추가합니다.
     image: jinhyoung9380/tomyongji-nginx:latest
+    container_name: tomyongji-dev-nginx
     depends_on:
-      spring:
+      app: # spring -> app 으로 변경
         condition: service_healthy
     ports:
       - "80:80"
@@ -28,21 +30,20 @@ services:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
     restart: unless-stopped
-#    command: >
-#      sh -c "
-#        echo 'Waiting for SSL certificate...';
-#        while ! test -f /etc/letsencrypt/live/tomyongji-dev.shop/fullchain.pem; do
-#          sleep 5;
-#        done;
-#        echo 'Certificate found! Starting Nginx...';
-#        nginx -g 'daemon off;'
-#      "
+    networks:
+      - app_network
 
   certbot:
     image: certbot/certbot
+    container_name: tomyongji-dev-certbot
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
     entrypoint: >
       sh -c "while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h; done"
     restart: unless-stopped
+    networks:
+      - app_network
+networks:
+  app_network:
+    driver: bridge

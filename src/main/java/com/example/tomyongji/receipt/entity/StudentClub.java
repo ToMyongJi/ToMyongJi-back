@@ -52,6 +52,7 @@ public class StudentClub {
         return ClubDto.builder()
                 .studentClubId(this.id)
                 .studentClubName(this.studentClubName)
+                .verification(this.verification)
                 .build();
     }
     @Override

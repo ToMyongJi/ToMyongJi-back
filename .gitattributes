@@ -1,0 +1,11 @@
+# GitHub Actions 워크플로우 → 브랜치별 버전 유지
+.github/workflows/github-actions.yml merge=ours
+.github/workflows/dev-github-actions.yml merge=ours
+
+# Nginx 설정 → 브랜치별 버전 유지
+nginx/conf.d/nginx.conf merge=ours
+
+# Docker 주요 파일 → 브랜치별 버전 유지
+Dockerfile           merge=ours
+docker-compose.yml   merge=ours
+docker-compose.monitoring.yml merge=ours

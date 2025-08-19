@@ -23,3 +23,6 @@ scrape_configs:
       - multiline:
           firstline: '^\<.*'  # 로그의 시작을 나타내는 정규식 (예: <2025-03-19)
           separator: '\n<.*'  # 로그의 구분자 (각각의 새로운 로그 항목은 <로 시작)
+     - limit:
+          max_line_size: 2097152
+

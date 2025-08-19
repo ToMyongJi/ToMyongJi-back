@@ -3,10 +3,6 @@ auth_enabled: false
 server:
   http_listen_port: 3100
   
-limits_config:
-  # 최대 entry size 설정 (2 MB)
-  max_entry_size_bytes: 2097152
-  
 common:
   path_prefix: /loki
   storage:
@@ -28,7 +24,9 @@ schema_config:
       index:
         prefix: index_
         period: 24h
-
+        
+ingester:
+  max_chunk_size_bytes: 2097152  # 2 MB
 ruler:
   storage:
     type: local

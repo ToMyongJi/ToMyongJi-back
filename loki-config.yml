@@ -28,5 +28,9 @@ schema_config:
 ruler:
   storage:
     type: local
+    
     local:
       directory: /tmp/loki/rules
+
+limits_config:
+  max_entry_size: 2097152  

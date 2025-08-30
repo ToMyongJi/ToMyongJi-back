@@ -39,7 +39,7 @@ var/log/tomyongji/*.log
 LOG_PATH_IS_UNDEFINED/*.log
 
 # 내 깃허브에서 git actions가 수행되지 않도록 함
-.github/workflows/dev-github-actions.yml
+.github/workflows/github-actions.yml
 
 # MapStruct 등 애노테이션 프로세서가 생성하는 소스
 # src/main 바로 아래 generated 폴더를 무시
@@ -52,4 +52,25 @@ build/generated/
 # var/log/tomyongji-dev/*.log
 var/log/tomyongji-dev/*.log
 
-/src/main/resources/application.properties
+# Application properties
+src/main/resources/application.properties
+src/test/resources/application.properties
+
+# Application Properties (민감한 정보 포함)
+application.properties
+application.yml
+application.yaml
+application-*.properties
+application-*.yml
+application-*.yaml
+
+# 환경별 설정 파일
+application-local.properties
+application-dev.properties
+application-prod.properties
+application-test.properties
+application-local.yml
+application-dev.yml
+application-prod.yml
+application-test.yml
+

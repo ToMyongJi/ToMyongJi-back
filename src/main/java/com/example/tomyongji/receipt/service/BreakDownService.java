@@ -137,7 +137,7 @@ public class BreakDownService {
                 .verification(true)
                 .build()
             );
-            
+
             //잔액 업데이트
             int balanceAdjustment = deposit - withdrawal;
             club.setBalance(club.getBalance() + balanceAdjustment);

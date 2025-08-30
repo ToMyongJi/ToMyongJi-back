@@ -6,11 +6,11 @@ global:
 
 # target별로 범주들을 묶고, 범주별로 수집 주기나 룰들을 유동적으로 설정
 scrape_configs:
-  - job_name: 'spring_boot_service_1'
+  - job_name: 'tomyongji-app'
     metrics_path: '/actuator/prometheus'
     static_configs:
       # actuator 요청을 보낼 위치 (ex : ['192.168.0.3:9090']), metrics_path 와 결합합니다.
-      - targets: ['host.docker.internal:8080']
+      - targets: ['app:8080']
         labels:
           # 인스턴스 이름 지정
           instance: 'service_1'

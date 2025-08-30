@@ -86,6 +86,7 @@ public class ReceiptService {
         List<Receipt> receipts = receiptRepository.findAll();
         return receiptDtoList(receipts);
     }
+
     public ReceiptByStudentClubDto getReceiptsByClub(Long id, UserDetails currentUser) {
 
         User user = userRepository.findById(id)
@@ -122,6 +123,7 @@ public class ReceiptService {
 
         return receiptMapper.toReceiptDto(receipt);
     }
+
     public ReceiptDto deleteReceipt(Long receiptId, UserDetails currentUser) {
         //접근 권한: 유저가 아닌 경우
 

@@ -1,19 +1,60 @@
-name: CI/CD using GitHub Actions & Docker
+name: Unified CI/CD for Dev and Prod
 
 on:
   push:
-    branches:
-      - main
- 
-permissions:
-  contents: read
+    branches: [ main, dev ]
 
 jobs:
   CI-CD:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          clean: 'true'
+
+      - name: Force sync with remote branch
+        run: |
+          git fetch origin ${{ github.ref_name }}
+          git reset --hard origin/${{ github.ref_name }}
+
+      - name: Set environment variables
+        id: vars
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "CONFIG_PATH=config/prod" >> $GITHUB_OUTPUT
+            echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
+            echo "DOCKER_PASSWORD_SECRET=${{ secrets.DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
+            echo "HOST=${{ secrets.HOST_PROD }}" >> $GITHUB_OUTPUT
+            echo "APP_DIR=/home/ubuntu/tomyongji-prod" >> $GITHUB_OUTPUT
+            {
+              echo 'KEY<<EOF'
+              echo "${{ secrets.PRIVATE_KEY }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+            {
+              echo 'PROPERTIES_SECRET<<EOF'
+              echo "${{ secrets.APPLICATION_PROPERTIES }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+          else
+            echo "CONFIG_PATH=config/dev" >> $GITHUB_OUTPUT
+            echo "DOCKER_USERNAME=${{ secrets.DEV_DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
+            echo "DOCKER_PASSWORD_SECRET=${{ secrets.DEV_DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
+            echo "HOST=${{ secrets.DEV_EC2_HOST }}" >> $GITHUB_OUTPUT
+            echo "APP_DIR=/home/ubuntu/tomyongji-dev" >> $GITHUB_OUTPUT
+            {
+              echo 'KEY<<EOF'
+              echo "${{ secrets.DEV_SSH_KEY }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+            {
+              echo 'PROPERTIES_SECRET<<EOF'
+              echo "${{ secrets.DEV_APPLICATION_PROPERTIES }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up JDK 17
         uses: actions/setup-java@v3
@@ -21,161 +62,107 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Create application.properties
+      - name: Create application.properties for build
         run: |
           mkdir -p ./src/main/resources
-          echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./src/main/resources/application.properties
-      - name: Check application.properties contents
-        run: |
-          echo "${{ secrets.APPLICATION_PROPERTIES }}"
-
-      - name: Gradle Caching
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
+          echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > ./src/main/resources/application.properties
 
       - name: Build with Gradle
-        run: ./gradlew build -x test
-
-      - name: Docker build & push to prod
         run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/tomyongji:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/tomyongji:latest
+          chmod +x ./gradlew
+          ./gradlew build -x test
 
-      - name: Test SSH Connection
+      - name: Docker build and push
+        run: |
+          echo "${{ steps.vars.outputs.DOCKER_PASSWORD_SECRET }}" | docker login -u "${{ steps.vars.outputs.DOCKER_USERNAME }}" --password-stdin
+          docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest -f ./${{ steps.vars.outputs.CONFIG_PATH }}/app.Dockerfile .
+          docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest
+          docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest -f ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.Dockerfile .
+          docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest
+
+      - name: Create directories and Set permissions on server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.HOST_PROD }}
+          host: ${{ steps.vars.outputs.HOST }}
           username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
-          script: echo 'SSH connection successful'
-          
-      - name: Ensure correct permissions on loki directory
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST_PROD }}
-          username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
+          key: ${{ steps.vars.outputs.KEY }}
           script: |
-            sudo chmod -R +r /home/ubuntu/etc/loki/  # 디렉토리와 파일에 읽기 권한 부여
-            sudo chown -R ubuntu:ubuntu /home/ubuntu/etc/loki/  # 소유권을 ubuntu로 변경
-            sudo chmod -R +r /home/ubuntu/etc/promtail/  # 디렉토리와 파일에 읽기 권한 부여
-            sudo chown -R ubuntu:ubuntu /home/ubuntu/etc/promtail/  # 소유권을 ubuntu로 변경
-            sudo chmod -R +r /home/ubuntu/etc/prometheus/  # 디렉토리와 파일에 읽기 권한 부여
-            sudo chown -R ubuntu:ubuntu /home/ubuntu/etc/prometheus/  # 소유권을 ubuntu로 변경
-            
-      - name: Copy docker-compose.yml to server
+            sudo mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/www
+            sudo mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/conf
+            sudo chown -R ubuntu:ubuntu ${{ steps.vars.outputs.APP_DIR }}
+
+      - name: Read docker-compose.yml content in Runner
+        id: compose_file
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: "./${{ steps.vars.outputs.CONFIG_PATH }}/docker-compose.yml"
+
+      - name: Write docker-compose.yml content on Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          script: |
+            cat <<'EOF' > ${{ steps.vars.outputs.APP_DIR }}/docker-compose.yml
+            ${{ steps.compose_file.outputs.content }}
+            EOF
+
+      - name: Read nginx.conf file content in Runner
+        id: nginx_file
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: "./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf"
+
+      - name: Write nginx.conf content on Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          script: |
+            cat <<'EOF' > ${{ steps.vars.outputs.APP_DIR }}/nginx.conf
+            ${{ steps.nginx_file.outputs.content }}
+            EOF
+
+      - name: Copy monitoring configs to server (prod only)
+        if: github.ref_name == 'main'
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.HOST_PROD }}
+          host: ${{ steps.vars.outputs.HOST }}
           username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
-          source: ./docker-compose.yml
-          target: /home/ubuntu/
+          key: ${{ steps.vars.outputs.KEY }}
+          source: |
+            ./${{ steps.vars.outputs.CONFIG_PATH }}/docker-compose.monitoring.yml
+            ./${{ steps.vars.outputs.CONFIG_PATH }}/loki-config.yml
+            ./${{ steps.vars.outputs.CONFIG_PATH }}/promtail-config.yml
+            ./${{ steps.vars.outputs.CONFIG_PATH }}/prometheus.yml
+          target: "${{ steps.vars.outputs.APP_DIR }}"
 
-      - name: Copy nginx config to server
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.HOST_PROD }}
+          host: ${{ steps.vars.outputs.HOST }}
           username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
+          key: ${{ steps.vars.outputs.KEY }}
           script: |
-            sudo rm -f /home/ubuntu/nginx.conf
-        # 복사 후 nginx.conf 덮어쓰게 하기
-      - name: Copy nginx config to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST_PROD }}
-          username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
-          source: ./nginx/conf.d/nginx.conf
-          target: /home/ubuntu/
+            APP_DIR=${{ steps.vars.outputs.APP_DIR }}
+            cd $APP_DIR
 
-      - name: Create directories for Loki and Prometheus data
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST_PROD }}
-          username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
-          script: |
-            echo "Creating directories for Loki and Prometheus data..."
-            mkdir -p /home/ubuntu/loki-data
-            mkdir -p /home/ubuntu/prometheus-data
-            echo "Directories created successfully."
-            
-      - name: Copy loki config to server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST_PROD }}
-          username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
-          script: |
-            sudo rm -f /home/ubuntu/etc/loki/loki-config.yml
-      - name: Copy loki config to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST_PROD }}
-          username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
-          source: ./loki-config.yml
-          target: /home/ubuntu/etc/loki/
+            echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > ./application.properties
 
-      - name: Copy promtail config to server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST_PROD }}
-          username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
-          script: |
-            sudo rm -f /home/ubuntu/etc/promtail/promtail-config.yml
-      - name: Copy promtail config to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST_PROD }}
-          username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
-          source: ./promtail-config.yml
-          target: /home/ubuntu/etc/promtail/
+            if [ "${{ github.ref_name }}" = "main" ]; then
+              if ! swapon -s | grep -q /swapfile; then
+                sudo fallocate -l 1G /swapfile
+                sudo chmod 600 /swapfile
+                sudo mkswap /swapfile
+                sudo swapon /swapfile
+                echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+              fi
+            fi
 
-      - name: Copy prometheus config to server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST_PROD }}
-          username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
-          script: |
-            sudo rm -f /home/ubuntu/etc/prometheus/prometheus.yml
-      - name: Copy prometheus config to server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST_PROD }}
-          username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
-          source: ./prometheus.yml
-          target: /home/ubuntu/etc/prometheus/
+            sudo docker-compose down
+            sudo docker-compose pull
+            sudo docker-compose up -d
 
-      - name: Deploy to prod
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST_PROD }}
-          username: ubuntu
-          key: ${{ secrets.PRIVATE_KEY }}
-          script: |
-            sudo fallocate -l 1G /swapfile
-            sudo chmod 600 /swapfile
-            sudo mkswap /swapfile
-            sudo swapon /swapfile
-            echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-            
-            cd /home/ubuntu/
-            sudo docker-compose pull  # 최신 이미지 가져오기
-            sudo docker-compose up -d  # 컨테이너 백그라운드에서 실행
+            sudo docker image prune -f

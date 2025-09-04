@@ -18,6 +18,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -35,6 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class OCRService {
 
     private final ReceiptService receiptService;
@@ -45,13 +48,6 @@ public class OCRService {
     private String apiURL;
     @Value("${ocr.secretKey}")
     private String secretKey;
-
-    public OCRService(ReceiptService receiptService, ReceiptMapper receiptMapper,
-        UserRepository userRepository) {
-        this.receiptService = receiptService;
-        this.receiptMapper = receiptMapper;
-        this.userRepository = userRepository;
-    }
 
     /**
      * OCR 이미지만 처리하고 결과 DTO 반환

@@ -6,6 +6,7 @@ import com.example.tomyongji.receipt.dto.CollegesDto;
 import com.example.tomyongji.receipt.entity.College;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.mapper.CollegeMapper;
+import com.example.tomyongji.receipt.mapper.StudentClubMapper;
 import com.example.tomyongji.receipt.repository.CollegeRepository;
 import java.util.ArrayList;
 
@@ -21,10 +22,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CollegeService {
-
-    @Autowired
     private final CollegeRepository collegeRepository;
-    @Autowired
     private final StudentClubRepository studentClubRepository;
     private final CollegeMapper collegeMapper;
     private final StudentClubMapper studentClubMapper;

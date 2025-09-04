@@ -6,7 +6,7 @@ import com.example.tomyongji.receipt.dto.ReceiptDto;
 import com.example.tomyongji.receipt.service.BreakDownService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,15 +17,11 @@ import java.util.List;
 
 @Tag(name="거래내역서 파싱 api", description = "PDF 거래내역서 파싱과 관련된 API들입니다.")
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/breakdown")
 public class BreakDownController {
 
     private final BreakDownService breakDownService;
-
-    @Autowired
-    public BreakDownController(BreakDownService breakDownService) {
-        this.breakDownService = breakDownService;
-    }
 
     @Operation(summary = "PDF 거래내역서 파싱 api", description = "PDF 파일을 업로드하여 거래내역을 파싱합니다.")
     @ResponseStatus(HttpStatus.CREATED)

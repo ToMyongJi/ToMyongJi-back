@@ -48,13 +48,6 @@ public class StudentClub {
     @JoinColumn(name = "president_id")
     private President president;
 
-    public ClubDto toDto() {
-        return ClubDto.builder()
-                .studentClubId(this.id)
-                .studentClubName(this.studentClubName)
-                .verification(this.verification)
-                .build();
-    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

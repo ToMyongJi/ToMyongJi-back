@@ -8,15 +8,15 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  - job_name: tomyongji-app-logs
+  - job_name: spring-logs
     static_configs:
       - targets:
           - localhost
         labels:
           # 수집되는 로그에 추가될 메타데이터(레이블)를 정의합니다.
           # 예시 : job=varlogs
-          job: tomyongji-app
-          __path__: /var/log/tomyongji/*.log
+          job: varlogs
+          __path__: "var/log/tomyongji/*.log"
 
     pipeline_stages:
       # 여러 줄에 걸친 로그 항목을 하나로 묶는 역할을 합니다.

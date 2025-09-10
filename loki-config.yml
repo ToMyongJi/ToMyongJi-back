@@ -7,8 +7,8 @@ common:
   path_prefix: /loki
   storage:
     filesystem:
-      chunks_directory: /loki/chunks
-      rules_directory: /loki/rules
+      chunks_directory: /tmp/loki/chunks
+      rules_directory: /tmp/loki/rules
 
   replication_factor: 1
   ring:
@@ -17,10 +17,10 @@ common:
 
 schema_config:
   configs:
-    - from: 2020-10-24
-      store: boltdb-shipper
+    - from: 2020-10-12
+      store: tsdb
       object_store: filesystem
-      schema: v11
+      schema: v13
       index:
         prefix: index_
         period: 24h
@@ -33,5 +33,5 @@ ruler:
     type: local
 
     local:
-      directory: /loki/rules
+      directory: /tmp/loki/rules
 

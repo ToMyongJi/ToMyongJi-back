@@ -1,0 +1,155 @@
+name: Unified CI/CD for Dev and Prod
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  CI-CD:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          clean: 'true'
+
+      - name: Force sync with remote branch
+        run: |
+          git fetch origin ${{ github.ref_name }}
+          git reset --hard origin/${{ github.ref_name }}
+
+      - name: Set environment variables
+        id: vars
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "CONFIG_PATH=config/prod" >> $GITHUB_OUTPUT
+            echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
+            echo "DOCKER_PASSWORD_SECRET=${{ secrets.DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
+            echo "HOST=${{ secrets.HOST_PROD }}" >> $GITHUB_OUTPUT
+            echo "APP_DIR=/home/ubuntu/tomyongji-prod" >> $GITHUB_OUTPUT
+            {
+              echo 'KEY<<EOF'
+              echo "${{ secrets.PRIVATE_KEY }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+            {
+              echo 'PROPERTIES_SECRET<<EOF'
+              echo "${{ secrets.APPLICATION_PROPERTIES }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+          else
+            echo "CONFIG_PATH=config/dev" >> $GITHUB_OUTPUT
+            echo "DOCKER_USERNAME=${{ secrets.DEV_DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
+            echo "DOCKER_PASSWORD_SECRET=${{ secrets.DEV_DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
+            echo "HOST=${{ secrets.DEV_EC2_HOST }}" >> $GITHUB_OUTPUT
+            echo "APP_DIR=/home/ubuntu/tomyongji-dev" >> $GITHUB_OUTPUT
+            {
+              echo 'KEY<<EOF'
+              echo "${{ secrets.DEV_SSH_KEY }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+            {
+              echo 'PROPERTIES_SECRET<<EOF'
+              echo "${{ secrets.DEV_APPLICATION_PROPERTIES }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Create application.properties for build
+        run: |
+          mkdir -p ./src/main/resources
+          echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > ./src/main/resources/application.properties
+
+      - name: Build with Gradle
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build -x test
+
+      - name: Docker build and push
+        run: |
+          echo "${{ steps.vars.outputs.DOCKER_PASSWORD_SECRET }}" | docker login -u "${{ steps.vars.outputs.DOCKER_USERNAME }}" --password-stdin
+          docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest -f ./${{ steps.vars.outputs.CONFIG_PATH }}/app.Dockerfile .
+          docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest
+          docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest -f ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.Dockerfile .
+          docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest
+
+      - name: Create directories and Set permissions on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          script: |
+            sudo mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/www
+            sudo mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/conf
+            sudo chown -R ubuntu:ubuntu ${{ steps.vars.outputs.APP_DIR }}
+
+      - name: Read docker-compose.yml content in Runner
+        id: compose_file
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: "./${{ steps.vars.outputs.CONFIG_PATH }}/docker-compose.yml"
+
+      - name: Write docker-compose.yml content on Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          script: |
+            cat <<'EOF' > ${{ steps.vars.outputs.APP_DIR }}/docker-compose.yml
+            ${{ steps.compose_file.outputs.content }}
+            EOF
+
+      - name: Read nginx.conf file content in Runner
+        id: nginx_file
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: "./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf"
+
+      - name: Write nginx.conf content on Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          script: |
+            cat <<'EOF' > ${{ steps.vars.outputs.APP_DIR }}/nginx.conf
+            ${{ steps.nginx_file.outputs.content }}
+            EOF
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          script: |
+            APP_DIR=${{ steps.vars.outputs.APP_DIR }}
+            cd $APP_DIR
+
+            echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > ./application.properties
+
+            if [ "${{ github.ref_name }}" = "main" ]; then
+              if ! swapon -s | grep -q /swapfile; then
+                sudo fallocate -l 1G /swapfile
+                sudo chmod 600 /swapfile
+                sudo mkswap /swapfile
+                sudo swapon /swapfile
+                echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+              fi
+            fi
+
+            sudo docker-compose down
+            sudo docker-compose pull
+            sudo docker-compose up -d
+
+            sudo docker image prune -f

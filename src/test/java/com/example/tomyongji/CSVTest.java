@@ -85,7 +85,9 @@ public class CSVTest {
     private ObjectMapper objectMapper;
 
     private User user;
+    private User anotherUser;
     private StudentClub studentClub;
+    private StudentClub anotherStudentClub;
     private MockMultipartFile csvFile;
 
     @BeforeEach
@@ -126,6 +128,42 @@ public class CSVTest {
                 .build();
         userRepository.saveAndFlush(user);
 
+        President anotherPresident = President.builder()
+                .studentNum("60221318")
+                .name("다른유저")
+                .build();
+        President savedAnotherPresident = presidentRepository.saveAndFlush(anotherPresident);
+
+        anotherStudentClub = studentClubRepository.findById(31L)
+                .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
+        anotherStudentClub.setPresident(savedAnotherPresident);
+        studentClubRepository.saveAndFlush(anotherStudentClub);
+
+        ClubVerification anotherClubVerification = ClubVerification.builder()
+                .verificatedAt(LocalDateTime.now())
+                .studentNum("60221318")
+                .build();
+        clubVerificationRepository.saveAndFlush(anotherClubVerification);
+
+        EmailVerification anotherEmailVerification = EmailVerification.builder()
+                .verificatedAt(LocalDateTime.now())
+                .email("another@example.com")
+                .verificationCode("TEST5678")
+                .build();
+        emailVerificationRepository.saveAndFlush(anotherEmailVerification);
+
+        anotherUser = User.builder()
+                .userId("anotherUser")
+                .name("다른유저")
+                .studentNum("60221318")
+                .studentClub(anotherStudentClub)
+                .collegeName("스마트시스템공과대학")
+                .email("another@example.com")
+                .password(encoder.encode("password123!"))
+                .role("PRESIDENT")
+                .build();
+        userRepository.saveAndFlush(anotherUser);
+
         String csvContent = "date,content,deposit,withdrawal\n" +
                 "2024-01-15,카페 결제,0,5000\n" +
                 "2024-01-16,입금,10000,0\n" +
@@ -143,21 +181,28 @@ public class CSVTest {
     void clear() {
         new TransactionTemplate(transactionManager).execute(status -> {
             receiptRepository.deleteAllByStudentClub(studentClub);
+            receiptRepository.deleteAllByStudentClub(anotherStudentClub);
 
             studentClub.setPresident(null);
+            anotherStudentClub.setPresident(null);
             studentClubRepository.saveAndFlush(studentClub);
+            studentClubRepository.saveAndFlush(anotherStudentClub);
 
             userRepository.deleteAllByStudentNum("60221317");
+            userRepository.deleteAllByStudentNum("60221318");
             clubVerificationRepository.deleteByStudentNum("60221317");
+            clubVerificationRepository.deleteByStudentNum("60221318");
             emailVerificationRepository.deleteByEmail("test@example.com");
+            emailVerificationRepository.deleteByEmail("another@example.com");
             presidentRepository.deleteByStudentNum("60221317");
+            presidentRepository.deleteByStudentNum("60221318");
 
             return null;
         });
     }
 
-    private String getAuthToken() {
-        LoginRequestDto loginRequest = new LoginRequestDto("testUser", "password123!");
+    private String getAuthToken(String userId, String password) {
+        LoginRequestDto loginRequest = new LoginRequestDto(userId, password);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -175,6 +220,10 @@ public class CSVTest {
         } catch (Exception e) {
             throw new RuntimeException("토큰 발급 실패: " + e.getMessage());
         }
+    }
+
+    private String getAuthToken() {
+        return getAuthToken("testUser", "password123!");
     }
 
     @Test
@@ -199,7 +248,7 @@ public class CSVTest {
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-        // When - String으로 응답 받기
+        // When
         ResponseEntity<String> response = restTemplate.exchange(
                 "/api/csv/upload/" + userIndexId,
                 HttpMethod.POST,
@@ -211,7 +260,6 @@ public class CSVTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertNotNull(response.getBody());
 
-        // JSON 파싱하여 검증
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
         assertThat(responseBody.get("statusCode")).isEqualTo(200);
         assertThat(responseBody.get("statusMessage")).isEqualTo("CSV file loaded successfully.");
@@ -289,7 +337,6 @@ public class CSVTest {
         long userIndexId = user.getId();
         String authToken = getAuthToken();
 
-        // 잘못된 형식의 CSV 파일 생성
         String invalidCsvContent = "date,content,deposit,withdrawal\n" +
                 "invalid-date,카페 결제,invalid-number,5000\n" +
                 "2024-01-16,,10000,abc";
@@ -328,7 +375,6 @@ public class CSVTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertNotNull(response.getBody());
 
-        // JSON 파싱하여 검증
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
         assertThat(responseBody.get("statusCode")).isEqualTo(200);
         assertThat(responseBody.get("statusMessage")).isEqualTo("CSV file loaded successfully.");
@@ -339,5 +385,192 @@ public class CSVTest {
 
         List<Receipt> savedReceipts = receiptRepository.findAllByStudentClub(studentClub);
         assertThat(savedReceipts.size()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("빈 파일 업로드 실패 테스트")
+    void uploadEmptyFileTest() throws Exception {
+        // Given
+        long userIndexId = user.getId();
+        String authToken = getAuthToken();
+
+        MockMultipartFile emptyFile = new MockMultipartFile(
+                "file",
+                "empty.csv",
+                "text/csv",
+                new byte[0]
+        );
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        ByteArrayResource fileResource = new ByteArrayResource(emptyFile.getBytes()) {
+            @Override
+            public String getFilename() {
+                return emptyFile.getOriginalFilename();
+            }
+        };
+        body.add("file", fileResource);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setBearerAuth(authToken);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        // When
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/csv/upload/" + userIndexId,
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        List<Map<String, Object>> data = (List<Map<String, Object>>) responseBody.get("data");
+        assertThat(data.size()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("다른 학생회 소속 사용자의 CSV 업로드 실패 테스트")
+    void uploadCsvDifferentClubTest() throws Exception {
+        // Given
+        long userIndexId = user.getId();
+        String anotherAuthToken = getAuthToken("anotherUser", "password123!");
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        ByteArrayResource fileResource = new ByteArrayResource(csvFile.getBytes()) {
+            @Override
+            public String getFilename() {
+                return csvFile.getOriginalFilename();
+            }
+        };
+        body.add("file", fileResource);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setBearerAuth(anotherAuthToken);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        // When
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/csv/upload/" + userIndexId,
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @DisplayName("다른 학생회 소속 사용자의 CSV 다운로드 실패 테스트")
+    void downloadCsvDifferentClubTest() throws Exception {
+        // Given
+        String anotherAuthToken = getAuthToken("anotherUser", "password123!");
+
+        CsvExportDto csvExportDto = CsvExportDto.builder()
+                .userId("testUser")
+                .year(2024)
+                .month(1)
+                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(anotherAuthToken);
+
+        HttpEntity<CsvExportDto> requestEntity = new HttpEntity<>(csvExportDto, headers);
+
+        // When
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/csv/export",
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @DisplayName("중복 데이터 처리 확인 테스트")
+    void uploadCsvDuplicateDataTest() throws Exception {
+        // Given
+        long userIndexId = user.getId();
+        String authToken = getAuthToken();
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        ByteArrayResource fileResource = new ByteArrayResource(csvFile.getBytes()) {
+            @Override
+            public String getFilename() {
+                return csvFile.getOriginalFilename();
+            }
+        };
+        body.add("file", fileResource);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setBearerAuth(authToken);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        restTemplate.exchange(
+                "/api/csv/upload/" + userIndexId,
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        // When
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/csv/upload/" + userIndexId,
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        List<Map<String, Object>> data = (List<Map<String, Object>>) responseBody.get("data");
+        assertThat(data.size()).isEqualTo(0);
+
+        List<Receipt> savedReceipts = receiptRepository.findAllByStudentClub(studentClub);
+        assertThat(savedReceipts.size()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 userId로 CSV 다운로드 실패 테스트")
+    void downloadCsvInvalidUserIdTest() throws Exception {
+        // Given
+        String authToken = getAuthToken();
+
+        CsvExportDto csvExportDto = CsvExportDto.builder()
+                .userId("nonExistentUser")
+                .year(2024)
+                .month(1)
+                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(authToken);
+
+        HttpEntity<CsvExportDto> requestEntity = new HttpEntity<>(csvExportDto, headers);
+
+        // When
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/csv/export",
+                HttpMethod.POST,
+                requestEntity,
+                String.class
+        );
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 }

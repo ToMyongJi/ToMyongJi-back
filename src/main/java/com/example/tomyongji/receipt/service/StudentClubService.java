@@ -13,7 +13,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-
 public class StudentClubService {
     private final StudentClubRepository studentClubRepository;
     private final StudentClubMapper studentClubMapper;

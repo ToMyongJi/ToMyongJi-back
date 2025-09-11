@@ -16,6 +16,7 @@ import java.util.List;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,16 +39,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name="영수증 조회 api", description = "영수증과 관련된 API들입니다.")
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/receipt")
 public class ReceiptController {
 
     private final ReceiptService receiptService;
-
-    @Autowired
-    public ReceiptController(ReceiptService receiptService) {
-        this.receiptService = receiptService;
-    }
-
 
     @Operation(summary = "영수증 작성 api", description = "유저 아이디를 통해 특정 학생회의 영수증을 작성합니다.")
     @ResponseStatus(HttpStatus.CREATED)

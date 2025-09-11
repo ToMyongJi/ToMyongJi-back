@@ -27,27 +27,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ReceiptService {
 
     private final ReceiptRepository receiptRepository;
     private final StudentClubRepository studentClubRepository;
     private final UserRepository userRepository;
     private final ReceiptMapper receiptMapper;
-
-    @Autowired
-    public ReceiptService(ReceiptRepository receiptRepository,
-        StudentClubRepository studentClubRepository, UserRepository userRepository,
-        ReceiptMapper receiptMapper) {
-        this.receiptRepository = receiptRepository;
-        this.studentClubRepository = studentClubRepository;
-        this.userRepository = userRepository;
-        this.receiptMapper = receiptMapper;
-    }
 
     public ReceiptDto createReceipt(ReceiptCreateDto receiptDto, UserDetails currentUser) {
         //유저 및 소속 클럽 조회

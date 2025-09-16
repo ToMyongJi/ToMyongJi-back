@@ -39,7 +39,6 @@ import java.util.logging.Logger;
 @Service
 @RequiredArgsConstructor
 public class CSVService {
-    //테스트 코드 오류로 인한 RequiredArgsConstructor 사용 -> 08/14 회의 후 기본 생성자를 사용해야만 하는 이유가 있다면 롤백 후 테스트 코드 수정
     private final ReceiptRepository receiptRepository;
     private final UserRepository userRepository;
     private static final Logger LOGGER = Logger.getLogger(ReceiptService.class.getName());

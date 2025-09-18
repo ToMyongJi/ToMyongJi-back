@@ -41,6 +41,7 @@ import java.util.logging.Logger;
 public class CSVService {
     private final ReceiptRepository receiptRepository;
     private final UserRepository userRepository;
+    private final ReceiptService receiptService;
     private static final Logger LOGGER = Logger.getLogger(ReceiptService.class.getName());
 
     @Transactional
@@ -93,6 +94,8 @@ public class CSVService {
         } catch (IOException | CsvValidationException e) {
             LOGGER.log(Level.SEVERE, "Error reading CSV file", e);
         }
+        
+        receiptService.checkAndUpdateVerificationStatus(studentClub.getId());
         return receipts;
     }
 

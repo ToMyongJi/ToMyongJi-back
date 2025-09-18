@@ -79,6 +79,8 @@ public class OCRService {
         ReceiptCreateDto createDto = receiptMapper.toReceiptCreateDto(receiptDto);
         createDto.setUserId(userId);
         receiptService.createReceipt(createDto, currentUser);
+        
+        receiptService.checkAndUpdateVerificationStatus(user.getStudentClub().getId());
     }
 
     /**

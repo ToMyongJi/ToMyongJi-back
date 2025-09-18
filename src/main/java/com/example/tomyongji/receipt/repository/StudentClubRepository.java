@@ -27,4 +27,8 @@ public interface StudentClubRepository extends JpaRepository<StudentClub, Long> 
     @Modifying
     @Query("UPDATE StudentClub s SET s.verification = true WHERE s.id = :clubId")
     void updateVerificationById(@Param("clubId") Long clubId);
+
+    @Modifying
+    @Query("UPDATE StudentClub s SET s.verification = false WHERE s.id = :clubId")
+    void updateVerificationToFalseById(@Param("clubId") Long clubId);
 }

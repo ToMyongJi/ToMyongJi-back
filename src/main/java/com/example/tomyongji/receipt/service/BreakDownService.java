@@ -49,6 +49,7 @@ public class BreakDownService {
     private final ReceiptRepository receiptRepository;
     private final StudentClubRepository studentClubRepository;
     private final ReceiptMapper mapper;
+    private final ReceiptService receiptService;
 
     public BreakDownDto parsePdf(MultipartFile file,
         String userId,
@@ -145,10 +146,7 @@ public class BreakDownService {
         receiptRepository.saveAll(receipts);
         studentClubRepository.save(club);
 
-        double verificationRatio = (double) receiptRepository.countByStudentClubAndVerificationTrue(club)/receiptRepository.countByStudentClub(club);
-        if(verificationRatio > 0.3){
-            studentClubRepository.updateVerificationById(clubId);
-        }
+        receiptService.checkAndUpdateVerificationStatus(clubId);
 
         return receipts.stream()
                 .map(mapper :: toReceiptDto)

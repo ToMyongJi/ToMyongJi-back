@@ -136,6 +136,9 @@ public class ReceiptService {
         studentClub.setBalance(studentClub.getBalance() - balanceAdjustment);
         studentClubRepository.save(studentClub);
 
+        //영수증 비율 확인 및 학생회 상태 변경
+        checkAndUpdateVerificationStatus(studentClub.getId());
+
         //DTO 반환
         return receiptMapper.toReceiptDto(receipt);
     }
@@ -217,6 +220,31 @@ public class ReceiptService {
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTime();
+    }
+
+    //전체 영수증 대비 토스뱅크로 검증된 영수증 비율에 따른 뱃지 부여 메서드
+    public void checkAndUpdateVerificationStatus(Long clubId) {
+        StudentClub club = studentClubRepository.findById(clubId)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
+
+        long totalReceipts = receiptRepository.countByStudentClub(club);
+        if (totalReceipts == 0) {
+            return;
+        }
+
+        long verifiedReceipts = receiptRepository.countByStudentClubAndVerificationTrue(club);
+        double verificationRatio = (double) verifiedReceipts / totalReceipts;
+
+        //boolean 으로 현재 상태와 검증된 상태의 값이 다를 경우에만 DB 업데이트
+        boolean shouldBeVerified = verificationRatio > 0.3;
+
+        if (club.isVerification() != shouldBeVerified) {
+            if (shouldBeVerified) {
+                studentClubRepository.updateVerificationById(clubId);
+            } else {
+                studentClubRepository.updateVerificationToFalseById(clubId);
+            }
+        }
     }
 
     private void checkClub(StudentClub studentClub, UserDetails currentUser) {

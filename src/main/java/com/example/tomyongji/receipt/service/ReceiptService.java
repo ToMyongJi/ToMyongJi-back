@@ -27,27 +27,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ReceiptService {
 
     private final ReceiptRepository receiptRepository;
     private final StudentClubRepository studentClubRepository;
     private final UserRepository userRepository;
     private final ReceiptMapper receiptMapper;
-
-    @Autowired
-    public ReceiptService(ReceiptRepository receiptRepository,
-        StudentClubRepository studentClubRepository, UserRepository userRepository,
-        ReceiptMapper receiptMapper) {
-        this.receiptRepository = receiptRepository;
-        this.studentClubRepository = studentClubRepository;
-        this.userRepository = userRepository;
-        this.receiptMapper = receiptMapper;
-    }
 
     public ReceiptDto createReceipt(ReceiptCreateDto receiptDto, UserDetails currentUser) {
         //유저 및 소속 클럽 조회
@@ -86,6 +79,7 @@ public class ReceiptService {
         List<Receipt> receipts = receiptRepository.findAll();
         return receiptDtoList(receipts);
     }
+
     public ReceiptByStudentClubDto getReceiptsByClub(Long id, UserDetails currentUser) {
 
         User user = userRepository.findById(id)
@@ -122,6 +116,7 @@ public class ReceiptService {
 
         return receiptMapper.toReceiptDto(receipt);
     }
+
     public ReceiptDto deleteReceipt(Long receiptId, UserDetails currentUser) {
         //접근 권한: 유저가 아닌 경우
 
@@ -140,6 +135,9 @@ public class ReceiptService {
         int balanceAdjustment = receipt.getDeposit() - receipt.getWithdrawal();
         studentClub.setBalance(studentClub.getBalance() - balanceAdjustment);
         studentClubRepository.save(studentClub);
+
+        //영수증 비율 확인 및 학생회 상태 변경
+        checkAndUpdateVerificationStatus(studentClub.getId());
 
         //DTO 반환
         return receiptMapper.toReceiptDto(receipt);
@@ -222,6 +220,31 @@ public class ReceiptService {
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTime();
+    }
+
+    //전체 영수증 대비 토스뱅크로 검증된 영수증 비율에 따른 뱃지 부여 메서드
+    public void checkAndUpdateVerificationStatus(Long clubId) {
+        StudentClub club = studentClubRepository.findById(clubId)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
+
+        long totalReceipts = receiptRepository.countByStudentClub(club);
+        if (totalReceipts == 0) {
+            return;
+        }
+
+        long verifiedReceipts = receiptRepository.countByStudentClubAndVerificationTrue(club);
+        double verificationRatio = (double) verifiedReceipts / totalReceipts;
+
+        //boolean 으로 현재 상태와 검증된 상태의 값이 다를 경우에만 DB 업데이트
+        boolean shouldBeVerified = verificationRatio > 0.3;
+
+        if (club.isVerification() != shouldBeVerified) {
+            if (shouldBeVerified) {
+                studentClubRepository.updateVerificationById(clubId);
+            } else {
+                studentClubRepository.updateVerificationToFalseById(clubId);
+            }
+        }
     }
 
     private void checkClub(StudentClub studentClub, UserDetails currentUser) {

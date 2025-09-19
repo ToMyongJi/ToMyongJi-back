@@ -18,6 +18,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.net.URLEncoder;
 import java.util.Calendar;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -35,20 +37,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Service
+@RequiredArgsConstructor
 public class CSVService {
-    private ReceiptRepository receiptRepository;
-    private UserRepository userRepository;
+    private final ReceiptRepository receiptRepository;
+    private final UserRepository userRepository;
+    private final ReceiptService receiptService;
     private static final Logger LOGGER = Logger.getLogger(ReceiptService.class.getName());
-
-    @Autowired
-    public CSVService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    @Autowired
-    public void ReceiptService(ReceiptRepository receiptRepository) {
-        this.receiptRepository = receiptRepository;
-    }
 
     @Transactional
     public List<Receipt> loadDataFromCSV(MultipartFile file, long userIndexId, UserDetails currentUser) {
@@ -100,6 +94,8 @@ public class CSVService {
         } catch (IOException | CsvValidationException e) {
             LOGGER.log(Level.SEVERE, "Error reading CSV file", e);
         }
+        
+        receiptService.checkAndUpdateVerificationStatus(studentClub.getId());
         return receipts;
     }
 

@@ -2,7 +2,7 @@ auth_enabled: false
 
 server:
   http_listen_port: 3100
-  
+
 common:
   path_prefix: /loki
   storage:
@@ -24,15 +24,14 @@ schema_config:
       index:
         prefix: index_
         period: 24h
-        
+
 ingester:
   chunk_target_size: 2097152  # 2 MB로 증가
-  
+
 ruler:
   storage:
     type: local
-    
+
     local:
       directory: /tmp/loki/rules
-
 

@@ -1,0 +1,58 @@
+version: '2.4'
+
+services:
+  app:
+    image: jinhyoung9380/tomyongji:latest
+    container_name: tomyongji-dev-app
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || wget -qO- http://localhost:8080/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - app_network
+
+  nginx:
+    image: jinhyoung9380/tomyongji-nginx:latest
+    container_name: tomyongji-dev-nginx
+    depends_on:
+      app: # spring -> app 으로 변경
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Waiting for SSL certificate...';
+        while ! test -f /etc/letsencrypt/live/tomyongji-dev.shop/fullchain.pem; do
+          sleep 5;
+        done;
+        echo 'Certificate found! Starting Nginx...';
+        nginx -g 'daemon off;'
+      "
+    networks:
+      - app_network
+
+  certbot:
+    image: certbot/certbot
+    container_name: tomyongji-dev-certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: >
+      sh -c "while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h; done"
+    restart: unless-stopped
+    networks:
+      - app_network
+networks:
+  app_network:
+    driver: bridge

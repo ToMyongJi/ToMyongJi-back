@@ -19,6 +19,7 @@ import java.util.List;
 public class StudentClubController {
 
     private final StudentClubService studentClubService;
+
     @Operation(summary = "모든 학생회 조회 api", description = "모든 학생회를 조회할때 사용합니다.")
     @GetMapping("api/club")
     public ApiResponse<List<ClubDto>> getAllStudentClub() {

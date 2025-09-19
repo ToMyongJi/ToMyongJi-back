@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
- 
+
 permissions:
   contents: read
 
@@ -58,7 +58,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.PRIVATE_KEY }}
           script: echo 'SSH connection successful'
-          
+
       - name: Ensure correct permissions on loki directory
         uses: appleboy/ssh-action@master
         with:
@@ -72,7 +72,7 @@ jobs:
             sudo chown -R ubuntu:ubuntu /home/ubuntu/etc/promtail/  # 소유권을 ubuntu로 변경
             sudo chmod -R +r /home/ubuntu/etc/prometheus/  # 디렉토리와 파일에 읽기 권한 부여
             sudo chown -R ubuntu:ubuntu /home/ubuntu/etc/prometheus/  # 소유권을 ubuntu로 변경
-            
+
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@master
         with:
@@ -111,7 +111,7 @@ jobs:
             mkdir -p /home/ubuntu/loki-data
             mkdir -p /home/ubuntu/prometheus-data
             echo "Directories created successfully."
-            
+
       - name: Copy loki config to server
         uses: appleboy/ssh-action@master
         with:

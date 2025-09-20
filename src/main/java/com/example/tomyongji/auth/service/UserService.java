@@ -17,4 +17,6 @@ public interface UserService {
 
     Boolean verifyClub(ClubVerifyRequestDto clubVerifyRequestDto);
 
+    public void deleteUser(String userId);
+
 }

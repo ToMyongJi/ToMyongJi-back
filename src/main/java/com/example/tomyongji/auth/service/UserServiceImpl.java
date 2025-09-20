@@ -165,6 +165,29 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    //회원 탈퇴
+    @Override
+    @Transactional
+    public void deleteUser(String userId){
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
 
+        if ("PRESIDENT".equals(user.getRole())) {
+            throw new CustomException(NOT_DELETE_PRESIDENT, 400);
+        }
+
+        if (!clubVerificationRepository.findByStudentNum(user.getStudentNum()).isEmpty()) {
+            clubVerificationRepository.deleteByStudentNum(user.getStudentNum());
+        }
+
+        emailVerificationRepository.deleteByEmail(user.getEmail());
+
+        Optional<Member> member = memberInfoRepository.findByStudentNum(user.getStudentNum());
+        if (member.isPresent()) {
+            memberInfoRepository.delete(member.get());
+        }
+
+        userRepository.delete(user);
+    }
 
 }

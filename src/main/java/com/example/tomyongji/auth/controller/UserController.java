@@ -57,11 +57,5 @@ public class UserController {
         return new ApiResponse(200,"소속인증을 성공적으로 마쳤습니다.",isClubVerify);
     }
 
-    @Operation(summary = "회원탈퇴 API", description = "사용자가 회원탈퇴를 합니다.")
-    @DeleteMapping("/delete")
-    public ApiResponse<String> deleteUser(@AuthenticationPrincipal UserDetails currentUser) {
-        String userId = currentUser.getUsername();
-        userService.deleteUser(userId);
-        return new ApiResponse<>(200, "회원탈퇴가 완료되었습니다.", "탈퇴 완료");
-    }
+
 }

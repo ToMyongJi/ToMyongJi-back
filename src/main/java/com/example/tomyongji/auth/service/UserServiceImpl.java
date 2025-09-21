@@ -151,6 +151,9 @@ public class UserServiceImpl implements UserService {
             return true;
         }else if(clubVerifyRequestDto.getRole().equals("PRESIDENT")){
             President president = this.presidentInfoRepository.findByStudentNum(clubVerifyRequestDto.getStudentNum());
+            if (president == null) {
+                throw new CustomException(NOT_FOUND_PRESIDENT, 400);
+            }
             StudentClub userClub = studentClubRepository.findByPresident(president)
                     .orElseThrow(()-> new CustomException(NOT_FOUND_STUDENT_CLUB,400));
             ClubVerification clubVerification = ClubVerification.builder()
@@ -165,6 +168,47 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    //회원 탈퇴
+    @Override
+    @Transactional
+    public void deleteUser(String userId){
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
 
+        if (!clubVerificationRepository.findByStudentNum(user.getStudentNum()).isEmpty()) {
+            clubVerificationRepository.deleteByStudentNum(user.getStudentNum());
+        }
 
+        emailVerificationRepository.deleteByEmail(user.getEmail());
+
+        //회장과 멤버 필드 지우기
+        String userRole = user.getRole();
+        if ("PRESIDENT".equals(userRole)) {
+            deletePresidentData(user.getStudentNum());
+        } else if ("STU".equals(userRole)) {
+            deleteMemberData(user.getStudentNum());
+        }
+
+        userRepository.delete(user);
+    }
+
+    private void deletePresidentData(String studentNum) {
+        President president = presidentInfoRepository.findByStudentNum(studentNum);
+        if (president != null) {
+            //엔터티 참조 제약때문에 먼저 참조 제거
+            Optional<StudentClub> studentClub = studentClubRepository.findByPresident(president);
+            if (studentClub.isPresent()) {
+                studentClub.get().setPresident(null);
+                studentClubRepository.save(studentClub.get());
+            }
+            presidentInfoRepository.delete(president);
+        }
+    }
+
+    private void deleteMemberData(String studentNum) {
+        Optional<Member> member = memberInfoRepository.findByStudentNum(studentNum);
+        if (member.isPresent()) {
+            memberInfoRepository.delete(member.get());
+        }
+    }
 }

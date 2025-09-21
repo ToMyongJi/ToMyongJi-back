@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name="로그인, 회원가입 api", description = "로그인, 회원가입에 관련된 api입니다.")
@@ -54,4 +56,13 @@ public class UserController {
         boolean isClubVerify = userService.verifyClub(clubVerifyDto);
         return new ApiResponse(200,"소속인증을 성공적으로 마쳤습니다.",isClubVerify);
     }
+
+    @Operation(summary = "회원탈퇴 API", description = "사용자가 회원탈퇴를 합니다.")
+    @DeleteMapping("/delete")
+    public ApiResponse<Void> deleteUser(@AuthenticationPrincipal UserDetails currentUser) {
+        String userId = currentUser.getUsername();
+        userService.deleteUser(userId);
+        return new ApiResponse<>(200, "회원탈퇴가 완료되었습니다.");
+    }
+
 }

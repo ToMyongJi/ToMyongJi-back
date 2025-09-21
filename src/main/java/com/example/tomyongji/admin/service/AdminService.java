@@ -1,9 +1,5 @@
 package com.example.tomyongji.admin.service;
 
-import static com.example.tomyongji.validation.ErrorMsg.EXISTING_USER;
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_MEMBER;
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
-
 import com.example.tomyongji.admin.dto.MemberDto;
 import com.example.tomyongji.admin.dto.PresidentDto;
 import com.example.tomyongji.admin.entity.Member;
@@ -28,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.example.tomyongji.validation.ErrorMsg.*;
+
 @Service
 @RequiredArgsConstructor
 public class AdminService {
@@ -49,6 +47,9 @@ public class AdminService {
             throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
         }
         President president = studentClub.get().getPresident();
+        if (president == null) {
+            throw new CustomException(NOT_FOUND_PRESIDENT, 400);
+        }
         PresidentDto presidentDto = adminMapper.toPresidentDto(president);
         presidentDto.setClubId(clubId);
         return presidentDto;

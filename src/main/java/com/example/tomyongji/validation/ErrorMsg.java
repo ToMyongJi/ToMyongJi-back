@@ -29,4 +29,5 @@ public class ErrorMsg {
     public static final String NOT_FOUND_BREAKDOWN = "거래내역서를 찾을 수 없습니다.";
     public static final String AUTENTICITY_FAILURE = "진위확인에 실패했습니다.";
     public static final String EXTERNAL_SERVER_ERROR = "외부 서버의 오류가 발생했습니다.";
+
 }

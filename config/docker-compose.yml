@@ -1,5 +1,3 @@
-version: '2.4'
-
 services:
   app:
     image: ${DOCKER_USERNAME}/${APP_NAME}:${IMAGE_TAG}
@@ -28,7 +26,6 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      # nginx.conf 파일의 경로도 변수 처리 가능하지만, 명확성을 위해 서버에서 직접 관리
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
@@ -52,4 +49,11 @@ services:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
     entrypoint: >
-      sh -c "while :; do certbot renew --webroot -w /var/w
+      sh -c "while :; do certbot renew --webroot -w /var/www/certbot; sleep 12h; done"
+    restart: unless-stopped
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

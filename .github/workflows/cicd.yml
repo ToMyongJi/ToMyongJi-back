@@ -20,13 +20,11 @@ jobs:
       - name: Set environment variables
         id: vars
         run: |
-          # prod 브랜치일 경우의 설정
           if [ "${{ github.ref_name }}" = "prod" ]; then
             echo "CONFIG_PATH=config/prod" >> $GITHUB_OUTPUT
             echo "ENV_SUFFIX=-prod" >> $GITHUB_OUTPUT
             echo "SPRING_PROFILE=prod" >> $GITHUB_OUTPUT
             echo "DOMAIN_NAME=tomyongji.com" >> $GITHUB_OUTPUT
-            # PROD_ 접두사가 붙은 Secret 변수들을 사용하도록 수정
             echo "DOCKER_USERNAME=${{ secrets.PROD_DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
             echo "DOCKER_PASSWORD_SECRET=${{ secrets.PROD_DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
             echo "HOST=${{ secrets.PROD_EC2_HOST }}" >> $GITHUB_OUTPUT
@@ -41,7 +39,6 @@ jobs:
               echo "${{ secrets.PROD_APPLICATION_PROPERTIES }}"
               echo 'EOF'
             } >> $GITHUB_OUTPUT
-          # dev 브랜치일 경우의 설정
           else
             echo "CONFIG_PATH=config/dev" >> $GITHUB_OUTPUT
             echo "ENV_SUFFIX=-dev" >> $GITHUB_OUTPUT
@@ -79,10 +76,9 @@ jobs:
           chmod +x ./gradlew
           ./gradlew build -x test
 
-      - name: Docker build and push
+      - name: Docker build and push (App Only)
         run: |
           echo "${{ steps.vars.outputs.DOCKER_PASSWORD_SECRET }}" | docker login -u "${{ steps.vars.outputs.DOCKER_USERNAME }}" --password-stdin
-            
           docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest -f ./config/app.Dockerfile .
           docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest
 
@@ -93,7 +89,6 @@ jobs:
           echo "APP_NAME=tomyongji" >> ./.env
           echo "IMAGE_TAG=latest" >> ./.env
           echo "ENV_SUFFIX=${{ steps.vars.outputs.ENV_SUFFIX }}" >> ./.env
-          echo "NGINX_CONF_PATH=./nginx.conf" >> ./.env
           echo "DOMAIN_NAME=${{ steps.vars.outputs.DOMAIN_NAME }}" >> ./.env
 
       - name: Create directories on server
@@ -103,9 +98,9 @@ jobs:
           username: ubuntu
           key: ${{ steps.vars.outputs.KEY }}
           script: |
-            sudo mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/www
-            sudo mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/conf
-            sudo chown -R ubuntu:ubuntu ${{ steps.vars.outputs.APP_DIR }}
+            mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/www
+            mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/conf
+            chown -R ubuntu:ubuntu ${{ steps.vars.outputs.APP_DIR }}
 
       - name: Copy files to server
         uses: appleboy/scp-action@master

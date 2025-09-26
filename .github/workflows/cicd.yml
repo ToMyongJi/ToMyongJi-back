@@ -83,13 +83,8 @@ jobs:
         run: |
           echo "${{ steps.vars.outputs.DOCKER_PASSWORD_SECRET }}" | docker login -u "${{ steps.vars.outputs.DOCKER_USERNAME }}" --password-stdin
             
-          # 공통 app.Dockerfile 빌드
           docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest -f ./config/app.Dockerfile .
           docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest
-            
-          # 환경별 nginx.Dockerfile 빌드 (경로 수정됨)
-          docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest -f ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.Dockerfile .
-          docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji-nginx:latest
 
       - name: Create .env file for Docker Compose
         run: |

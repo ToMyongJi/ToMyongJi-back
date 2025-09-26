@@ -91,6 +91,9 @@ jobs:
           echo "ENV_SUFFIX=${{ steps.vars.outputs.ENV_SUFFIX }}" >> ./.env
           echo "DOMAIN_NAME=${{ steps.vars.outputs.DOMAIN_NAME }}" >> ./.env
 
+      - name: DEBUG - List all files in the repository
+        run: ls -R
+
       - name: Create directories on server
         uses: appleboy/ssh-action@master
         with:

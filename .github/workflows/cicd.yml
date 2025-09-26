@@ -82,14 +82,24 @@ jobs:
           docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest -f ./config/app.Dockerfile .
           docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest
 
-      - name: Create .env file for Docker Compose
+      - name: DEBUG - Create and Verify .env file
         run: |
-          echo "SPRING_PROFILE=${{ steps.vars.outputs.SPRING_PROFILE }}" > ./.env
-          echo "DOCKER_USERNAME=${{ steps.vars.outputs.DOCKER_USERNAME }}" >> ./.env
-          echo "APP_NAME=tomyongji" >> ./.env
-          echo "IMAGE_TAG=latest" >> ./.env
-          echo "ENV_SUFFIX=${{ steps.vars.outputs.ENV_SUFFIX }}" >> ./.env
-          echo "DOMAIN_NAME=${{ steps.vars.outputs.DOMAIN_NAME }}" >> ./.env
+            echo "--- Starting .env file creation ---"
+            echo "SPRING_PROFILE=${{ steps.vars.outputs.SPRING_PROFILE }}" > ./.env
+            echo "DOCKER_USERNAME=${{ steps.vars.outputs.DOCKER_USERNAME }}" >> ./.env
+            echo "APP_NAME=tomyongji" >> ./.env
+            echo "IMAGE_TAG=latest" >> ./.env
+            echo "ENV_SUFFIX=${{ steps.vars.outputs.ENV_SUFFIX }}" >> ./.env
+            echo "DOMAIN_NAME=${{ steps.vars.outputs.DOMAIN_NAME }}" >> ./.env
+            echo "--- Finished creating .env file ---"
+            
+            echo ""
+            echo "--- Verifying file system from inside the creation step ---"
+            echo "Current directory:"
+            pwd
+            echo "Listing all files recursively:"
+            ls -R
+            echo "--- Verification complete ---"
 
       - name: Create directories on server
         uses: appleboy/ssh-action@master

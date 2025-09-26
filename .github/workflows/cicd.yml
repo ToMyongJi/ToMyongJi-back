@@ -102,15 +102,6 @@ jobs:
             mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/conf
             chown -R ubuntu:ubuntu ${{ steps.vars.outputs.APP_DIR }}
 
-      - name: Create .env file for Docker Compose
-        run: |
-          echo "SPRING_PROFILE=${{ steps.vars.outputs.SPRING_PROFILE }}" > ./.env
-          echo "DOCKER_USERNAME=${{ steps.vars.outputs.DOCKER_USERNAME }}" >> ./.env
-          echo "APP_NAME=tomyongji" >> ./.env
-          echo "IMAGE_TAG=latest" >> ./.env
-          echo "ENV_SUFFIX=${{ steps.vars.outputs.ENV_SUFFIX }}" >> ./.env
-          echo "DOMAIN_NAME=${{ steps.vars.outputs.DOMAIN_NAME }}" >> ./.env
-
       - name: Copy files to server
         uses: appleboy/scp-action@master
         with:

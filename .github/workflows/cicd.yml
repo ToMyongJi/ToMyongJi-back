@@ -104,16 +104,21 @@ jobs:
             mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/conf
             chown -R ubuntu:ubuntu ${{ steps.vars.outputs.APP_DIR }}
 
-      - name: Copy files to server
+      - name: DEBUG - Check source files before copy
+        run: |
+            echo "--- Checking files to be copied ---"
+            ls -l ./config/docker-compose.yml
+            ls -l ./.env
+            ls -l ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf
+            echo "--- Check complete ---"
+
+      - name: Copy files to server (Updated Syntax)
         uses: appleboy/scp-action@master
         with:
           host: ${{ steps.vars.outputs.HOST }}
           username: ubuntu
           key: ${{ steps.vars.outputs.KEY }}
-          source: |
-            ./config/docker-compose.yml
-            ./.env
-            ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf
+          source: "./config/docker-compose.yml,./.env,./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf"
           target: ${{ steps.vars.outputs.APP_DIR }}
 
       - name: Deploy to EC2

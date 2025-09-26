@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - dev
-
+      - prod
+  pull_request:
+    branches:
+      - dev
 jobs:
   CI-CD:
     runs-on: ubuntu-latest
@@ -23,7 +26,7 @@ jobs:
       - name: Set environment variables
         id: vars
         run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
+          if [ "${{ github.ref_name }}" = "prod" ]; then
             echo "CONFIG_PATH=config/prod" >> $GITHUB_OUTPUT
             echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
             echo "DOCKER_PASSWORD_SECRET=${{ secrets.DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT

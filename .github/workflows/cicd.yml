@@ -116,7 +116,7 @@ jobs:
           source: |
             ./config/docker-compose.yml
             ./.env
-            ./config/${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf
+            ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf
           target: ${{ steps.vars.outputs.APP_DIR }}
 
       - name: Deploy to EC2

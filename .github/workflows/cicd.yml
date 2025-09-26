@@ -124,27 +124,39 @@ jobs:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ steps.vars.outputs.HOST }}
-          username: ubuntu
-          key: ${{ steps.vars.outputs.KEY }}
-          script: |
-            APP_DIR=${{ steps.vars.outputs.APP_DIR }}
-            cd $APP_DIR
-
-            echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > ./application.properties
-
-            if [ "${{ github.ref_name }}" = "prod" ]; then
-              if ! swapon -s | grep -q /swapfile; then
-                sudo fallocate -l 1G /swapfile
-                sudo chmod 600 /swapfile
-                sudo mkswap /swapfile
-                sudo swapon /swapfile
-                echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+            host: ${{ steps.vars.outputs.HOST }}
+            username: ubuntu
+            key: ${{ steps.vars.outputs.KEY }}
+            script: |
+              APP_DIR=${{ steps.vars.outputs.APP_DIR }}
+              
+              # --- 이 아래 디버깅 코드를 추가하세요 ---
+              echo "--- Verifying files inside Deploy step ---"
+              ls -l $APP_DIR
+              echo "--- Verification complete ---"
+              # --- 여기까지 추가 ---
+              
+              cd $APP_DIR
+              
+              echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > ./application.properties
+              
+              if [ "${{ github.ref_name }}" = "prod" ]; then
+                if ! swapon -s | grep -q /swapfile; then
+                  sudo fallocate -l 1G /swapfile
+                  sudo chmod 600 /swapfile
+                  sudo mkswap /swapfile
+                  sudo swapon /swapfile
+                  echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+                fi
               fi
-            fi
-
-            sudo docker-compose --env-file .env down
-            sudo docker-compose --env-file .env pull
-            sudo docker-compose --env-file .env up -d
-
-            sudo docker image prune -f
+              
+              # docker-compose.yml 파일이 있는지 확인 후 실행
+              if [ -f "docker-compose.yml" ]; then
+                sudo docker-compose --env-file .env down
+                sudo docker-compose --env-file .env pull
+                sudo docker-compose --env-file .env up -d
+                sudo docker image prune -f
+              else
+                echo "!!! docker-compose.yml not found, skipping deployment !!!"
+                exit 1
+              fi

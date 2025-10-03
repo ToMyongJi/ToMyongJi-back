@@ -24,7 +24,7 @@ jobs:
             echo "CONFIG_PATH=config/prod" >> $GITHUB_OUTPUT
             echo "ENV_SUFFIX=-prod" >> $GITHUB_OUTPUT
             echo "SPRING_PROFILE=prod" >> $GITHUB_OUTPUT
-            echo "DOMAIN_NAME=tomyongji.com" >> $GITHUB_OUTPUT
+            echo "DOMAIN_NAME=api.tomyongji.com" >> $GITHUB_OUTPUT
             echo "DOCKER_USERNAME=${{ secrets.PROD_DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
             echo "DOCKER_PASSWORD_SECRET=${{ secrets.PROD_DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
             echo "HOST=${{ secrets.PROD_EC2_HOST }}" >> $GITHUB_OUTPUT

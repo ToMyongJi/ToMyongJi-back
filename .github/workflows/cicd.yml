@@ -1,0 +1,153 @@
+name: Unified CI/CD for Dev and Prod
+
+on:
+  push:
+    branches:
+      - dev
+      - prod
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  CI-CD:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set environment variables
+        id: vars
+        run: |
+          if [ "${{ github.ref_name }}" = "prod" ]; then
+            echo "CONFIG_PATH=config/prod" >> $GITHUB_OUTPUT
+            echo "ENV_SUFFIX=-prod" >> $GITHUB_OUTPUT
+            echo "SPRING_PROFILE=prod" >> $GITHUB_OUTPUT
+            echo "DOMAIN_NAME=api.tomyongji.com" >> $GITHUB_OUTPUT
+            echo "DOCKER_USERNAME=${{ secrets.PROD_DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
+            echo "DOCKER_PASSWORD_SECRET=${{ secrets.PROD_DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
+            echo "HOST=${{ secrets.PROD_EC2_HOST }}" >> $GITHUB_OUTPUT
+            echo "APP_DIR=/home/ubuntu/tomyongji-prod" >> $GITHUB_OUTPUT
+            {
+              echo 'KEY<<EOF'
+              echo "${{ secrets.PROD_SSH_KEY }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+            {
+              echo 'PROPERTIES_SECRET<<EOF'
+              echo "${{ secrets.PROD_APPLICATION_PROPERTIES }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+          else
+            echo "CONFIG_PATH=config/dev" >> $GITHUB_OUTPUT
+            echo "ENV_SUFFIX=-dev" >> $GITHUB_OUTPUT
+            echo "SPRING_PROFILE=dev" >> $GITHUB_OUTPUT
+            echo "DOMAIN_NAME=tomyongji-dev.shop" >> $GITHUB_OUTPUT
+            echo "DOCKER_USERNAME=${{ secrets.DEV_DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
+            echo "DOCKER_PASSWORD_SECRET=${{ secrets.DEV_DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
+            echo "HOST=${{ secrets.DEV_EC2_HOST }}" >> $GITHUB_OUTPUT
+            echo "APP_DIR=/home/ubuntu/tomyongji-dev" >> $GITHUB_OUTPUT
+            {
+              echo 'KEY<<EOF'
+              echo "${{ secrets.DEV_SSH_KEY }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+            {
+              echo 'PROPERTIES_SECRET<<EOF'
+              echo "${{ secrets.DEV_APPLICATION_PROPERTIES }}"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Create application.properties for build
+        run: |
+          mkdir -p ./src/main/resources
+          echo "${{ steps.vars.outputs.PROPERTIES_SECRET }}" > ./src/main/resources/application.properties
+
+      - name: Build with Gradle
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build -x test
+
+      - name: Docker build and push (App Only)
+        run: |
+          echo "${{ steps.vars.outputs.DOCKER_PASSWORD_SECRET }}" | docker login -u "${{ steps.vars.outputs.DOCKER_USERNAME }}" --password-stdin
+          docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest -f ./config/app.Dockerfile .
+          docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest
+
+      - name: Read deploy files content
+        id: deploy_files
+        run: |
+          COMPOSE_FILE=$(cat ./config/docker-compose.yml)
+          NGINX_FILE=$(cat ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf)
+          echo "compose_file<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMPOSE_FILE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "nginx_file<<EOF" >> $GITHUB_OUTPUT
+          echo "$NGINX_FILE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create and Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ steps.vars.outputs.HOST }}
+          username: ubuntu
+          key: ${{ steps.vars.outputs.KEY }}
+          script: |
+            # 서버에 디렉터리 생성
+            mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/www
+            mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/conf
+            chown -R ubuntu:ubuntu ${{ steps.vars.outputs.APP_DIR }}
+            cd ${{ steps.vars.outputs.APP_DIR }}
+            
+            # docker-compose.yml 파일 생성
+            cat <<'EOF' > ./docker-compose.yml
+            ${{ steps.deploy_files.outputs.compose_file }}
+            EOF
+            
+            # nginx.conf 파일 생성
+            cat <<'EOF' > ./nginx.conf
+            ${{ steps.deploy_files.outputs.nginx_file }}
+            EOF
+
+            # .env 파일 생성
+            cat <<'EOF' > ./.env
+            SPRING_PROFILE=${{ steps.vars.outputs.SPRING_PROFILE }}
+            DOCKER_USERNAME=${{ steps.vars.outputs.DOCKER_USERNAME }}
+            APP_NAME=tomyongji
+            IMAGE_TAG=latest
+            ENV_SUFFIX=${{ steps.vars.outputs.ENV_SUFFIX }}
+            DOMAIN_NAME=${{ steps.vars.outputs.DOMAIN_NAME }}
+            EOF
+
+            # application.properties 파일 생성
+            cat <<'EOF' > ./application.properties
+            ${{ steps.vars.outputs.PROPERTIES_SECRET }}
+            EOF
+            
+            echo "--- All files created on server. Listing files: ---"
+            ls -l
+            
+            # 스왑 파일 생성 (prod 전용)
+            if [ "${{ github.ref_name }}" = "prod" ]; then
+              if ! swapon -s | grep -q /swapfile; then
+                sudo fallocate -l 1G /swapfile
+                sudo chmod 600 /swapfile
+                sudo mkswap /swapfile
+                sudo swapon /swapfile
+                echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+              fi
+            fi
+            
+            # Docker Compose 실행
+            sudo docker-compose --env-file .env down
+            sudo docker-compose --env-file .env pull
+            sudo docker-compose --env-file .env up -d
+            sudo docker image prune -f

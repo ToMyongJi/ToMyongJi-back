@@ -1,9 +1,9 @@
-version: '2.4'
-
 services:
   app:
-    image: jinhyoung9380/tomyongji:latest
-    container_name: tomyongji-dev-app
+    image: ${DOCKER_USERNAME}/${APP_NAME}:${IMAGE_TAG}
+    container_name: ${APP_NAME}${ENV_SUFFIX}-app
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILE}
     ports:
       - "8080:8080"
     healthcheck:
@@ -17,10 +17,10 @@ services:
       - app_network
 
   nginx:
-    image: jinhyoung9380/tomyongji-nginx:latest
-    container_name: tomyongji-dev-nginx
+    image: nginx:latest
+    container_name: ${APP_NAME}${ENV_SUFFIX}-nginx
     depends_on:
-      app: # spring -> app 으로 변경
+      app:
         condition: service_healthy
     ports:
       - "80:80"
@@ -33,7 +33,7 @@ services:
     command: >
       sh -c "
         echo 'Waiting for SSL certificate...';
-        while ! test -f /etc/letsencrypt/live/tomyongji-dev.shop/fullchain.pem; do
+        while ! test -f /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem; do
           sleep 5;
         done;
         echo 'Certificate found! Starting Nginx...';
@@ -44,7 +44,7 @@ services:
 
   certbot:
     image: certbot/certbot
-    container_name: tomyongji-dev-certbot
+    container_name: ${APP_NAME}${ENV_SUFFIX}-certbot
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
@@ -53,6 +53,7 @@ services:
     restart: unless-stopped
     networks:
       - app_network
+
 networks:
   app_network:
     driver: bridge

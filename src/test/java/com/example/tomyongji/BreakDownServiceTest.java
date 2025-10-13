@@ -25,6 +25,7 @@ import com.example.tomyongji.receipt.mapper.ReceiptMapper;
 import com.example.tomyongji.receipt.repository.ReceiptRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.receipt.service.BreakDownService;
+import com.example.tomyongji.receipt.service.ReceiptService;
 import com.example.tomyongji.validation.CustomException;
 
 import java.text.ParseException;
@@ -63,6 +64,9 @@ public class BreakDownServiceTest {
 
     @Mock
     private ReceiptMapper mapper;
+
+    @Mock
+    private ReceiptService receiptService;
 
     @InjectMocks
     private BreakDownService breakDownService;
@@ -162,12 +166,13 @@ public class BreakDownServiceTest {
     void parsePdf_Success() throws Exception {
         // Given
         String userId = user.getUserId();
+        String keyword = "학생회비";
 
         when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
         when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
 
         // When
-        BreakDownDto result = breakDownService.parsePdf(pdfFile, userId, currentUser);
+        BreakDownDto result = breakDownService.parsePdf(pdfFile, userId, keyword, currentUser);
 
         // Then
         assertNotNull(result);
@@ -183,11 +188,12 @@ public class BreakDownServiceTest {
     void parsePdf_NotFoundUser() {
         // Given
         String invalidUserId = "nonExistentUser";
+        String keyword = "학생회비";
         when(userRepository.findByUserId(invalidUserId)).thenReturn(Optional.empty());
 
         // When & Then
         CustomException exception = assertThrows(CustomException.class,
-                () -> breakDownService.parsePdf(pdfFile, invalidUserId, currentUser));
+                () -> breakDownService.parsePdf(pdfFile, invalidUserId, keyword, currentUser));
 
         assertThat(exception.getErrorCode()).isEqualTo(400);
         assertThat(exception.getMessage()).isEqualTo(NOT_FOUND_USER);
@@ -198,6 +204,7 @@ public class BreakDownServiceTest {
     @DisplayName("학생회가 없는 유저로 PDF 파싱 실패")
     void parsePdf_NotFoundStudentClub() {
         // Given
+        String keyword = "학생회비";
         User userWithoutClub = User.builder()
                 .id(1L)
                 .userId("testUser")
@@ -209,7 +216,7 @@ public class BreakDownServiceTest {
 
         // When & Then
         CustomException exception = assertThrows(CustomException.class,
-                () -> breakDownService.parsePdf(pdfFile, user.getUserId(), currentUser));
+                () -> breakDownService.parsePdf(pdfFile, user.getUserId(), keyword, currentUser));
 
         assertThat(exception.getErrorCode()).isEqualTo(400);
         assertThat(exception.getMessage()).isEqualTo(NOT_FOUND_STUDENT_CLUB);
@@ -219,12 +226,13 @@ public class BreakDownServiceTest {
     @DisplayName("빈 PDF 파일로 파싱 실패")
     void parsePdf_EmptyFile() {
         // Given
+        String keyword = "학생회비";
         when(userRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user));
         when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
 
         // When & Then
         CustomException exception = assertThrows(CustomException.class,
-                () -> breakDownService.parsePdf(emptyPdfFile, user.getUserId(), currentUser));
+                () -> breakDownService.parsePdf(emptyPdfFile, user.getUserId(), keyword, currentUser));
 
         assertThat(exception.getErrorCode()).isEqualTo(400);
         assertThat(exception.getMessage()).isEqualTo(EMPTY_FILE);
@@ -234,12 +242,13 @@ public class BreakDownServiceTest {
     @DisplayName("다른 소속 유저의 권한 없음으로 PDF 파싱 실패")
     void parsePdf_NoAuthorizationBelonging() {
         // Given
+        String keyword = "테스트키워드";
         when(userRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user));
         when(userRepository.findByUserId(anotherCurrentUser.getUsername())).thenReturn(Optional.of(anotherUser));
 
         // When & Then
         CustomException exception = assertThrows(CustomException.class,
-                () -> breakDownService.parsePdf(pdfFile, user.getUserId(), anotherCurrentUser));
+                () -> breakDownService.parsePdf(pdfFile, user.getUserId(), keyword, anotherCurrentUser));
 
         assertThat(exception.getErrorCode()).isEqualTo(403);
         assertThat(exception.getMessage()).isEqualTo(NO_AUTHORIZATION_BELONGING);
@@ -325,6 +334,8 @@ public class BreakDownServiceTest {
                 eq("2024-01-15"),
                 eq("ABC123")
         );
+        verify(receiptRepository).saveAll(any());
+        verify(studentClubRepository).save(studentClub);
         verify(receiptRepository).saveAll(any());
         verify(mapper, times(2)).toReceiptDto(any(Receipt.class));
     }

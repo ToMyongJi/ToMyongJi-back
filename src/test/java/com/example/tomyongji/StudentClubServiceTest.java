@@ -2,16 +2,29 @@ package com.example.tomyongji;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.tomyongji.admin.dto.PresidentDto;
+import com.example.tomyongji.admin.service.AdminService;
+import com.example.tomyongji.auth.entity.User;
+import com.example.tomyongji.auth.repository.UserRepository;
+import com.example.tomyongji.auth.service.UserService;
 import com.example.tomyongji.receipt.dto.ClubDto;
+import com.example.tomyongji.receipt.dto.TransferDto;
+import com.example.tomyongji.receipt.dto.TransferRequestDto;
 import com.example.tomyongji.receipt.entity.College;
+import com.example.tomyongji.receipt.entity.Receipt;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.mapper.StudentClubMapper;
+import com.example.tomyongji.receipt.repository.ReceiptRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.receipt.service.StudentClubService;
+import com.example.tomyongji.validation.CustomException;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @ExtendWith(MockitoExtension.class)
 public class StudentClubServiceTest {
@@ -27,6 +41,14 @@ public class StudentClubServiceTest {
     private StudentClubRepository studentClubRepository;
     @Mock
     private StudentClubMapper studentClubMapper;
+    @Mock
+    private ReceiptRepository receiptRepository;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private UserService userService;
+    @Mock
+    private AdminService adminService;
     @InjectMocks
     StudentClubService studentClubService;
 
@@ -37,6 +59,14 @@ public class StudentClubServiceTest {
     private ClubDto convergenceSoftwareDto;
     private ClubDto digitalContentsDesignDto;
     private ClubDto businessDto;
+
+    // 학생회 이전 기능 테스트 사용 필드
+    private User president;
+    private User student1;
+    private User nextPresident;
+    private Receipt receipt1;
+    private Receipt receipt2;
+    private UserDetails currentUser;
 
     @BeforeEach
     void setUp() {
@@ -72,6 +102,62 @@ public class StudentClubServiceTest {
         businessDto = ClubDto.builder()
             .studentClubId(business.getId())
             .studentClubName(business.getStudentClubName())
+            .build();
+
+        president = User.builder()
+            .id(1L)
+            .userId("president123")
+            .name("정우주")
+            .studentNum("60221317")
+            .collegeName("ICT 융합대학")
+            .email("president@mju.ac.kr")
+            .password("password")
+            .role("PRESIDENT")
+            .studentClub(convergenceSoftware)
+            .build();
+
+        student1 = User.builder()
+            .id(2L)
+            .userId("student1")
+            .name("홍길동")
+            .studentNum("60221111")
+            .collegeName("ICT 융합대학")
+            .email("student1@mju.ac.kr")
+            .password("password")
+            .role("STU")
+            .studentClub(convergenceSoftware)
+            .build();
+
+        nextPresident = User.builder()
+            .id(3L)
+            .userId("nextPresident")
+            .name("박진형")
+            .studentNum("60221318")
+            .collegeName("ICT 융합대학")
+            .email("np@mju.ac.kr")
+            .password("password")
+            .role("STU")
+            .studentClub(convergenceSoftware)
+            .build();
+
+        receipt1 = Receipt.builder()
+            .id(1L)
+            .deposit(5000)
+            .withdrawal(0)
+            .studentClub(convergenceSoftware)
+            .build();
+
+        receipt2 = Receipt.builder()
+            .id(2L)
+            .deposit(0)
+            .withdrawal(2000)
+            .studentClub(convergenceSoftware)
+            .build();
+
+        currentUser = org.springframework.security.core.userdetails.User
+            .withUsername("president123")
+            .password("password")
+            .roles("PRESIDENT")
             .build();
     }
 
@@ -115,4 +201,88 @@ public class StudentClubServiceTest {
         verify(studentClubRepository).findAllByCollege_Id(collegeId);
     }
 
+    @Test
+    @DisplayName("다음 회장이 확정되지 않았을 경우 학생회 이전 성공")
+    void transferStudentClub_Success() {
+        //Given
+        int year = 2024;
+        List<Receipt> receipts = List.of(receipt1, receipt2);
+        TransferRequestDto request = TransferRequestDto.builder()
+            .year(year)
+            .nextPresident(null)
+            .build();
+
+        when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
+        when(receiptRepository.findByStudentClubAndYear(convergenceSoftware, year)).thenReturn(receipts);
+        when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
+        when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of(student1));
+
+        //When
+        TransferDto result = studentClubService.transferStudentClub(request, currentUser);
+
+        //Then
+        assertNotNull(result);
+        assertEquals("융합소프트웨어학부 학생회", result.getStudentClubName());
+        assertEquals(5000, result.getTotalDeposit());
+        assertEquals(2000, result.getTotalWithdrawal());
+        assertEquals(3000, result.getNetAmount());
+        assertEquals(year, result.getYear());
+
+        verify(userRepository).findByUserId("president123");
+        verify(receiptRepository).findByStudentClubAndYear(convergenceSoftware, year);
+        verify(receiptRepository).deleteAll(receipts);
+        verify(receiptRepository).save(any(Receipt.class));
+        verify(userService).deleteUser("president123");
+        verify(userService).deleteUser("student1");
+    }
+
+    @Test
+    @DisplayName("다음 회장이 존재하는 경우 학생회 이전 성공")
+    void transferStudentClub_WithNextPresident_Success() {
+        //Given
+        int year = 2024;
+        Receipt depositReceipt = Receipt.builder()
+            .id(1L)
+            .deposit(10000)
+            .withdrawal(0)
+            .studentClub(convergenceSoftware)
+            .build();
+        List<Receipt> receipts = List.of(depositReceipt);
+
+        PresidentDto nextPresidentDto = PresidentDto.builder()
+            .clubId(0L)
+            .studentNum("60221318")
+            .name("박진형")
+            .build();
+
+        TransferRequestDto request = TransferRequestDto.builder()
+            .year(year)
+            .nextPresident(nextPresidentDto)
+            .build();
+
+        when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
+        when(receiptRepository.findByStudentClubAndYear(convergenceSoftware, year)).thenReturn(receipts);
+        when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
+        when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of());
+        when(userRepository.findByStudentNum("60221318")).thenReturn(nextPresident);
+
+        //When
+        TransferDto result = studentClubService.transferStudentClub(request, currentUser);
+
+        //Then
+        assertNotNull(result);
+        assertEquals("융합소프트웨어학부 학생회", result.getStudentClubName());
+        assertEquals(10000, result.getTotalDeposit());
+        assertEquals(0, result.getTotalWithdrawal());
+        assertEquals(10000, result.getNetAmount());
+        assertEquals(year, result.getYear());
+
+        verify(userRepository).findByUserId("president123");
+        verify(receiptRepository).findByStudentClubAndYear(convergenceSoftware, year);
+        verify(receiptRepository).deleteAll(receipts);
+        verify(receiptRepository).save(any(Receipt.class));
+        verify(userService).deleteUser("president123");
+        verify(userRepository).findByStudentNum("60221318");
+        verify(adminService).savePresident(any(PresidentDto.class));
+    }
 }

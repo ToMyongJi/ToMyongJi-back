@@ -7,7 +7,6 @@ import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.auth.service.UserService;
 import com.example.tomyongji.receipt.dto.ClubDto;
 import com.example.tomyongji.receipt.dto.TransferDto;
-import com.example.tomyongji.receipt.dto.TransferRequestDto;
 import com.example.tomyongji.receipt.entity.Receipt;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.mapper.StudentClubMapper;
@@ -62,7 +61,7 @@ public class StudentClubService {
     }
 
     @Transactional
-    public TransferDto transferStudentClub(TransferRequestDto request, UserDetails currentUser) {
+    public TransferDto transferStudentClub(PresidentDto nextPresident, UserDetails currentUser) {
         User user = userRepository.findByUserId(currentUser.getUsername())
             .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
 
@@ -71,30 +70,29 @@ public class StudentClubService {
             throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
         }
 
-        // 해당 년도의 영수증 처리
-        TransferDto summary = transferReceipt(studentClub, request.getYear());
+        //영수증 처리
+        TransferDto summary = transferReceipt(studentClub);
 
         //기존 학생회 멤버 전체 삭제
         deleteAllStudentClubMembers(studentClub);
 
-        //다음 회장이 있을 땐 새 회장 등록
-        PresidentDto nextPresidentdto = request.getNextPresident();
-        if (nextPresidentdto != null) {
-            User nextPresidentUser = userRepository.findByStudentNum(nextPresidentdto.getStudentNum());
+        //다음 회장이 있을 경우 새 회장 등록
+        if (nextPresident != null) {
+            User nextPresidentUser = userRepository.findByStudentNum(nextPresident.getStudentNum());
             if (nextPresidentUser != null
                 && nextPresidentUser.getStudentClub() != null
                 && nextPresidentUser.getStudentClub().getId().equals(studentClub.getId())) {
-                nextPresidentdto.setClubId(studentClub.getId());
-                adminService.savePresident(nextPresidentdto);
+                nextPresident.setClubId(studentClub.getId());
+                adminService.savePresident(nextPresident);
             }
         }
 
         return summary;
     }
 
-    private TransferDto transferReceipt(StudentClub studentClub, int year) {
-        // 해당 년도의 영수증 조회
-        List<Receipt> receipts = receiptRepository.findByStudentClubAndYear(studentClub, year);
+    private TransferDto transferReceipt(StudentClub studentClub) {
+        // 모든 영수증 조회
+        List<Receipt> receipts = receiptRepository.findAllByStudentClub(studentClub);
 
         // 총 입금/출금 계산
         int totalDeposit = receipts.stream()
@@ -107,13 +105,13 @@ public class StudentClubService {
 
         int netAmount = totalDeposit - totalWithdrawal;
 
-        // 해당 년도의 영수증들 전부 삭제
+        // 모든 영수증 삭제
         receiptRepository.deleteAll(receipts);
 
         // 이월 영수증 생성
         Receipt transferReceipt = Receipt.builder()
             .date(new Date())
-            .content(year + "년도 학생회비 이월")
+            .content("학생회비 이월")
             .deposit(totalDeposit)
             .withdrawal(totalWithdrawal)
             .verification(false)
@@ -127,7 +125,6 @@ public class StudentClubService {
             .totalDeposit(totalDeposit)
             .totalWithdrawal(totalWithdrawal)
             .netAmount(netAmount)
-            .year(year)
             .build();
     }
 

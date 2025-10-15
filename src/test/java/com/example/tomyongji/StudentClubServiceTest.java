@@ -14,7 +14,6 @@ import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.auth.service.UserService;
 import com.example.tomyongji.receipt.dto.ClubDto;
 import com.example.tomyongji.receipt.dto.TransferDto;
-import com.example.tomyongji.receipt.dto.TransferRequestDto;
 import com.example.tomyongji.receipt.entity.College;
 import com.example.tomyongji.receipt.entity.Receipt;
 import com.example.tomyongji.receipt.entity.StudentClub;
@@ -205,20 +204,15 @@ public class StudentClubServiceTest {
     @DisplayName("다음 회장이 확정되지 않았을 경우 학생회 이전 성공")
     void transferStudentClub_Success() {
         //Given
-        int year = 2024;
         List<Receipt> receipts = List.of(receipt1, receipt2);
-        TransferRequestDto request = TransferRequestDto.builder()
-            .year(year)
-            .nextPresident(null)
-            .build();
 
         when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
-        when(receiptRepository.findByStudentClubAndYear(convergenceSoftware, year)).thenReturn(receipts);
+        when(receiptRepository.findAllByStudentClub(convergenceSoftware)).thenReturn(receipts);
         when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
         when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of(student1));
 
         //When
-        TransferDto result = studentClubService.transferStudentClub(request, currentUser);
+        TransferDto result = studentClubService.transferStudentClub(null, currentUser);
 
         //Then
         assertNotNull(result);
@@ -226,10 +220,9 @@ public class StudentClubServiceTest {
         assertEquals(5000, result.getTotalDeposit());
         assertEquals(2000, result.getTotalWithdrawal());
         assertEquals(3000, result.getNetAmount());
-        assertEquals(year, result.getYear());
 
         verify(userRepository).findByUserId("president123");
-        verify(receiptRepository).findByStudentClubAndYear(convergenceSoftware, year);
+        verify(receiptRepository).findAllByStudentClub(convergenceSoftware);
         verify(receiptRepository).deleteAll(receipts);
         verify(receiptRepository).save(any(Receipt.class));
         verify(userService).deleteUser("president123");
@@ -240,7 +233,6 @@ public class StudentClubServiceTest {
     @DisplayName("다음 회장이 존재하는 경우 학생회 이전 성공")
     void transferStudentClub_WithNextPresident_Success() {
         //Given
-        int year = 2024;
         Receipt depositReceipt = Receipt.builder()
             .id(1L)
             .deposit(10000)
@@ -255,19 +247,14 @@ public class StudentClubServiceTest {
             .name("박진형")
             .build();
 
-        TransferRequestDto request = TransferRequestDto.builder()
-            .year(year)
-            .nextPresident(nextPresidentDto)
-            .build();
-
         when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
-        when(receiptRepository.findByStudentClubAndYear(convergenceSoftware, year)).thenReturn(receipts);
+        when(receiptRepository.findAllByStudentClub(convergenceSoftware)).thenReturn(receipts);
         when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
         when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of());
         when(userRepository.findByStudentNum("60221318")).thenReturn(nextPresident);
 
         //When
-        TransferDto result = studentClubService.transferStudentClub(request, currentUser);
+        TransferDto result = studentClubService.transferStudentClub(nextPresidentDto, currentUser);
 
         //Then
         assertNotNull(result);
@@ -275,10 +262,9 @@ public class StudentClubServiceTest {
         assertEquals(10000, result.getTotalDeposit());
         assertEquals(0, result.getTotalWithdrawal());
         assertEquals(10000, result.getNetAmount());
-        assertEquals(year, result.getYear());
 
         verify(userRepository).findByUserId("president123");
-        verify(receiptRepository).findByStudentClubAndYear(convergenceSoftware, year);
+        verify(receiptRepository).findAllByStudentClub(convergenceSoftware);
         verify(receiptRepository).deleteAll(receipts);
         verify(receiptRepository).save(any(Receipt.class));
         verify(userService).deleteUser("president123");

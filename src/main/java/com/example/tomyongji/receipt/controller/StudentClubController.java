@@ -4,11 +4,8 @@ import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.admin.dto.PresidentDto;
 import com.example.tomyongji.receipt.dto.ClubDto;
 import com.example.tomyongji.receipt.dto.TransferDto;
-import com.example.tomyongji.receipt.dto.TransferRequestDto;
-import com.example.tomyongji.receipt.service.CollegeService;
 import com.example.tomyongji.receipt.service.StudentClubService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +41,7 @@ public class StudentClubController {
     @Operation(summary = "학생회 이월/이전 api", description = "학생회 정보를 이월 합니다.")
     @PostMapping("api/club/transfer")
     public ApiResponse<TransferDto> transferStudentClub(
-        @RequestBody TransferRequestDto request,
+        @RequestBody(required = false) PresidentDto request,
         @AuthenticationPrincipal UserDetails currentUser
     ) {
         TransferDto result = studentClubService.transferStudentClub(

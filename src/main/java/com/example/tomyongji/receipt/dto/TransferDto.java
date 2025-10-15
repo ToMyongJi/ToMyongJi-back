@@ -14,5 +14,4 @@ public class TransferDto {
     private int totalDeposit;
     private int totalWithdrawal;
     private int netAmount;
-    private int year;
 }

@@ -9,6 +9,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import java.util.Date;
+import jakarta.persistence.Table;
+import jakarta.persistence.Index;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "receipt", indexes = @Index(name = "idx_receipt_student_club", columnList = "studentClub_id"))
 public class Receipt {
 
     @Id

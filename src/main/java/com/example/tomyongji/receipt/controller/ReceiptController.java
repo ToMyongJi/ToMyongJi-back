@@ -99,6 +99,11 @@ public class ReceiptController {
         ReceiptDto updatedReceipt = receiptService.updateReceipt(receiptDto, currentUser);
         return new ApiResponse<>(200, "영수증을 성공적으로 수정했습니다.", updatedReceipt);
     }
+
+    @Operation(summary = "영수증 검색 api", description = "두 글자 이상의 검색어를 통해 특정 영수증을 조회합니다.")
+    @GetMapping("/keyword") //특정 영수증 수정
+    public ApiResponse<List<ReceiptDto>> searchReceiptByKeyword(@RequestParam String keyword, @AuthenticationPrincipal UserDetails currentUser) {
+        List<ReceiptDto> receipts = receiptService.searchReceiptByKeyword(keyword, currentUser);
+        return new ApiResponse<>(200, "영수증을 성공적으로 조회했습니다.", receipts);
+    }
 }
-
-

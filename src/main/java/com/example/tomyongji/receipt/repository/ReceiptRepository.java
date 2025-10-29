@@ -18,6 +18,9 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
 
     List<Receipt> findByStudentClubAndDateBetween(StudentClub studentClub, Date startDate, Date endDate);
 
+    @Query("SELECT r FROM Receipt r WHERE r.studentClub = :studentClub AND FUNCTION('YEAR', r.date) = :year")
+    List<Receipt> findByStudentClubAndYear(@Param("studentClub") StudentClub studentClub, @Param("year") int year);
+
     @Query(
         value = "SELECT * FROM receipt WHERE student_club_id = :studentClubId AND MATCH(content) AGAINST(:keyword IN BOOLEAN MODE) ORDER BY date DESC",
         nativeQuery = true

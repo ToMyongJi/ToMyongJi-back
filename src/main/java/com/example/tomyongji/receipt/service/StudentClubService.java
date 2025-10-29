@@ -26,6 +26,7 @@ import java.util.List;
 
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
+import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_ROLE;
 
 @Service
 @RequiredArgsConstructor
@@ -66,6 +67,10 @@ public class StudentClubService {
 
         User user = userRepository.findByUserId(currentUser.getUsername())
                 .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
+
+        if (!"PRESIDENT".equals(user.getRole())) {
+            throw new CustomException(NO_AUTHORIZATION_ROLE, 403);
+        }
 
         StudentClub studentClub = user.getStudentClub();
         if (studentClub == null) {

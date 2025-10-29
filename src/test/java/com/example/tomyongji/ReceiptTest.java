@@ -487,4 +487,78 @@ public class ReceiptTest {
         assertThat(body.getStatusCode()).isEqualTo(200);
         assertThat(body.getStatusMessage()).isEqualTo("해당 단과대의 학생회를 성공적으로 조회했습니다.");
     }
+
+    @Test
+    @DisplayName("영수증 키워드 검색 테스트")
+    void testSearchReceiptByKeywordFlow() {
+        // Given (준비)
+        String token = getToken(); // 로그인 토큰 가져오기
+        String keyword = "테스트 키워드";
+        StudentClub userClub = user.getStudentClub(); // 테스트 유저의 학생회
+
+        // 1. 검색되어야 하는 영수증 (현재 유저의 학생회 소속 + 키워드 포함)
+        Receipt expectedReceipt = Receipt.builder()
+            .content("이것은 " + keyword + " 입니다.")
+            .deposit(1000)
+            .studentClub(userClub)
+            .date(new Date()) // 날짜 추가 (정렬 기준)
+            .build();
+        receiptRepository.save(expectedReceipt);
+
+        // 2. 검색되지 않아야 하는 영수증 (현재 유저의 학생회 소속 + 키워드 미포함)
+        Receipt nonMatchingReceipt = Receipt.builder()
+            .content("다른 내용의 영수증")
+            .deposit(500)
+            .studentClub(userClub)
+            .date(new Date())
+            .build();
+        receiptRepository.save(nonMatchingReceipt);
+
+        // 3. (선택적이지만 좋은 테스트) 검색되지 않아야 하는 영수증 (다른 학생회 소속 + 키워드 포함)
+        StudentClub anotherClub = StudentClub.builder().studentClubName("다른 학생회").Balance(0).build();
+        studentClubRepository.save(anotherClub); // 다른 학생회 저장
+        Receipt anotherClubReceipt = Receipt.builder()
+            .content("다른 학생회의 " + keyword)
+            .deposit(2000)
+            .studentClub(anotherClub)
+            .date(new Date())
+            .build();
+        receiptRepository.save(anotherClubReceipt);
+
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON)); // JSON 응답 선호
+        headers.setBearerAuth(token); // 인증 토큰 설정
+        HttpEntity<Object> entity = new HttpEntity<>(null, headers);
+
+        // URI에 쿼리 파라미터 추가
+        String url = "/api/receipt/keyword?keyword=" + keyword;
+
+        // When (실행)
+        ResponseEntity<ApiResponse<List<ReceiptDto>>> response = restTemplate.exchange(
+            url,
+            HttpMethod.GET,
+            entity,
+            new ParameterizedTypeReference<ApiResponse<List<ReceiptDto>>>() {}
+        );
+
+        // Then (검증)
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        ApiResponse<List<ReceiptDto>> body = response.getBody();
+        assertNotNull(body, "응답 Body는 null이 아니어야 합니다.");
+        assertThat(body.getStatusCode()).isEqualTo(200);
+        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 조회했습니다.");
+
+        List<ReceiptDto> resultList = body.getData();
+        assertNotNull(resultList, "응답 데이터(리스트)는 null이 아니어야 합니다.");
+
+        // 1. userClub 소속이고 keyword를 포함하는 영수증 1개만 반환되어야 함
+        assertThat(resultList.size()).isEqualTo(1);
+
+        // 2. 반환된 영수증의 내용 확인
+        ReceiptDto foundReceiptDto = resultList.get(0);
+        assertThat(foundReceiptDto.getContent()).isEqualTo(expectedReceipt.getContent());
+        assertThat(foundReceiptDto.getReceiptId()).isEqualTo(expectedReceipt.getId());
+    }
 }

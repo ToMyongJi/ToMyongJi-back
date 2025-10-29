@@ -2,6 +2,7 @@ package com.example.tomyongji;
 
 import static com.example.tomyongji.validation.ErrorMsg.DUPLICATED_FLOW;
 import static com.example.tomyongji.validation.ErrorMsg.EMPTY_CONTENT;
+import static com.example.tomyongji.validation.ErrorMsg.INVALID_KEYWORD;
 import static com.example.tomyongji.validation.ErrorMsg.MISMATCHED_USER;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_RECEIPT;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
@@ -473,6 +474,7 @@ public class ReceiptServiceTest {
         when(receiptRepository.findById(receiptId)).thenReturn(Optional.of(receipt));
         when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
         when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
+        when(studentClubRepository.findById(receipt.getStudentClub().getId())).thenReturn(Optional.of(studentClub));
         //When
         ReceiptDto result = receiptService.deleteReceipt(receiptId, currentUser);
         //Then
@@ -671,5 +673,65 @@ public class ReceiptServiceTest {
 
         assertEquals(400, exception.getErrorCode());
         assertEquals(EMPTY_CONTENT, exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("키워드 검색 성공")
+    void searchReceiptByKeyword_Success() {
+        // Given
+        String keyword = "테스트";
+        Receipt receipt = Receipt.builder()
+            .id(1L)
+            .content("테스트 영수증")
+            .studentClub(studentClub)
+            .build();
+        ReceiptDto receiptDto = ReceiptDto.builder()
+            .receiptId(1L)
+            .content("테스트 영수증")
+            .build();
+
+        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
+        when(receiptRepository.findByStudentClubAndContent(studentClub.getId(), keyword))
+            .thenReturn(List.of(receipt));
+        when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
+
+        // When
+        List<ReceiptDto> result = receiptService.searchReceiptByKeyword(keyword, currentUser);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(receiptDto, result.get(0));
+    }
+
+    @Test
+    @DisplayName("키워드가 2글자 미만인 경우 실패")
+    void searchReceiptByKeyword_InvalidKeyword() {
+        // Given
+        String invalidKeyword = "a";
+        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
+
+        // When, Then
+        CustomException exception = assertThrows(CustomException.class,
+            () -> receiptService.searchReceiptByKeyword(invalidKeyword, currentUser));
+
+        assertEquals(400, exception.getErrorCode());
+        assertEquals(INVALID_KEYWORD, exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("현재 사용자가 존재하지 않는 경우 실패")
+    void searchReceiptByKeyword_NotFoundUser() {
+        // Given
+        String keyword = "테스트";
+
+        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.empty());
+
+        // When, Then
+        CustomException exception = assertThrows(CustomException.class,
+            () -> receiptService.searchReceiptByKeyword(keyword, currentUser));
+
+        assertEquals(400, exception.getErrorCode());
+        assertEquals(NOT_FOUND_USER, exception.getMessage());
     }
 }

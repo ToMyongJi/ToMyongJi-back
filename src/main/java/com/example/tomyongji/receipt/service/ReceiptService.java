@@ -2,6 +2,7 @@ package com.example.tomyongji.receipt.service;
 
 import static com.example.tomyongji.validation.ErrorMsg.DUPLICATED_FLOW;
 import static com.example.tomyongji.validation.ErrorMsg.EMPTY_CONTENT;
+import static com.example.tomyongji.validation.ErrorMsg.INVALID_KEYWORD;
 import static com.example.tomyongji.validation.ErrorMsg.MISMATCHED_USER;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_RECEIPT;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
@@ -253,5 +254,24 @@ public class ReceiptService {
         if (!studentClub.equals(compareUser.getStudentClub())) {
             throw new CustomException(NO_AUTHORIZATION_BELONGING, 400);
         }
+    }
+
+    public List<ReceiptDto> searchReceiptByKeyword(String keyword, UserDetails currentUser) {
+        //접근 권한: 유저가 아닌 경우
+        User user = userRepository.findByUserId(currentUser.getUsername())
+            .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
+        StudentClub studentClub = user.getStudentClub();
+
+        String trimmedKeyword = keyword.trim();
+        if (trimmedKeyword.length() < 2) {
+            throw new CustomException(INVALID_KEYWORD, 400);
+        }
+
+        List<Receipt> matchedReceipts = receiptRepository.findByStudentClubAndContent(
+            studentClub.getId(),keyword.trim());
+
+        return matchedReceipts.stream()
+            .map(receiptMapper::toReceiptDto)
+            .collect(Collectors.toList());
     }
 }

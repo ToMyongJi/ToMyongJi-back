@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BreakDownDto {
+    private String keyword;
     private String issueDate;
     private String issueNumber;
     private Long studentClubId;

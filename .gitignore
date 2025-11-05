@@ -46,9 +46,6 @@ LOG_PATH_IS_UNDEFINED/*.log
 build/generated-sources/
 build/generated/
 
-# var/log/tomyongji-dev/*.log
-var/log/tomyongji-dev/*.log
-
 # Application properties
 src/main/resources/application.properties
 src/test/resources/application.properties

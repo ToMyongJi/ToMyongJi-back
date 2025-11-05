@@ -11,6 +11,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 // 1. kv와 JsonNode를 import
 import static net.logstash.logback.argument.StructuredArguments.kv;
@@ -45,45 +46,66 @@ public class AuditLogAspect {
         Object[] args = joinPoint.getArgs();
         String methodName = method.getName();
 
+        Object[] sanitizedArgs = sanitizeArguments(args);
+
         try {
-            // 2. String이 아닌 JsonNode(JSON 객체)로 변환
-            JsonNode argsAsJsonNode = objectMapper.valueToTree(args);
-
-            // 3. kv를 사용해 구조화된 로그 전달
-            log.info("[Audit Action] Method called",
-                kv("action", action),       // 1. JSON_FILE은 필드로 사용
-                kv("method", methodName),   // 2. JSON_FILE은 필드로 사용
-                kv("args", argsAsJsonNode)  // 3. JSON_FILE은 필드로 사용
+            JsonNode argsAsJsonNode = objectMapper.valueToTree(sanitizedArgs);
+            log.info("[Audit] Method called",
+                new Object[]{
+                    kv("action", action),
+                    kv("method", methodName),
+                    kv("args", argsAsJsonNode)
+                }
             );
-
-        } catch (Exception e) { // JsonProcessingException 포함 더 넓은 범위의 예외 처리
-            log.warn("[Audit Log] Failed to serialize arguments for method {}", methodName, e);
-            // JSON 변환 실패 시 그냥 기본 toString() 사용
-            log.info("[Audit Action: {}] Method {} called with arguments - {}",
-                action, methodName, Arrays.toString(args));
+        } catch (Exception e) {
+            log.warn("[Audit] Failed to serialize arguments for method {}", methodName, e);
+            log.info("[Audit] Method called (fallback)",
+                new Object[]{
+                    kv("action", action),
+                    kv("method", methodName),
+                    kv("args", Arrays.toString(args))
+                }
+            );
         }
 
         Object result = joinPoint.proceed(); // ◀ 실제 메소드 실행
 
         try {
-            // 2. String이 아닌 JsonNode(JSON 객체)로 변환
             JsonNode resultAsJsonNode = objectMapper.valueToTree(result);
-
-            // 3. kv를 사용해 구조화된 로그 전달
-            log.info("[Audit Action: {}] Method {} executed",
-                action,
-                methodName,
-                kv("action", action),
-                kv("method", methodName),
-                kv("result", resultAsJsonNode) // "result" 필드를 JSON 객체로 추가
+            log.info("[Audit] Method executed",
+                new Object[]{
+                    kv("action", action),
+                    kv("method", methodName),
+                    kv("result", resultAsJsonNode)
+                }
             );
-
         } catch (Exception e) {
-            log.warn("[Audit Log] Failed to serialize result for method {}", methodName, e);
-            // JSON 변환 실패 시 그냥 기본 toString() 사용
-            log.info("[Audit Action: {}] Method {} executed with result - {}",
-                action, methodName, (result != null ? result.toString() : "null"));
+            log.warn("[Audit] Failed to serialize result for method {}", methodName, e);
+            log.info("[Audit] Method executed (fallback)",
+                new Object[]{
+                    kv("action", action),
+                    kv("method", methodName),
+                    kv("result", result != null ? result.toString() : "null")
+                }
+            );
         }
         return result;
     }
+    private Object[] sanitizeArguments(Object[] args) {
+        if (args == null) {
+            return new Object[0];
+        }
+
+        Object[] sanitized = new Object[args.length];
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] instanceof UserDetails userDetails) {
+                // UserDetails 대신 username만 기록
+                sanitized[i] = "UserDetails(username=" + userDetails.getUsername() + ")";
+            } else {
+                sanitized[i] = args[i];
+            }
+        }
+        return sanitized;
+    }
+
 }

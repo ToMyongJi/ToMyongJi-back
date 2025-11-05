@@ -38,6 +38,8 @@ out/
 var/log/tomyongji/*.log
 LOG_PATH_IS_UNDEFINED/*.log
 
+var/log/tomyongji/*.json
+
 # MapStruct 등 애노테이션 프로세서가 생성하는 소스
 # src/main 바로 아래 generated 폴더를 무시
 /src/main/generated/

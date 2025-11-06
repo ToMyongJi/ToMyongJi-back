@@ -52,8 +52,7 @@ public class BreakDownService {
     private final ReceiptService receiptService;
 
     public BreakDownDto parsePdf(MultipartFile file,
-        String userId,
-        UserDetails currentUser) throws Exception {
+        String userId, String keyword, UserDetails currentUser) throws Exception {
         User user = userRepository.findByUserId(userId)
             .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
 
@@ -87,10 +86,11 @@ public class BreakDownService {
                 "발급번호\\s+([A-Z0-9\\-]+)");
 
             return BreakDownDto.builder()
-                .issueDate(isoDate)
-                .issueNumber(issueNumber)
-                .studentClubId(club.getId())
-                .build();
+                    .keyword(keyword)
+                    .issueDate(isoDate)
+                    .issueNumber(issueNumber)
+                    .studentClubId(club.getId())
+                    .build();
 
         } catch (Exception e) {
             throw new CustomException(PARSING_ERROR, 500);
@@ -105,11 +105,11 @@ public class BreakDownService {
             dto.getIssueDate(), dto.getIssueNumber()
         );
         //getBody = HTML 로 반환
-        return proceedNext(resp.getBody(), dto.getStudentClubId());
+        return proceedNext(resp.getBody(), dto.getStudentClubId(), dto.getKeyword());
     }
 
     //진위 여부 후 돌아온 html 응답을 파라미터로 넘겨줌
-    private List<ReceiptDto> proceedNext(String html, Long clubId) throws ParseException {
+    private List<ReceiptDto> proceedNext(String html, Long clubId, String keyword) throws ParseException {
         StudentClub club = studentClubRepository.findById(clubId)
             .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
 
@@ -128,6 +128,10 @@ public class BreakDownService {
             int deposit    = amt > 0 ? amt : 0;
             int withdrawal = amt < 0 ? Math.abs(amt) : 0;
             String content = tds.get(4).text();
+
+            if(keyword != null && !keyword.trim().isEmpty()) {
+                content = "[" + keyword + "]" + " " + content;
+            }
 
             receipts.add(Receipt.builder()
                 .date(parsedDate)

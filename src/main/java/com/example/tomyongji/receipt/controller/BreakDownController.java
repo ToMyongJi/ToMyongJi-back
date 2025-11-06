@@ -29,9 +29,10 @@ public class BreakDownController {
     public ApiResponse<List<ReceiptDto>> parsePdfFile(
             @RequestPart("file") MultipartFile file,
             @RequestPart("userId") String userId,
+            @RequestPart("keyword") String keyword,
             @AuthenticationPrincipal UserDetails currentUser) throws Exception {
 
-        BreakDownDto breakDownDto = breakDownService.parsePdf(file, userId, currentUser);
+        BreakDownDto breakDownDto = breakDownService.parsePdf(file, userId, keyword, currentUser);
         List<ReceiptDto> receiptDtoList = breakDownService.fetchAndProcessDocument(breakDownDto);
 
         return new ApiResponse<>(200, "PDF 파싱을 성공적으로 완료했습니다.", receiptDtoList);

@@ -56,24 +56,10 @@ services:
     restart: unless-stopped
     networks:
       - app_network
-  loki:
-    image: grafana/loki:latest
-    container_name: ${APP_NAME}${ENV_SUFFIX}-loki
-    ports:
-      - "3100:3100"
-    volumes:
-      - ./loki-config.yml:/etc/loki/config.yml
-      - loki-data:/loki
-    command: -config.file=/etc/loki/config.yml
-    restart: unless-stopped
-    networks:
-      - app_network
 
   promtail:
     image: grafana/promtail:latest
     container_name: ${APP_NAME}${ENV_SUFFIX}-promtail
-    depends_on:
-      - loki
     volumes:
       - ./promtail-config.yml:/etc/promtail/config.yml
       # app이 공유한 호스트의 ./app-logs 폴더를 Promtail 컨테이너의 /var/log/app 경로로 연결
@@ -84,23 +70,8 @@ services:
     networks:
       - app_network
 
-  grafana:
-    image: grafana/grafana:latest
-    container_name: ${APP_NAME}${ENV_SUFFIX}-grafana
-    depends_on:
-       - loki
-    ports:
-      - "3000:3000" # 3000번 포트로 Grafana 대시보드 접근
-    volumes:
-      - grafana-data:/var/lib/grafana
-    restart: unless-stopped
-    networks:
-      - app_network
-
 networks:
   app_network:
     driver: bridge
 volumes:
-  loki-data:
   promtail-data:
-  grafana-data:

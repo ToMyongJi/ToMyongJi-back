@@ -6,7 +6,10 @@ positions:
   filename: /var/lib/promtail/positions.yml
 
 clients:
-  - url: http://loki:3100/loki/api/v1/push # docker-compose의 loki 서비스로 전송
+  - url: https://logs-prod-ap-northeast-1.grafana.net/loki/api/v1/push
+    basic_auth:
+      username: "1139056"
+      password: ${PROMTAIL_API_KEY}
 
 scrape_configs:
   - job_name: tomyongji-app

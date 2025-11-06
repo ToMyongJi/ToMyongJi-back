@@ -88,7 +88,6 @@ jobs:
           COMPOSE_FILE=$(cat ./config/docker-compose.yml)
           NGINX_FILE=$(cat ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf)
           
-          LOKI_CONFIG=$(cat ./config/loki-config.yml)
           PROMTAIL_CONFIG=$(cat ./config/promtail-config.yml)
           
           echo "compose_file<<EOF" >> $GITHUB_OUTPUT
@@ -98,10 +97,6 @@ jobs:
           echo "nginx_file<<EOF" >> $GITHUB_OUTPUT
           echo "$NGINX_FILE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-          
-          echo "loki_config<<EOF" >> $GITHUB_OUTPUT 
-          echo "$LOKI_CONFIG" >> $GITHUB_OUTPUT 
-          echo "EOF" >> $GITHUB_OUTPUT 
 
           echo "promtail_config<<EOF" >> $GITHUB_OUTPUT 
           echo "$PROMTAIL_CONFIG" >> $GITHUB_OUTPUT 
@@ -128,10 +123,6 @@ jobs:
             # nginx.conf 파일 생성
             cat <<'EOF' > ./nginx.conf
             ${{ steps.deploy_files.outputs.nginx_file }}
-            EOF
-            
-            cat <<'EOF' > ./loki-config.yml
-            ${{ steps.deploy_files.outputs.loki_config }}
             EOF
 
             cat <<'EOF' > ./promtail-config.yml

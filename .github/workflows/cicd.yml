@@ -39,6 +39,7 @@ jobs:
               echo "${{ secrets.PROD_APPLICATION_PROPERTIES }}"
               echo 'EOF'
             } >> $GITHUB_OUTPUT
+            echo "PROMTAIL_API_KEY=${{ secrets.PROMTAIL_API_KEY }}" >> $GITHUB_OUTPUT
           else
             echo "CONFIG_PATH=config/dev" >> $GITHUB_OUTPUT
             echo "ENV_SUFFIX=-dev" >> $GITHUB_OUTPUT
@@ -58,6 +59,7 @@ jobs:
               echo "${{ secrets.DEV_APPLICATION_PROPERTIES }}"
               echo 'EOF'
             } >> $GITHUB_OUTPUT
+            echo "PROMTAIL_API_KEY=${{ secrets.PROMTAIL_API_KEY }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up JDK 17
@@ -137,6 +139,7 @@ jobs:
             IMAGE_TAG=latest
             ENV_SUFFIX=${{ steps.vars.outputs.ENV_SUFFIX }}
             DOMAIN_NAME=${{ steps.vars.outputs.DOMAIN_NAME }}
+            PROMTAIL_API_KEY=${{ steps.vars.outputs.PROMTAIL_API_KEY }}
             EOF
 
             # application.properties 파일 생성

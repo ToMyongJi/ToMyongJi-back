@@ -39,6 +39,7 @@ jobs:
               echo "${{ secrets.PROD_APPLICATION_PROPERTIES }}"
               echo 'EOF'
             } >> $GITHUB_OUTPUT
+            echo "PROMTAIL_API_KEY=${{ secrets.PROMTAIL_API_KEY }}" >> $GITHUB_OUTPUT
           else
             echo "CONFIG_PATH=config/dev" >> $GITHUB_OUTPUT
             echo "ENV_SUFFIX=-dev" >> $GITHUB_OUTPUT
@@ -58,6 +59,7 @@ jobs:
               echo "${{ secrets.DEV_APPLICATION_PROPERTIES }}"
               echo 'EOF'
             } >> $GITHUB_OUTPUT
+            echo "PROMTAIL_API_KEY=${{ secrets.PROMTAIL_API_KEY }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up JDK 17
@@ -87,12 +89,20 @@ jobs:
         run: |
           COMPOSE_FILE=$(cat ./config/docker-compose.yml)
           NGINX_FILE=$(cat ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf)
+          
+          PROMTAIL_CONFIG=$(cat ./config/promtail-config.yml)
+          
           echo "compose_file<<EOF" >> $GITHUB_OUTPUT
           echo "$COMPOSE_FILE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+          
           echo "nginx_file<<EOF" >> $GITHUB_OUTPUT
           echo "$NGINX_FILE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "promtail_config<<EOF" >> $GITHUB_OUTPUT 
+          echo "$PROMTAIL_CONFIG" >> $GITHUB_OUTPUT 
+          echo "EOF" >> $GITHUB_OUTPUT 
 
       - name: Create and Deploy to EC2
         uses: appleboy/ssh-action@master
@@ -117,6 +127,10 @@ jobs:
             ${{ steps.deploy_files.outputs.nginx_file }}
             EOF
 
+            cat <<'EOF' > ./promtail-config.yml
+            ${{ steps.deploy_files.outputs.promtail_config }}
+            EOF
+
             # .env 파일 생성
             cat <<'EOF' > ./.env
             SPRING_PROFILE=${{ steps.vars.outputs.SPRING_PROFILE }}
@@ -125,6 +139,7 @@ jobs:
             IMAGE_TAG=latest
             ENV_SUFFIX=${{ steps.vars.outputs.ENV_SUFFIX }}
             DOMAIN_NAME=${{ steps.vars.outputs.DOMAIN_NAME }}
+            PROMTAIL_API_KEY=${{ steps.vars.outputs.PROMTAIL_API_KEY }}
             EOF
 
             # application.properties 파일 생성
@@ -149,5 +164,5 @@ jobs:
             # Docker Compose 실행
             sudo docker-compose --env-file .env down
             sudo docker-compose --env-file .env pull
-            sudo docker-compose --env-file .env up -d
+            sudo docker-compose --env-file .env up -d --remove-orphans
             sudo docker image prune -f

@@ -13,6 +13,7 @@ import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_USER;
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.auth.service.CustomUserDetails;
+import com.example.tomyongji.logging.AuditLog;
 import com.example.tomyongji.receipt.dto.ReceiptByStudentClubDto;
 import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
@@ -33,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +45,7 @@ public class ReceiptService {
     private final UserRepository userRepository;
     private final ReceiptMapper receiptMapper;
 
+    @Transactional
     public ReceiptDto createReceipt(ReceiptCreateDto receiptDto, UserDetails currentUser) {
         //유저 및 소속 클럽 조회
         User user = userRepository.findByUserId(receiptDto.getUserId())
@@ -75,12 +78,13 @@ public class ReceiptService {
         return receiptMapper.toReceiptDto(receipt);
     }
 
-
+    @Transactional(readOnly = true)
     public List<ReceiptDto> getAllReceipts() {
         List<Receipt> receipts = receiptRepository.findAll();
         return receiptDtoList(receipts);
     }
 
+    @Transactional(readOnly = true)
     public ReceiptByStudentClubDto getReceiptsByClub(Long id, UserDetails currentUser) {
 
         User user = userRepository.findById(id)
@@ -100,6 +104,7 @@ public class ReceiptService {
         return receiptByStudentClubDto;
     }
 
+    @Transactional(readOnly = true)
     public List<ReceiptDto> getReceiptsByClubForStudent(Long clubId) {
         StudentClub studentClub = studentClubRepository.findById(clubId)
             .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
@@ -111,6 +116,7 @@ public class ReceiptService {
             .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public ReceiptDto getReceiptById(Long receiptId) {
         Receipt receipt = receiptRepository.findById(receiptId)
             .orElseThrow(() -> new CustomException(NOT_FOUND_RECEIPT, 400));
@@ -118,6 +124,8 @@ public class ReceiptService {
         return receiptMapper.toReceiptDto(receipt);
     }
 
+    @Transactional
+    @AuditLog(action = "영수증 삭제")
     public ReceiptDto deleteReceipt(Long receiptId, UserDetails currentUser) {
         //접근 권한: 유저가 아닌 경우
 
@@ -144,6 +152,8 @@ public class ReceiptService {
         return receiptMapper.toReceiptDto(receipt);
     }
 
+    @Transactional
+    @AuditLog(action = "영수증 수정")
     public ReceiptDto updateReceipt(ReceiptDto receiptDto, UserDetails currentUser) {
         //영수증 조회
         Receipt existingReceipt = receiptRepository.findById(receiptDto.getReceiptId())
@@ -256,6 +266,7 @@ public class ReceiptService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<ReceiptDto> searchReceiptByKeyword(String keyword, UserDetails currentUser) {
         //접근 권한: 유저가 아닌 경우
         User user = userRepository.findByUserId(currentUser.getUsername())

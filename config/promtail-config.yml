@@ -1,0 +1,42 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /var/lib/promtail/positions.yml
+
+clients:
+  - url: https://logs-prod-030.grafana.net/loki/api/v1/push
+    basic_auth:
+      username: "1139056"
+      password: ${PROMTAIL_API_KEY}
+
+scrape_configs:
+  - job_name: tomyongji-app
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: tomyongji-app
+          __path__: /var/log/app/*.json # ◀ docker-compose에서 연결한 경로
+
+    pipeline_stages:
+      # 1. 로그 라인을 JSON으로 파싱
+      - json:
+          expressions:
+            level: level
+            logger: logger
+            message: message
+            action: action
+            method: method
+
+      # 2. 파싱한 필드 중 중요한 것들을 Loki 레이블로 승격
+      - labels:
+          level:
+          logger:
+          action:
+          method:
+
+      # 3. Grafana에 표시될 최종 로그 라인을 'message' 필드의 값으로 설정
+      - output:
+          source: message

@@ -15,6 +15,9 @@ services:
     restart: unless-stopped
     networks:
       - app_network
+    volumes:
+      # 컨테이너의 로그 경로(/var/log/tomyongji/)를 호스트의 ./logs 폴더와 연결
+      - ./app-logs:/var/log/tomyongji
 
   nginx:
     image: nginx:latest
@@ -54,6 +57,21 @@ services:
     networks:
       - app_network
 
+  promtail:
+    image: grafana/promtail:latest
+    container_name: ${APP_NAME}${ENV_SUFFIX}-promtail
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml
+      # app이 공유한 호스트의 ./app-logs 폴더를 Promtail 컨테이너의 /var/log/app 경로로 연결
+      - ./app-logs:/var/log/app
+      - promtail-data:/var/lib/promtail
+    command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+    networks:
+      - app_network
+
 networks:
   app_network:
     driver: bridge
+volumes:
+  promtail-data:

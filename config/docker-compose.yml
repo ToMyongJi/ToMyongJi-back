@@ -65,6 +65,8 @@ services:
       # app이 공유한 호스트의 ./app-logs 폴더를 Promtail 컨테이너의 /var/log/app 경로로 연결
       - ./app-logs:/var/log/app
       - promtail-data:/var/lib/promtail
+    environment:
+      - PROMTAIL_API_KEY=${PROMTAIL_API_KEY}
     command: -config.file=/etc/promtail/config.yml
     restart: unless-stopped
     networks:

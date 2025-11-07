@@ -114,7 +114,7 @@ jobs:
             # 서버에 디렉터리 생성
             mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/www
             mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/conf
-            chown -R ubuntu:ubuntu ${{ steps.vars.outputs.APP_DIR }}
+            sudo chown -R ubuntu:ubuntu ${{ steps.vars.outputs.APP_DIR }}
             cd ${{ steps.vars.outputs.APP_DIR }}
             
             # docker-compose.yml 파일 생성

@@ -130,6 +130,10 @@ jobs:
             cat <<'EOF' > ./promtail-config.yml
             ${{ steps.deploy_files.outputs.promtail_config }}
             EOF
+            
+            # 디버깅
+            echo "--- [Debug] Current directory and permissions ---"
+            pwd && ls -la
 
             # .env 파일 생성
             cat <<'EOF' > ./.env

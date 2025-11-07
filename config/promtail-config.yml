@@ -9,7 +9,7 @@ clients:
   - url: https://logs-prod-030.grafana.net/loki/api/v1/push
     basic_auth:
       username: "1139056"
-      password: !ENV 'PROMTAIL_API_KEY'
+      password: __PROMTAIL_API_KEY__
 
 scrape_configs:
   - job_name: tomyongji-app

@@ -145,6 +145,10 @@ jobs:
             DOMAIN_NAME=${{ steps.vars.outputs.DOMAIN_NAME }}
             PROMTAIL_API_KEY=${{ steps.vars.outputs.PROMTAIL_API_KEY }}
             EOF
+            
+            # .env 파일에서 API 키를 읽어서 promtail-config.yml의 __PROMTAIL_API_KEY__를 실제 값으로 치환
+            export API_KEY_VALUE=$(grep PROMTAIL_API_KEY .env | cut -d '=' -f2)
+            sed -i "s|__PROMTAIL_API_KEY__|${API_KEY_VALUE}|g" ./promtail-config.yml
 
             # application.properties 파일 생성
             cat <<'EOF' > ./application.properties

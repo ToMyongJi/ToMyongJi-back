@@ -29,6 +29,7 @@ scrape_configs:
             message: message
             action: action
             method: method
+            args: args
 
       # 2. 파싱한 필드 중 중요한 것들을 Loki 레이블로 승격
       - labels:
@@ -36,7 +37,3 @@ scrape_configs:
           logger:
           action:
           method:
-
-      # 3. Grafana에 표시될 최종 로그 라인을 'message' 필드의 값으로 설정
-      - output:
-          source: message

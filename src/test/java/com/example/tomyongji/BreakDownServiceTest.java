@@ -11,8 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.example.tomyongji.auth.entity.User;
@@ -40,12 +38,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.StreamUtils;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 @ExtendWith(MockitoExtension.class)
 public class BreakDownServiceTest {
@@ -54,7 +50,16 @@ public class BreakDownServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private RestTemplate restTemplate;
+    private RestClient restClient;
+
+    @Mock
+    private RestClient.RequestHeadersUriSpec requestHeadersUriSpec;
+
+    @Mock
+    private RestClient.RequestHeadersSpec requestHeadersSpec;
+
+    @Mock
+    private RestClient.ResponseSpec responseSpec;
 
     @Mock
     private ReceiptRepository receiptRepository;
@@ -285,10 +290,12 @@ public class BreakDownServiceTest {
                 </table>
                 """;
 
-        ResponseEntity<String> mockResponse = new ResponseEntity<>(mockHtmlResponse, HttpStatus.OK);
+        // RestClient fluent API mocking
+        when(restClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString(), any(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.body(String.class)).thenReturn(mockHtmlResponse);
 
-        when(restTemplate.getForEntity(anyString(), eq(String.class), any(), any()))
-                .thenReturn(mockResponse);
         when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
 
         Receipt receipt1 = Receipt.builder()
@@ -324,19 +331,12 @@ public class BreakDownServiceTest {
         assertNotNull(result);
         assertThat(result.size()).isEqualTo(2);
 
-        verify(restTemplate).getForEntity(anyString(), eq(String.class), any(), any());
-        verify(receiptRepository).saveAll(any());
-        verify(mapper, times(2)).toReceiptDto(any(Receipt.class));
-
-        verify(restTemplate).getForEntity(
-                contains("api.tossbank.com"),
-                eq(String.class),
-                eq("2024-01-15"),
-                eq("ABC123")
-        );
+        verify(restClient).get();
+        verify(requestHeadersUriSpec).uri(anyString(), any(), any());
+        verify(requestHeadersSpec).retrieve();
+        verify(responseSpec).body(String.class);
         verify(receiptRepository).saveAll(any());
         verify(studentClubRepository).save(studentClub);
-        verify(receiptRepository).saveAll(any());
         verify(mapper, times(2)).toReceiptDto(any(Receipt.class));
     }
 

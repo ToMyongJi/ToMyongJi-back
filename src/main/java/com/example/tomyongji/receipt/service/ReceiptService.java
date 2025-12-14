@@ -94,7 +94,7 @@ public class ReceiptService {
 
         checkClub(studentClub, currentUser);
 
-        List<Receipt> receipts = receiptRepository.findAllByStudentClub(studentClub);
+        List<Receipt> receipts = receiptRepository.findAllByStudentClubOrderByIdDesc(studentClub);
 
         ReceiptByStudentClubDto receiptByStudentClubDto = new ReceiptByStudentClubDto();
         receiptByStudentClubDto.setReceiptList(receipts.stream()
@@ -109,7 +109,7 @@ public class ReceiptService {
         StudentClub studentClub = studentClubRepository.findById(clubId)
             .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
 
-        List<Receipt> receipts = receiptRepository.findAllByStudentClub(studentClub);
+        List<Receipt> receipts = receiptRepository.findAllByStudentClubOrderByIdDesc(studentClub);
 
         return receipts.stream()
             .map(receiptMapper::toReceiptDto)

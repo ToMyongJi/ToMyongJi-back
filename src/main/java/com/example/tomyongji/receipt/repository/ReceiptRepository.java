@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
     List<Receipt> findAllByStudentClub(StudentClub studentClub);
+    List<Receipt> findAllByStudentClubOrderByIdDesc(StudentClub studentClub);
     boolean existsByDateAndContent(Date date, String content);
     void deleteAllByStudentClub(StudentClub studentClub);
     int countByStudentClub(StudentClub studentClub);

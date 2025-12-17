@@ -16,9 +16,20 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.mockito.ArgumentCaptor;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import com.example.tomyongji.receipt.dto.PagingReceiptDto;
+
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.auth.service.CustomUserDetails;
+import com.example.tomyongji.receipt.dto.PagingReceiptDto;
 import com.example.tomyongji.receipt.dto.ReceiptByStudentClubDto;
 import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
@@ -36,9 +47,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @ExtendWith(MockitoExtension.class)
@@ -317,16 +333,20 @@ public class ReceiptServiceTest {
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(
             Optional.of(user));
-        when(receiptRepository.findAllByStudentClub(studentClub)).thenReturn(receiptList);
-        when(receiptMapper.toReceiptDto(receipt1)).thenReturn(receiptDto1);
-        when(receiptMapper.toReceiptDto(receipt2)).thenReturn(receiptDto2);
+        when(receiptRepository.findAllByStudentClubOrderByIdDesc(any(StudentClub.class))).thenReturn(receiptList);
+        when(receiptMapper.toReceiptDto(any(Receipt.class))).thenAnswer(invocation -> {
+            Receipt arg = invocation.getArgument(0);
+            if (arg.getId() == 2L) return receiptDto1;
+            if (arg.getId() == 3L) return receiptDto2;
+            return null;
+        });
         //When
         ReceiptByStudentClubDto result = receiptService.getReceiptsByClub(id, currentUser);
         //Then
         assertNotNull(result);
         assertEquals(result.getReceiptList().get(0), receiptDto1);
         assertEquals(result.getReceiptList().get(1), receiptDto2);
-        verify(receiptRepository).findAllByStudentClub(studentClub);
+        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(studentClub);
     }
 
     @Test
@@ -393,7 +413,7 @@ public class ReceiptServiceTest {
         List<ReceiptDto> receiptDtoList = List.of(receiptDto1, receiptDto2);
 
         when(studentClubRepository.findById(clubId)).thenReturn(Optional.of(studentClub));
-        when(receiptRepository.findAllByStudentClub(studentClub)).thenReturn(receiptList);
+        when(receiptRepository.findAllByStudentClubOrderByIdDesc(studentClub)).thenReturn(receiptList);
         when(receiptMapper.toReceiptDto(receipt1)).thenReturn(receiptDto1);
         when(receiptMapper.toReceiptDto(receipt2)).thenReturn(receiptDto2);
         //When
@@ -403,7 +423,7 @@ public class ReceiptServiceTest {
         assertEquals(result.get(0), receiptDto1);
         assertEquals(result.get(1), receiptDto2);
         verify(studentClubRepository).findById(clubId);
-        verify(receiptRepository).findAllByStudentClub(studentClub);
+        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(studentClub);
     }
 
     @Test
@@ -733,5 +753,74 @@ public class ReceiptServiceTest {
 
         assertEquals(400, exception.getErrorCode());
         assertEquals(NOT_FOUND_USER, exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("영수증 페이징 조회 성공 - 정렬 조건 확인")
+    void getReceiptsByClubPaging_Success() {
+        // Given
+        Long clubId = studentClub.getId();
+        int page = 0;
+        int size = 10;
+
+        // 테스트용 더미 데이터 생성
+        List<Receipt> receipts = List.of(receipt);
+        Page<Receipt> receiptPage = new PageImpl<>(receipts, PageRequest.of(page, size), 1);
+
+        // DTO 매핑 결과
+        ReceiptDto receiptDto = ReceiptDto.builder()
+            .receiptId(receipt.getId())
+            .content(receipt.getContent())
+            .deposit(receipt.getDeposit())
+            .build();
+
+        // Mock 설정
+        when(studentClubRepository.findById(clubId)).thenReturn(Optional.of(studentClub));
+        // any(Pageable.class)를 사용하여 Pageable 객체가 무엇이든 간에 receiptPage를 반환하도록 설정
+        when(receiptRepository.findByStudentClub(eq(studentClub), any(Pageable.class)))
+            .thenReturn(receiptPage);
+        when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
+
+        // When
+        PagingReceiptDto result = receiptService.getReceiptsByClubPaging(clubId, page, size);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getReceiptDtoList().size());
+        assertEquals(receipt.getContent(), result.getReceiptDtoList().get(0).getContent());
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(receiptRepository).findByStudentClub(eq(studentClub), pageableCaptor.capture());
+
+        Pageable capturedPageable = pageableCaptor.getValue();
+        Sort sort = capturedPageable.getSort();
+
+        // 정렬 조건 검증
+        assertNotNull(sort.getOrderFor("date"));
+        assertEquals(Sort.Direction.DESC, sort.getOrderFor("date").getDirection());
+        assertNotNull(sort.getOrderFor("id"));
+        assertEquals(Sort.Direction.DESC, sort.getOrderFor("id").getDirection());
+    }
+
+    @Test
+    @DisplayName("학생회 조회 실패로 인한 영수증 페이징 조회 실패")
+    void getReceiptsByClubPaging_NotFoundStudentClub() {
+        // Given
+        Long wrongClubId = 999L;
+        int page = 0;
+        int size = 10;
+
+        when(studentClubRepository.findById(wrongClubId)).thenReturn(Optional.empty());
+
+        // When & Then
+        CustomException exception = assertThrows(CustomException.class,
+            () -> receiptService.getReceiptsByClubPaging(wrongClubId, page, size));
+
+        assertEquals(400, exception.getErrorCode());
+        assertEquals(NOT_FOUND_STUDENT_CLUB, exception.getMessage());
+
+        // 예외 발생 시 리포지토리 조회 메서드가 호출되지 않았는지 확인
+        verify(receiptRepository, times(0)).findByStudentClub(any(), any());
     }
 }

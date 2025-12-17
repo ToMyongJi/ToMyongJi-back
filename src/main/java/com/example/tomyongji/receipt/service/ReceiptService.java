@@ -14,6 +14,7 @@ import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.repository.UserRepository;
 import com.example.tomyongji.auth.service.CustomUserDetails;
 import com.example.tomyongji.logging.AuditLog;
+import com.example.tomyongji.receipt.dto.PagingReceiptDto;
 import com.example.tomyongji.receipt.dto.ReceiptByStudentClubDto;
 import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
@@ -32,6 +33,10 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,7 +99,7 @@ public class ReceiptService {
 
         checkClub(studentClub, currentUser);
 
-        List<Receipt> receipts = receiptRepository.findAllByStudentClub(studentClub);
+        List<Receipt> receipts = receiptRepository.findAllByStudentClubOrderByIdDesc(studentClub);
 
         ReceiptByStudentClubDto receiptByStudentClubDto = new ReceiptByStudentClubDto();
         receiptByStudentClubDto.setReceiptList(receipts.stream()
@@ -109,11 +114,32 @@ public class ReceiptService {
         StudentClub studentClub = studentClubRepository.findById(clubId)
             .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
 
-        List<Receipt> receipts = receiptRepository.findAllByStudentClub(studentClub);
+        List<Receipt> receipts = receiptRepository.findAllByStudentClubOrderByIdDesc(studentClub);
 
         return receipts.stream()
             .map(receiptMapper::toReceiptDto)
             .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public PagingReceiptDto getReceiptsByClubPaging(Long clubId, int page, int size) { // page, size를 파라미터로 받음
+
+        StudentClub studentClub = studentClubRepository.findById(clubId)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
+
+        // "date" 내림차순, "id" 내림차순 (인덱스 순서와 동일하게)
+        Pageable pageable = PageRequest.of(page, size, Sort.by(
+            Sort.Order.desc("date"),
+            Sort.Order.desc("id")
+        ));
+
+        // DB 조회
+        Page<Receipt> receiptPage = receiptRepository.findByStudentClub(studentClub, pageable);
+
+        Page<ReceiptDto> dtoPage = receiptPage.map(receiptMapper::toReceiptDto);
+
+        // DTO 변환 및 반환
+        return PagingReceiptDto.from(dtoPage);
     }
 
     @Transactional(readOnly = true)

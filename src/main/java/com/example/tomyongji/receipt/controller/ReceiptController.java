@@ -4,6 +4,7 @@ import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_USER;
 
 import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.auth.service.CustomUserDetails;
+import com.example.tomyongji.receipt.dto.PagingReceiptDto;
 import com.example.tomyongji.receipt.dto.ReceiptByStudentClubDto;
 import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.receipt.dto.ReceiptDto;
@@ -73,6 +74,17 @@ public class ReceiptController {
     public ApiResponse<List<ReceiptDto>> getReceiptsByClubForStudent(@PathVariable("clubId") Long clubId) {
         List<ReceiptDto> receipts = receiptService.getReceiptsByClubForStudent(clubId);
         return new ApiResponse<>(200, "해당 학생회의 영수증들을 성공적으로 조회했습니다.", receipts); // 200 OK
+    }
+
+    @Operation(summary = "특정 학생회 영수증 페이지별 조회 일반 학생용 api", description = "학생회 아이디와 페이지 정보, 영수증 수를 통해 특정 학생회의 영수증을 조회합니다.")
+    @GetMapping("/club/{clubId}/paging")
+    public ApiResponse<PagingReceiptDto> getReceiptsByClubPaging(
+        @PathVariable("clubId") Long clubId,
+        @RequestParam(defaultValue = "0") int page, // 값이 안 오면 0(첫페이지)
+        @RequestParam(defaultValue = "10") int size // 값이 안 오면 10개씩
+    ) {
+        PagingReceiptDto receiptPage = receiptService.getReceiptsByClubPaging(clubId, page, size);
+        return new ApiResponse<>(200, "해당 학생회의 영수증들을 성공적으로 조회했습니다.", receiptPage);
     }
 
 

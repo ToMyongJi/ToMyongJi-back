@@ -29,7 +29,7 @@ public class BreakDownController {
     public ApiResponse<List<ReceiptDto>> parsePdfFile(
             @RequestPart("file") MultipartFile file,
             @RequestPart("userId") String userId,
-            @RequestPart("keyword") String keyword,
+            @RequestPart(value = "keyword", required = false) String keyword,
             @AuthenticationPrincipal UserDetails currentUser) throws Exception {
 
         BreakDownDto breakDownDto = breakDownService.parsePdf(file, userId, keyword, currentUser);

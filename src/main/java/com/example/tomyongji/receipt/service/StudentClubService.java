@@ -99,7 +99,7 @@ public class StudentClubService {
 
     private TransferDto transferReceipt(StudentClub studentClub) {
         // 모든 영수증 조회
-        List<Receipt> receipts = receiptRepository.findAllByStudentClub(studentClub);
+        List<Receipt> receipts = receiptRepository.findAllByStudentClubOrderByIdDesc(studentClub);
 
         // 총 입금/출금 계산
         int totalDeposit = receipts.stream()

@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "receipt", indexes = @Index(name = "idx_receipt_student_club", columnList = "studentClub_id"))
+@Table(name = "receipt", indexes = @Index(name = "idx_receipt_student_club", columnList = "student_club_id, date DESC, id DESC"))
 public class Receipt {
 
     @Id

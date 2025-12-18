@@ -33,11 +33,10 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -45,7 +44,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class BreakDownService {
 
     private final UserRepository userRepository;
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final ReceiptRepository receiptRepository;
     private final StudentClubRepository studentClubRepository;
     private final ReceiptMapper mapper;
@@ -100,12 +99,12 @@ public class BreakDownService {
     @Transactional(rollbackFor = Exception.class)
     public List<ReceiptDto> fetchAndProcessDocument(BreakDownDto dto) throws ParseException {
         String url = "https://api.tossbank.com/api-public/document/view/{date}/{docId}";
-        ResponseEntity<String> resp = restTemplate.getForEntity(
-            url, String.class,
-            dto.getIssueDate(), dto.getIssueNumber()
-        );
+        String body = restClient.get()
+            .uri(url, dto.getIssueDate(), dto.getIssueNumber())
+            .retrieve()
+            .body(String.class);
         //getBody = HTML 로 반환
-        return proceedNext(resp.getBody(), dto.getStudentClubId(), dto.getKeyword());
+        return proceedNext(body, dto.getStudentClubId(), dto.getKeyword());
     }
 
     //진위 여부 후 돌아온 html 응답을 파라미터로 넘겨줌

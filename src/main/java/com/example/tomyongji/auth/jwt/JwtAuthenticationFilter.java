@@ -23,19 +23,20 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
             throws IOException, ServletException {
         // 1. Request Header에서 JWT 토큰 추출
         String token = resolveToken((HttpServletRequest) request);
-        // 2. validateToken으로 토큰 유효성 검사
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            // 토큰이 유효할 경우 토큰에서 Authentication 객체를 가지고 와서 SecurityContext에 저장
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // 권한 정보를 콘솔에 출력
-            if (authentication != null) {
-                System.out.println("User authenticated successfully!");
-                System.out.println("Authorities: " + authentication.getAuthorities());
+        try {
+            // 2. validateToken으로 토큰 유효성 검사
+            if (token != null && jwtTokenProvider.validateToken(token)) {
+                Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
             }
+        } catch (Exception e) {
+            request.setAttribute("exception", e);
         }
-        // 에러 핸들링 필요
+
+        // 3. 토큰이 정상이든 불량이든 무조건 다음 필터로 진행시킨다!
+        // -> permitAll() 페이지라면 통과될 것이고, 인증이 필요하면 알아서 403이 뜰 것이다.
         chain.doFilter(request, response);
     }
 

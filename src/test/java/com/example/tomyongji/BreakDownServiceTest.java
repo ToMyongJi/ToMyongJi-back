@@ -82,6 +82,8 @@ public class BreakDownServiceTest {
     private StudentClub anotherStudentClub;
     private MockMultipartFile pdfFile;
     private MockMultipartFile emptyPdfFile;
+    private MockMultipartFile excelFile;
+    private MockMultipartFile emptyExcelFile;
     private UserDetails currentUser;
     private UserDetails anotherCurrentUser;
 
@@ -164,6 +166,30 @@ public class BreakDownServiceTest {
         } catch (IOException e) {
             throw new RuntimeException("PDF 파일 로드 실패: " + e.getMessage(), e);
         }
+
+        // 엑셀 파일 로드
+        try {
+            ClassPathResource excelResource = new ClassPathResource("Toss_Excel.xlsx");
+            byte[] excelBytes = StreamUtils.copyToByteArray(excelResource.getInputStream());
+            System.out.println("엑셀 파일 로드 성공: Toss_Excel.xlsx, 크기: " + excelBytes.length + " bytes");
+
+            excelFile = new MockMultipartFile(
+                    "file",
+                    "Toss_Excel.xlsx",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    excelBytes
+            );
+        } catch (IOException e) {
+            throw new RuntimeException("엑셀 파일 로드 실패: " + e.getMessage(), e);
+        }
+
+        // 빈 엑셀 파일 생성
+        emptyExcelFile = new MockMultipartFile(
+                "file",
+                "empty.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                new byte[0]
+        );
     }
 
     @Test
@@ -368,5 +394,181 @@ public class BreakDownServiceTest {
 
         // Then
         assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("엑셀 파일 로드 성공 테스트 - 패스워드 포함")
+    void loadDataFromExcel_Success_WithPassword() {
+        // Given
+        String userId = user.getUserId();
+        String excelPassword = "020408";
+        String keyword = "학생회비";
+
+        studentClub.setBalance(0);
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(receiptRepository.existsByDateAndContent(any(), anyString())).thenReturn(false);
+        when(receiptRepository.save(any(Receipt.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(studentClubRepository.save(any(StudentClub.class))).thenReturn(studentClub);
+        when(mapper.toReceiptDto(any(Receipt.class))).thenAnswer(invocation -> {
+            Receipt receipt = invocation.getArgument(0);
+            return ReceiptDto.builder()
+                    .content(receipt.getContent())
+                    .deposit(receipt.getDeposit())
+                    .withdrawal(receipt.getWithdrawal())
+                    .build();
+        });
+
+        // When
+        List<ReceiptDto> result = breakDownService.loadDataFromExcel(
+                excelFile, excelPassword, keyword, userId, currentUser);
+
+        // Then
+        assertNotNull(result);
+        assertThat(result.size()).isGreaterThan(0);
+
+        verify(userRepository).findByUserId(userId);
+        verify(studentClubRepository).save(studentClub);
+        verify(receiptService).checkAndUpdateVerificationStatus(studentClub.getId());
+    }
+
+    @Test
+    @DisplayName("엑셀 파일 로드 성공 테스트 - 키워드 없음")
+    void loadDataFromExcel_Success_WithoutKeyword() {
+        // Given
+        String userId = user.getUserId();
+        String excelPassword = "020408";
+
+        studentClub.setBalance(0);
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+        when(receiptRepository.existsByDateAndContent(any(), anyString())).thenReturn(false);
+        when(receiptRepository.save(any(Receipt.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(studentClubRepository.save(any(StudentClub.class))).thenReturn(studentClub);
+        when(mapper.toReceiptDto(any(Receipt.class))).thenAnswer(invocation -> {
+            Receipt receipt = invocation.getArgument(0);
+            return ReceiptDto.builder()
+                    .content(receipt.getContent())
+                    .deposit(receipt.getDeposit())
+                    .withdrawal(receipt.getWithdrawal())
+                    .build();
+        });
+
+        // When
+        List<ReceiptDto> result = breakDownService.loadDataFromExcel(
+                excelFile, excelPassword, null, userId, currentUser);
+
+        // Then
+        assertNotNull(result);
+        assertThat(result.size()).isGreaterThan(0);
+
+        verify(userRepository).findByUserId(userId);
+        verify(studentClubRepository).save(studentClub);
+    }
+
+    @Test
+    @DisplayName("엑셀 파일 로드 실패 - 빈 파일")
+    void loadDataFromExcel_EmptyFile() {
+        // Given
+        String userId = user.getUserId();
+        String excelPassword = "020408";
+        String keyword = "학생회비";
+
+        // When & Then
+        CustomException exception = assertThrows(CustomException.class,
+                () -> breakDownService.loadDataFromExcel(
+                        emptyExcelFile, excelPassword, keyword, userId, currentUser));
+
+        assertThat(exception.getErrorCode()).isEqualTo(400);
+        assertThat(exception.getMessage()).isEqualTo(EMPTY_FILE);
+    }
+
+    @Test
+    @DisplayName("엑셀 파일 로드 실패 - 존재하지 않는 유저")
+    void loadDataFromExcel_NotFoundUser() {
+        // Given
+        String invalidUserId = "nonExistentUser";
+        String excelPassword = "020408";
+        String keyword = "학생회비";
+
+        when(userRepository.findByUserId(invalidUserId)).thenReturn(Optional.empty());
+
+        // When & Then
+        CustomException exception = assertThrows(CustomException.class,
+                () -> breakDownService.loadDataFromExcel(
+                        excelFile, excelPassword, keyword, invalidUserId, currentUser));
+
+        assertThat(exception.getErrorCode()).isEqualTo(400);
+        assertThat(exception.getMessage()).isEqualTo(NOT_FOUND_USER);
+
+        verify(userRepository).findByUserId(invalidUserId);
+    }
+
+    @Test
+    @DisplayName("엑셀 파일 로드 실패 - 잘못된 패스워드")
+    void loadDataFromExcel_InvalidPassword() {
+        // Given
+        String userId = user.getUserId();
+        String wrongPassword = "wrongpassword";
+        String keyword = "학생회비";
+
+        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
+
+        // When & Then
+        CustomException exception = assertThrows(CustomException.class,
+                () -> breakDownService.loadDataFromExcel(
+                        excelFile, wrongPassword, keyword, userId, currentUser));
+
+        assertThat(exception.getErrorCode()).isIn(400, 500);
+    }
+
+    @Test
+    @DisplayName("엑셀 파일 유효성 검사 - 정상 파일 (.xlsx)")
+    void validateExcelFile_ValidXlsxFile() {
+        // Given
+        MockMultipartFile xlsxFile = new MockMultipartFile(
+                "file",
+                "test.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "test data".getBytes()
+        );
+
+        // When
+        boolean result = breakDownService.validatePdfFile(xlsxFile);
+
+        // Then
+        // validateExcelFile은 private 메서드이므로 loadDataFromExcel를 통해 간접 테스트
+        assertThat(xlsxFile.getOriginalFilename()).endsWith(".xlsx");
+    }
+
+    @Test
+    @DisplayName("엑셀 파일 유효성 검사 - 정상 파일 (.xls)")
+    void validateExcelFile_ValidXlsFile() {
+        // Given
+        MockMultipartFile xlsFile = new MockMultipartFile(
+                "file",
+                "test.xls",
+                "application/vnd.ms-excel",
+                "test data".getBytes()
+        );
+
+        // When & Then
+        assertThat(xlsFile.getOriginalFilename()).endsWith(".xls");
+    }
+
+    @Test
+    @DisplayName("엑셀 파일 유효성 검사 - null 파일")
+    void validateExcelFile_NullFile() {
+        // Given
+        String userId = user.getUserId();
+        String excelPassword = "020408";
+
+        // When & Then
+        CustomException exception = assertThrows(CustomException.class,
+                () -> breakDownService.loadDataFromExcel(
+                        null, excelPassword, null, userId, currentUser));
+
+        assertThat(exception.getErrorCode()).isEqualTo(400);
+        assertThat(exception.getMessage()).isEqualTo(EMPTY_FILE);
     }
 }

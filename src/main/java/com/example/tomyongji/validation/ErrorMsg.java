@@ -11,6 +11,8 @@ public class ErrorMsg {
     public static final String EMPTY_MONEY = "입출금 내역을 작성해주세요.";
     public static final String DUPLICATED_FLOW = "입금과 출금 둘 중 하나만 적어주세요.";
     public static final String INVALID_KEYWORD = "검색어는 두 글자 이상으로 작성해주세요.";
+    public static final String PASSWORD_REQUIRED = "암호화된 파일입니다. 생년월일을 입력해주세요.";
+    public static final String INVALID_PASSWORD = "암호가 올바르지 않습니다.";
 
     // **401 Unauthorized**
     public static final String NOT_VERIFY_EMAIL = "이메일 인증이 되지 않은 유저입니다.";
@@ -44,4 +46,5 @@ public class ErrorMsg {
 
     // **500 Internal Server Error**
     public static final String EXTERNAL_SERVER_ERROR = "외부 서버의 오류가 발생했습니다.";
+    public static final String EXCEL_OPEN_FAILED = "엑셀 파일을 열 수 없습니다.";
 }

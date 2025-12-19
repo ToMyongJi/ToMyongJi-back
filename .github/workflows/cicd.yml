@@ -40,6 +40,8 @@ jobs:
               echo 'EOF'
             } >> $GITHUB_OUTPUT
             echo "PROMTAIL_API_KEY=${{ secrets.PROMTAIL_API_KEY }}" >> $GITHUB_OUTPUT
+            echo "DB_NAME=${{ secrets.PROD_DB_NAME }}" >> $GITHUB_OUTPUT
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_OUTPUT
           else
             echo "CONFIG_PATH=config/dev" >> $GITHUB_OUTPUT
             echo "ENV_SUFFIX=-dev" >> $GITHUB_OUTPUT
@@ -60,6 +62,8 @@ jobs:
               echo 'EOF'
             } >> $GITHUB_OUTPUT
             echo "PROMTAIL_API_KEY=${{ secrets.PROMTAIL_API_KEY }}" >> $GITHUB_OUTPUT
+            echo "DB_NAME=${{ secrets.DEV_DB_NAME }}" >> $GITHUB_OUTPUT
+            echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up JDK 17
@@ -144,6 +148,8 @@ jobs:
             ENV_SUFFIX=${{ steps.vars.outputs.ENV_SUFFIX }}
             DOMAIN_NAME=${{ steps.vars.outputs.DOMAIN_NAME }}
             PROMTAIL_API_KEY=${{ steps.vars.outputs.PROMTAIL_API_KEY }}
+            DB_NAME=${{ steps.vars.outputs.DB_NAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             EOF
             
             # .env 파일에서 API 키를 읽어서 promtail-config.yml의 __PROMTAIL_API_KEY__를 실제 값으로 치환
@@ -159,14 +165,12 @@ jobs:
             ls -l
             
             # 스왑 파일 생성 (main 전용)
-            if [ "${{ github.ref_name }}" = "main" ]; then
-              if ! swapon -s | grep -q /swapfile; then
-                sudo fallocate -l 1G /swapfile
-                sudo chmod 600 /swapfile
-                sudo mkswap /swapfile
-                sudo swapon /swapfile
-                echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-              fi
+            if ! swapon -s | grep -q /swapfile; then
+              sudo fallocate -l 3G /swapfile
+              sudo chmod 600 /swapfile
+              sudo mkswap /swapfile
+              sudo swapon /swapfile
+              echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
             fi
             
             # Docker Compose 실행

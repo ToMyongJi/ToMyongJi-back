@@ -1,9 +1,28 @@
 services:
+  db:
+    image: mysql:8.0
+    container_name: ${APP_NAME}${ENV_SUFFIX}-db
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    networks:
+      - app_network
+
   app:
     image: ${DOCKER_USERNAME}/${APP_NAME}:${IMAGE_TAG}
     container_name: ${APP_NAME}${ENV_SUFFIX}-app
+    depends_on:
+      db:
+        condition: service_started
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILE}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
     ports:
       - "8080:8080"
     healthcheck:

@@ -4,6 +4,8 @@ services:
     container_name: ${APP_NAME}${ENV_SUFFIX}-db
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
     environment:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}

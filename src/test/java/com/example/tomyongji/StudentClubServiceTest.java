@@ -2,6 +2,7 @@ package com.example.tomyongji;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,6 +21,7 @@ import com.example.tomyongji.receipt.mapper.StudentClubMapper;
 import com.example.tomyongji.receipt.repository.ReceiptRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.receipt.service.StudentClubService;
+import com.example.tomyongji.validation.CustomException;
 import java.util.List;
 import java.util.Optional;
 
@@ -277,29 +279,23 @@ public class StudentClubServiceTest {
     }
 
     @Test
-    @DisplayName("영수증이 0개일 경우 학생회 이전 성공")
-    void transferStudentClub_EmptyReceipts_Success() {
+    @DisplayName("영수증이 0개일 경우 학생회 이전 실패")
+    void transferStudentClub_EmptyReceipts_Failure() {
         //Given
         List<Receipt> receipts = List.of();
 
         when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
         when(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).thenReturn(receipts);
-        when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
-        when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of(student1));
 
-        //When
-        TransferDto result = studentClubService.transferStudentClub(null, currentUser);
+        //When & Then
+        CustomException exception = assertThrows(CustomException.class, () -> {
+            studentClubService.transferStudentClub(null, currentUser);
+        });
 
-        //Then
-        assertNotNull(result);
-        assertEquals("융합소프트웨어학부 학생회", result.getStudentClubName());
-        assertEquals(0, result.getTotalDeposit());
-        assertEquals(0, result.getNetAmount());
+        assertEquals("이월할 영수증이 없습니다.", exception.getMessage());
+        assertEquals(400, exception.getErrorCode());
 
         verify(userRepository).findByUserId("president123");
         verify(receiptRepository).findAllByStudentClubOrderByIdDesc(convergenceSoftware);
-        verify(studentClubRepository).save(convergenceSoftware);
-        verify(userService).deleteUser("president123");
-        verify(userService).deleteUser("student1");
     }
 }

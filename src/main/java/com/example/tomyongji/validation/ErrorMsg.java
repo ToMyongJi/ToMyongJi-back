@@ -11,6 +11,7 @@ public class ErrorMsg {
     public static final String EMPTY_MONEY = "입출금 내역을 작성해주세요.";
     public static final String DUPLICATED_FLOW = "입금과 출금 둘 중 하나만 적어주세요.";
     public static final String INVALID_KEYWORD = "검색어는 두 글자 이상으로 작성해주세요.";
+    public static final String NO_RECEIPTS_TO_TRANSFER = "이월할 영수증이 없습니다.";
 
     // **401 Unauthorized**
     public static final String NOT_VERIFY_EMAIL = "이메일 인증이 되지 않은 유저입니다.";

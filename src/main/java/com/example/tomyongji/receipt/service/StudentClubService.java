@@ -27,6 +27,7 @@ import java.util.List;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
 import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_ROLE;
+import static com.example.tomyongji.validation.ErrorMsg.NO_RECEIPTS_TO_TRANSFER;
 
 @Service
 @RequiredArgsConstructor
@@ -116,13 +117,9 @@ public class StudentClubService {
 
         int netAmount = totalDeposit - totalWithdrawal;
 
-        //영수증 0개일 경우 빈 TransferDto 반환
+        //영수증 0개일 경우 에러 발생
         if (receipts.isEmpty()) {
-            return TransferDto.builder()
-                    .studentClubName(studentClub.getStudentClubName())
-                    .totalDeposit(0)
-                    .netAmount(0)
-                    .build();
+            throw new CustomException(NO_RECEIPTS_TO_TRANSFER, 400);
         }
 
         // 모든 영수증 삭제

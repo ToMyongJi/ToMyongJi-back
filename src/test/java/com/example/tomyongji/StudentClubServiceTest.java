@@ -2,6 +2,7 @@ package com.example.tomyongji;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,6 +21,7 @@ import com.example.tomyongji.receipt.mapper.StudentClubMapper;
 import com.example.tomyongji.receipt.repository.ReceiptRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.receipt.service.StudentClubService;
+import com.example.tomyongji.validation.CustomException;
 import java.util.List;
 import java.util.Optional;
 
@@ -208,7 +210,7 @@ public class StudentClubServiceTest {
         List<Receipt> receipts = List.of(receipt1, receipt2);
 
         when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
-        when(receiptRepository.findAllByStudentClub(convergenceSoftware)).thenReturn(receipts);
+        when(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).thenReturn(receipts);
         when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
         when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of(student1));
 
@@ -219,15 +221,15 @@ public class StudentClubServiceTest {
         //Then
         assertNotNull(result);
         assertEquals("융합소프트웨어학부 학생회", result.getStudentClubName());
-        assertEquals(5000, result.getTotalDeposit());
-        assertEquals(2000, result.getTotalWithdrawal());
+        assertEquals(3000, result.getTotalDeposit());
         assertEquals(3000, result.getNetAmount());
 
         verify(userRepository).findByUserId("president123");
-        verify(receiptRepository).findAllByStudentClub(convergenceSoftware);
+        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(convergenceSoftware);
 
         verify(receiptRepository).deleteAll(receipts);
         verify(receiptRepository).save(any(Receipt.class));
+        verify(studentClubRepository).save(convergenceSoftware);
         verify(userService).deleteUser("president123");
         verify(userService).deleteUser("student1");
     }
@@ -251,10 +253,9 @@ public class StudentClubServiceTest {
                 .build();
 
         when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
-        when(receiptRepository.findAllByStudentClub(convergenceSoftware)).thenReturn(receipts);
+        when(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).thenReturn(receipts);
         when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
         when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of());
-        when(userRepository.findByStudentNum("60221318")).thenReturn(nextPresident);
 
         //When
         TransferDto result = studentClubService.transferStudentClub(nextPresidentDto, currentUser);
@@ -264,15 +265,35 @@ public class StudentClubServiceTest {
         assertNotNull(result);
         assertEquals("융합소프트웨어학부 학생회", result.getStudentClubName());
         assertEquals(10000, result.getTotalDeposit());
-        assertEquals(0, result.getTotalWithdrawal());
         assertEquals(10000, result.getNetAmount());
 
         verify(userRepository).findByUserId("president123");
-        verify(receiptRepository).findAllByStudentClub(convergenceSoftware);
+        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(convergenceSoftware);
         verify(receiptRepository).deleteAll(receipts);
         verify(receiptRepository).save(any(Receipt.class));
+        verify(studentClubRepository).save(convergenceSoftware);
         verify(userService).deleteUser("president123");
-        verify(userRepository).findByStudentNum("60221318");
         verify(adminService).savePresident(any(PresidentDto.class));
+    }
+
+    @Test
+    @DisplayName("영수증이 0개일 경우 학생회 이전 실패")
+    void transferStudentClub_EmptyReceipts_Failure() {
+        //Given
+        List<Receipt> receipts = List.of();
+
+        when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
+        when(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).thenReturn(receipts);
+
+        //When & Then
+        CustomException exception = assertThrows(CustomException.class, () -> {
+            studentClubService.transferStudentClub(null, currentUser);
+        });
+
+        assertEquals("이월할 영수증이 없습니다.", exception.getMessage());
+        assertEquals(400, exception.getErrorCode());
+
+        verify(userRepository).findByUserId("president123");
+        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(convergenceSoftware);
     }
 }

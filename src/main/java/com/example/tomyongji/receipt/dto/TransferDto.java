@@ -12,6 +12,5 @@ import lombok.NoArgsConstructor;
 public class TransferDto {
     private String studentClubName;
     private int totalDeposit;
-    private int totalWithdrawal;
     private int netAmount;
 }

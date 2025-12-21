@@ -83,6 +83,10 @@ public class StudentClubService {
         //기존 학생회 멤버 전체 삭제
         deleteAllStudentClubMembers(studentClub);
 
+        //토스뱅크 인증 마크 제거
+        studentClub.setVerification(false);
+        studentClubRepository.save(studentClub);
+
         //다음 회장이 있을 땐 새 회장 등록
         if (nextPresident != null) {
             User nextPresidentUser = userRepository.findByStudentNum(nextPresident.getStudentNum());
@@ -112,6 +116,15 @@ public class StudentClubService {
 
         int netAmount = totalDeposit - totalWithdrawal;
 
+        //영수증 0개일 경우 빈 TransferDto 반환
+        if (receipts.isEmpty()) {
+            return TransferDto.builder()
+                    .studentClubName(studentClub.getStudentClubName())
+                    .totalDeposit(0)
+                    .netAmount(0)
+                    .build();
+        }
+
         // 모든 영수증 삭제
         receiptRepository.deleteAll(receipts);
 
@@ -119,8 +132,8 @@ public class StudentClubService {
         Receipt transferReceipt = Receipt.builder()
                 .date(new Date())
                 .content("학생회비 이월")
-                .deposit(totalDeposit)
-                .withdrawal(totalWithdrawal)
+                .deposit(totalDeposit-totalWithdrawal)
+                .withdrawal(0)
                 .verification(false)
                 .studentClub(studentClub)
                 .build();
@@ -129,8 +142,7 @@ public class StudentClubService {
 
         return TransferDto.builder()
                 .studentClubName(studentClub.getStudentClubName())
-                .totalDeposit(totalDeposit)
-                .totalWithdrawal(totalWithdrawal)
+                .totalDeposit(totalDeposit-totalWithdrawal)
                 .netAmount(netAmount)
                 .build();
     }

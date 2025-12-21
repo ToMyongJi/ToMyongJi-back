@@ -90,13 +90,8 @@ public class StudentClubService {
 
         //다음 회장이 있을 땐 새 회장 등록
         if (nextPresident != null) {
-            User nextPresidentUser = userRepository.findByStudentNum(nextPresident.getStudentNum());
-            if (nextPresidentUser != null
-                    && nextPresidentUser.getStudentClub() != null
-                    && nextPresidentUser.getStudentClub().getId().equals(studentClub.getId())) {
-                    nextPresident.setClubId(studentClub.getId());
-                    adminService.savePresident(nextPresident);
-            }
+            nextPresident.setClubId(studentClub.getId());
+            adminService.savePresident(nextPresident);
         }
 
         return summary;

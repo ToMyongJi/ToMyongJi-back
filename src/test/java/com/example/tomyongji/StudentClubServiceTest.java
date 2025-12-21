@@ -208,7 +208,7 @@ public class StudentClubServiceTest {
         List<Receipt> receipts = List.of(receipt1, receipt2);
 
         when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
-        when(receiptRepository.findAllByStudentClub(convergenceSoftware)).thenReturn(receipts);
+        when(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).thenReturn(receipts);
         when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
         when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of(student1));
 
@@ -219,15 +219,15 @@ public class StudentClubServiceTest {
         //Then
         assertNotNull(result);
         assertEquals("융합소프트웨어학부 학생회", result.getStudentClubName());
-        assertEquals(5000, result.getTotalDeposit());
-        assertEquals(2000, result.getTotalWithdrawal());
+        assertEquals(3000, result.getTotalDeposit());
         assertEquals(3000, result.getNetAmount());
 
         verify(userRepository).findByUserId("president123");
-        verify(receiptRepository).findAllByStudentClub(convergenceSoftware);
+        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(convergenceSoftware);
 
         verify(receiptRepository).deleteAll(receipts);
         verify(receiptRepository).save(any(Receipt.class));
+        verify(studentClubRepository).save(convergenceSoftware);
         verify(userService).deleteUser("president123");
         verify(userService).deleteUser("student1");
     }
@@ -251,7 +251,7 @@ public class StudentClubServiceTest {
                 .build();
 
         when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
-        when(receiptRepository.findAllByStudentClub(convergenceSoftware)).thenReturn(receipts);
+        when(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).thenReturn(receipts);
         when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
         when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of());
         when(userRepository.findByStudentNum("60221318")).thenReturn(nextPresident);
@@ -264,15 +264,42 @@ public class StudentClubServiceTest {
         assertNotNull(result);
         assertEquals("융합소프트웨어학부 학생회", result.getStudentClubName());
         assertEquals(10000, result.getTotalDeposit());
-        assertEquals(0, result.getTotalWithdrawal());
         assertEquals(10000, result.getNetAmount());
 
         verify(userRepository).findByUserId("president123");
-        verify(receiptRepository).findAllByStudentClub(convergenceSoftware);
+        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(convergenceSoftware);
         verify(receiptRepository).deleteAll(receipts);
         verify(receiptRepository).save(any(Receipt.class));
+        verify(studentClubRepository).save(convergenceSoftware);
         verify(userService).deleteUser("president123");
         verify(userRepository).findByStudentNum("60221318");
         verify(adminService).savePresident(any(PresidentDto.class));
+    }
+
+    @Test
+    @DisplayName("영수증이 0개일 경우 학생회 이전 성공")
+    void transferStudentClub_EmptyReceipts_Success() {
+        //Given
+        List<Receipt> receipts = List.of();
+
+        when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
+        when(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).thenReturn(receipts);
+        when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
+        when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of(student1));
+
+        //When
+        TransferDto result = studentClubService.transferStudentClub(null, currentUser);
+
+        //Then
+        assertNotNull(result);
+        assertEquals("융합소프트웨어학부 학생회", result.getStudentClubName());
+        assertEquals(0, result.getTotalDeposit());
+        assertEquals(0, result.getNetAmount());
+
+        verify(userRepository).findByUserId("president123");
+        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(convergenceSoftware);
+        verify(studentClubRepository).save(convergenceSoftware);
+        verify(userService).deleteUser("president123");
+        verify(userService).deleteUser("student1");
     }
 }

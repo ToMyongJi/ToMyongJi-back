@@ -256,7 +256,6 @@ public class StudentClubServiceTest {
         when(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).thenReturn(receipts);
         when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
         when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of());
-        when(userRepository.findByStudentNum("60221318")).thenReturn(nextPresident);
 
         //When
         TransferDto result = studentClubService.transferStudentClub(nextPresidentDto, currentUser);
@@ -274,7 +273,6 @@ public class StudentClubServiceTest {
         verify(receiptRepository).save(any(Receipt.class));
         verify(studentClubRepository).save(convergenceSoftware);
         verify(userService).deleteUser("president123");
-        verify(userRepository).findByStudentNum("60221318");
         verify(adminService).savePresident(any(PresidentDto.class));
     }
 

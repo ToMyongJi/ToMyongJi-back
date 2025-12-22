@@ -83,6 +83,7 @@ jobs:
           ./gradlew build -x test
 
       - name: Docker build and push (App Only)
+        if: github.event_name == 'push'
         run: |
           echo "${{ steps.vars.outputs.DOCKER_PASSWORD_SECRET }}" | docker login -u "${{ steps.vars.outputs.DOCKER_USERNAME }}" --password-stdin
           docker build -t ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest -f ./config/app.Dockerfile .

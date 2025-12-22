@@ -140,9 +140,9 @@ jobs:
 
             # [수정] 운영 서버(prod)일 때만 Promtail 설정 파일 생성 및 치환
             if [ "${{ steps.vars.outputs.SPRING_PROFILE }}" = "prod" ]; then
-              cat <<'EOF' > ./promtail-config.yml
-              ${{ steps.deploy_files.outputs.promtail_config }}
-              EOF
+            cat <<'EOF' > ./promtail-config.yml
+            ${{ steps.deploy_files.outputs.promtail_config }}
+            EOF
             fi
             
             # 디버깅

@@ -90,6 +90,7 @@ jobs:
           docker push ${{ steps.vars.outputs.DOCKER_USERNAME }}/tomyongji:latest
 
       - name: Read deploy files content
+        if: github.event_name == 'push'
         id: deploy_files
         run: |
           COMPOSE_FILE=$(cat ./config/docker-compose.yml)
@@ -105,11 +106,16 @@ jobs:
           echo "$NGINX_FILE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-          echo "promtail_config<<EOF" >> $GITHUB_OUTPUT 
-          echo "$PROMTAIL_CONFIG" >> $GITHUB_OUTPUT 
-          echo "EOF" >> $GITHUB_OUTPUT 
+          # Promtail 설정은 main(prod)일 때만 읽어옴
+          if [ "${{ steps.vars.outputs.SPRING_PROFILE }}" = "prod" ]; then
+            PROMTAIL_CONFIG=$(cat ./config/promtail-config.yml)
+            echo "promtail_config<<EOF" >> $GITHUB_OUTPUT 
+            echo "$PROMTAIL_CONFIG" >> $GITHUB_OUTPUT 
+            echo "EOF" >> $GITHUB_OUTPUT 
+          fi
 
       - name: Create and Deploy to EC2
+        if: github.event_name == 'push'
         uses: appleboy/ssh-action@master
         with:
           host: ${{ steps.vars.outputs.HOST }}
@@ -132,9 +138,12 @@ jobs:
             ${{ steps.deploy_files.outputs.nginx_file }}
             EOF
 
-            cat <<'EOF' > ./promtail-config.yml
-            ${{ steps.deploy_files.outputs.promtail_config }}
-            EOF
+            # [수정] 운영 서버(prod)일 때만 Promtail 설정 파일 생성 및 치환
+            if [ "${{ steps.vars.outputs.SPRING_PROFILE }}" = "prod" ]; then
+              cat <<'EOF' > ./promtail-config.yml
+              ${{ steps.deploy_files.outputs.promtail_config }}
+              EOF
+            fi
             
             # 디버깅
             echo "--- [Debug] Current directory and permissions ---"
@@ -151,11 +160,14 @@ jobs:
             PROMTAIL_API_KEY=${{ steps.vars.outputs.PROMTAIL_API_KEY }}
             DB_NAME=${{ steps.vars.outputs.DB_NAME }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            COMPOSE_PROFILES=${{ steps.vars.outputs.SPRING_PROFILE == 'prod' && 'monitoring' || '' }}
             EOF
             
-            # .env 파일에서 API 키를 읽어서 promtail-config.yml의 __PROMTAIL_API_KEY__를 실제 값으로 치환
-            export API_KEY_VALUE=$(grep PROMTAIL_API_KEY .env | cut -d '=' -f2)
-            sed -i "s|__PROMTAIL_API_KEY__|${API_KEY_VALUE}|g" ./promtail-config.yml
+            # [수정] 운영 서버일 때만 API Key 치환 작업 수행
+            if [ "${{ steps.vars.outputs.SPRING_PROFILE }}" = "prod" ]; then
+              export API_KEY_VALUE=$(grep PROMTAIL_API_KEY .env | cut -d '=' -f2)
+              sed -i "s|__PROMTAIL_API_KEY__|${API_KEY_VALUE}|g" ./promtail-config.yml
+            fi
 
             # application.properties 파일 생성
             cat <<'EOF' > ./application.properties

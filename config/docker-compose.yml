@@ -80,6 +80,7 @@ services:
 
   promtail:
     image: grafana/promtail:latest
+    profiles: ["monitoring"]
     container_name: ${APP_NAME}${ENV_SUFFIX}-promtail
     volumes:
       - ./promtail-config.yml:/etc/promtail/config.yml

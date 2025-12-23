@@ -112,11 +112,21 @@ public class BreakDownService {
         StudentClub club = studentClubRepository.findById(clubId)
             .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
 
+        // 영수증 저장 전 기존 개수 조회
+        ReceiptRepository.ReceiptCount existingCount = receiptRepository.countTotalAndVerified(club);
+        long totalReceipt = existingCount.getTotal(); // 기존 전체 영수증
+        Long existingVerified = existingCount.getVerified();
+        long existingVerifiedReceipt = 0L;
+        if (existingVerified != null) {
+            existingVerifiedReceipt = existingVerified;
+        }
+
         Document doc = Jsoup.parse(html);
         Elements rows = doc.select("table.table tbody tr:has(td)");
 
         List<Receipt> receipts = new ArrayList<>();
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        int newVerifiedReceipt = 0;
 
         for (Element row : rows) {
             Elements tds = row.select("td");
@@ -142,6 +152,8 @@ public class BreakDownService {
                 .build()
             );
 
+            newVerifiedReceipt++;
+
             //잔액 업데이트
             int balanceAdjustment = deposit - withdrawal;
             club.setBalance(club.getBalance() + balanceAdjustment);
@@ -149,7 +161,7 @@ public class BreakDownService {
         receiptRepository.saveAll(receipts);
         studentClubRepository.save(club);
 
-        receiptService.checkAndUpdateVerificationStatus(clubId);
+        receiptService.checkAndUpdateVerificationStatus(clubId, totalReceipt + newVerifiedReceipt, existingVerifiedReceipt + newVerifiedReceipt);
 
         return receipts.stream()
                 .map(mapper :: toReceiptDto)

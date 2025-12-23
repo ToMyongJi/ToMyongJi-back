@@ -35,4 +35,12 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
         @Param("keyword") String keyword
     );
 
+    @Query("SELECT COUNT(r) as total, SUM(CASE WHEN r.verification = true THEN 1 ELSE 0 END) as verified FROM Receipt r WHERE r.studentClub = :club")
+    ReceiptCount countTotalAndVerified(@Param("club") StudentClub club);
+
+    interface ReceiptCount {
+        Long getTotal();
+        Long getVerified();
+    }
+
 }

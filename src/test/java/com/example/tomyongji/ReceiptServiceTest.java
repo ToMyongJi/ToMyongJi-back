@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import java.util.Date;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -782,7 +783,7 @@ public class ReceiptServiceTest {
         when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
 
         // When
-        PagingReceiptDto result = receiptService.getReceiptsByClubPaging(clubId, page, size);
+        PagingReceiptDto result = receiptService.getReceiptsByClubPaging(clubId, page, size, null, null);
 
         // Then
         assertNotNull(result);
@@ -804,6 +805,58 @@ public class ReceiptServiceTest {
     }
 
     @Test
+    @DisplayName("영수증 월별 필터링 조회 성공")
+    void getReceiptsByClubPaging_WithDateFilter_Success() {
+        // Given
+        Long clubId = studentClub.getId();
+        int page = 0;
+        int size = 10;
+        Integer year = 2025;
+        Integer month = 5;
+
+        // 테스트용 더미 데이터
+        List<Receipt> receipts = List.of(receipt);
+        Page<Receipt> receiptPage = new PageImpl<>(receipts, PageRequest.of(page, size), 1);
+
+        ReceiptDto receiptDto = ReceiptDto.builder()
+            .receiptId(receipt.getId())
+            .content(receipt.getContent())
+            .build();
+
+        // Mock 설정
+        when(studentClubRepository.findById(clubId)).thenReturn(Optional.of(studentClub));
+
+        // year, month가 있을 때는 findAllByStudentClubAndDateBetween이 호출되어야 함
+        // 날짜 계산은 Service 내부 로직이므로, 입력값은 any(Date.class)로 처리하여 유연하게 검증
+        when(receiptRepository.findAllByStudentClubAndDateBetween(
+            eq(studentClub),
+            any(Date.class),
+            any(Date.class),
+            any(Pageable.class))
+        ).thenReturn(receiptPage);
+
+        when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
+
+        // When
+        PagingReceiptDto result = receiptService.getReceiptsByClubPaging(clubId, page, size, year, month);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+
+        // 검증: 기존 findByStudentClub이 아니라, DateBetween 메서드가 호출되었는지 확인!
+        verify(receiptRepository).findAllByStudentClubAndDateBetween(
+            eq(studentClub),
+            any(Date.class),
+            any(Date.class),
+            any(Pageable.class)
+        );
+
+        // 검증: 기존 메서드는 호출되지 않아야 함
+        verify(receiptRepository, times(0)).findByStudentClub(any(), any());
+    }
+
+    @Test
     @DisplayName("학생회 조회 실패로 인한 영수증 페이징 조회 실패")
     void getReceiptsByClubPaging_NotFoundStudentClub() {
         // Given
@@ -815,7 +868,7 @@ public class ReceiptServiceTest {
 
         // When & Then
         CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.getReceiptsByClubPaging(wrongClubId, page, size));
+            () -> receiptService.getReceiptsByClubPaging(wrongClubId, page, size, null, null));
 
         assertEquals(400, exception.getErrorCode());
         assertEquals(NOT_FOUND_STUDENT_CLUB, exception.getMessage());

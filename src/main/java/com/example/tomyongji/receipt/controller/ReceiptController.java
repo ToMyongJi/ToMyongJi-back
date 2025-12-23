@@ -81,9 +81,11 @@ public class ReceiptController {
     public ApiResponse<PagingReceiptDto> getReceiptsByClubPaging(
         @PathVariable("clubId") Long clubId,
         @RequestParam(defaultValue = "0") int page, // 값이 안 오면 0(첫페이지)
-        @RequestParam(defaultValue = "10") int size // 값이 안 오면 10개씩
+        @RequestParam(defaultValue = "10") int size, // 값이 안 오면 10개씩
+        @RequestParam(required = false) Integer year,
+        @RequestParam(required = false) Integer month
     ) {
-        PagingReceiptDto receiptPage = receiptService.getReceiptsByClubPaging(clubId, page, size);
+        PagingReceiptDto receiptPage = receiptService.getReceiptsByClubPaging(clubId, page, size, year, month);
         return new ApiResponse<>(200, "해당 학생회의 영수증들을 성공적으로 조회했습니다.", receiptPage);
     }
 

@@ -260,16 +260,43 @@ public class ReceiptService {
     }
 
     //전체 영수증 대비 토스뱅크로 검증된 영수증 비율에 따른 뱃지 부여 메서드
+    //영수증 삭제 등과 같은 경우 사용
     public void checkAndUpdateVerificationStatus(Long clubId) {
         StudentClub club = studentClubRepository.findById(clubId)
             .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
 
-        long totalReceipts = receiptRepository.countByStudentClub(club);
+        ReceiptRepository.ReceiptCount count = receiptRepository.countTotalAndVerified(club);
+        Long totalReceipts = count.getTotal();
         if (totalReceipts == 0) {
             return;
         }
 
-        long verifiedReceipts = receiptRepository.countByStudentClubAndVerificationTrue(club);
+        Long verifiedReceipts = count.getVerified();
+        long verified = verifiedReceipts != null ? verifiedReceipts : 0L;
+        double verificationRatio = (double) verified / totalReceipts;
+
+        //boolean 으로 현재 상태와 검증된 상태의 값이 다를 경우에만 DB 업데이트
+        boolean shouldBeVerified = verificationRatio > 0.3;
+
+        if (club.isVerification() != shouldBeVerified) {
+            if (shouldBeVerified) {
+                studentClubRepository.updateVerificationById(clubId);
+            } else {
+                studentClubRepository.updateVerificationToFalseById(clubId);
+            }
+        }
+    }
+
+    //전체 영수증 대비 토스뱅크로 검증된 영수증 비율에 따른 뱃지 부여 메서드
+    //토스뱅크 거래내역서를 통한 영수증 생성 시 성능 개선 메서드
+    public void checkAndUpdateVerificationStatus(Long clubId, long totalReceipts, long verifiedReceipts) {
+        StudentClub club = studentClubRepository.findById(clubId)
+                .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
+
+        if (totalReceipts == 0) {
+            return;
+        }
+
         double verificationRatio = (double) verifiedReceipts / totalReceipts;
 
         //boolean 으로 현재 상태와 검증된 상태의 값이 다를 경우에만 DB 업데이트

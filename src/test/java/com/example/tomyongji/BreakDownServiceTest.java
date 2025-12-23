@@ -267,6 +267,7 @@ public class BreakDownServiceTest {
                 .issueDate("2024-01-15")
                 .issueNumber("ABC123")
                 .studentClubId(studentClub.getId())
+                .keyword(null)
                 .build();
 
         String mockHtmlResponse = """
@@ -297,6 +298,15 @@ public class BreakDownServiceTest {
         when(responseSpec.body(String.class)).thenReturn(mockHtmlResponse);
 
         when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
+
+        // countTotalAndVerified 쿼리 추가
+        ReceiptRepository.ReceiptCount receiptCount = new ReceiptRepository.ReceiptCount() {
+            @Override
+            public Long getTotal() { return 0L; }
+            @Override
+            public Long getVerified() { return 0L; }
+        };
+        when(receiptRepository.countTotalAndVerified(studentClub)).thenReturn(receiptCount);
 
         Receipt receipt1 = Receipt.builder()
                 .content("카페 결제")
@@ -338,6 +348,72 @@ public class BreakDownServiceTest {
         verify(receiptRepository).saveAll(any());
         verify(studentClubRepository).save(studentClub);
         verify(mapper, times(2)).toReceiptDto(any(Receipt.class));
+        // 성능 개선된 checkAndUpdateVerificationStatus 호출 검증
+        verify(receiptService).checkAndUpdateVerificationStatus(studentClub.getId(), 2L, 2L);
+    }
+
+    @Test
+    @DisplayName("외부 API 정상 응답 처리 성공 - 키워드 포함")
+    void fetchAndProcessDocument_SuccessWithKeyword() throws ParseException {
+        // Given
+        String keyword = "학생회비";
+        BreakDownDto dto = BreakDownDto.builder()
+                .issueDate("2024-01-15")
+                .issueNumber("ABC123")
+                .studentClubId(studentClub.getId())
+                .keyword(keyword)
+                .build();
+
+        String mockHtmlResponse = """
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td>2024-01-15 10:30:00</td>
+                            <td></td>
+                            <td>-5000</td>
+                            <td></td>
+                            <td>카페 결제</td>
+                        </tr>
+                    </tbody>
+                </table>
+                """;
+
+        // RestClient fluent API mocking
+        when(restClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString(), any(), any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.body(String.class)).thenReturn(mockHtmlResponse);
+
+        when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
+
+        // countTotalAndVerified 쿼리 mock 추가
+        ReceiptRepository.ReceiptCount receiptCount = new ReceiptRepository.ReceiptCount() {
+            @Override
+            public Long getTotal() { return 0L; }
+            @Override
+            public Long getVerified() { return 0L; }
+        };
+        when(receiptRepository.countTotalAndVerified(studentClub)).thenReturn(receiptCount);
+
+        ReceiptDto receiptDto = ReceiptDto.builder()
+                .content("[학생회비] 카페 결제")
+                .withdrawal(5000)
+                .build();
+
+        when(mapper.toReceiptDto(any(Receipt.class))).thenReturn(receiptDto);
+
+        // When
+        List<ReceiptDto> result = breakDownService.fetchAndProcessDocument(dto);
+
+        // Then
+        assertNotNull(result);
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.get(0).getContent()).contains("[" + keyword + "]");
+
+        verify(restClient).get();
+        verify(receiptRepository).saveAll(any());
+        verify(studentClubRepository).save(studentClub);
+        verify(receiptService).checkAndUpdateVerificationStatus(studentClub.getId(), 1L, 1L);
     }
 
     @Test

@@ -161,6 +161,9 @@ public class BreakDownService {
         receiptRepository.saveAll(receipts);
         studentClubRepository.save(club);
 
+        // 데이터 저장 후 캐시 삭제
+        receiptService.clearReceiptCache(clubId);
+
         receiptService.checkAndUpdateVerificationStatus(clubId, totalReceipt + newVerifiedReceipt, existingVerifiedReceipt + newVerifiedReceipt);
 
         return receipts.stream()

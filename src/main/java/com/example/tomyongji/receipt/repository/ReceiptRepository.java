@@ -16,6 +16,13 @@ public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
     List<Receipt> findAllByStudentClubOrderByIdDesc(StudentClub studentClub);
 
     Page<Receipt> findByStudentClub(StudentClub studentClub, Pageable pageable);
+
+    Page<Receipt> findAllByStudentClubAndDateBetween(
+        StudentClub studentClub,
+        Date startDate,
+        Date endDate,
+        Pageable pageable
+    );
     boolean existsByDateAndContent(Date date, String content);
     void deleteAllByStudentClub(StudentClub studentClub);
     int countByStudentClub(StudentClub studentClub);

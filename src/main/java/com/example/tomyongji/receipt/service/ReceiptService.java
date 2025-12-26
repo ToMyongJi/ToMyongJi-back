@@ -2,6 +2,7 @@ package com.example.tomyongji.receipt.service;
 
 import static com.example.tomyongji.validation.ErrorMsg.DUPLICATED_FLOW;
 import static com.example.tomyongji.validation.ErrorMsg.EMPTY_CONTENT;
+import static com.example.tomyongji.validation.ErrorMsg.INVALID_DATE_SEARCH;
 import static com.example.tomyongji.validation.ErrorMsg.INVALID_KEYWORD;
 import static com.example.tomyongji.validation.ErrorMsg.MISMATCHED_USER;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_RECEIPT;
@@ -24,6 +25,10 @@ import com.example.tomyongji.receipt.mapper.ReceiptMapper;
 import com.example.tomyongji.receipt.repository.ReceiptRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.validation.CustomException;
+import java.time.LocalDateTime;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -122,7 +127,7 @@ public class ReceiptService {
     }
 
     @Transactional(readOnly = true)
-    public PagingReceiptDto getReceiptsByClubPaging(Long clubId, int page, int size) { // page, size를 파라미터로 받음
+    public PagingReceiptDto getReceiptsByClubPaging(Long clubId, int page, int size, Integer year, Integer month) { // page, size를 파라미터로 받음
 
         StudentClub studentClub = studentClubRepository.findById(clubId)
             .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
@@ -133,13 +138,44 @@ public class ReceiptService {
             Sort.Order.desc("id")
         ));
 
-        // DB 조회
-        Page<Receipt> receiptPage = receiptRepository.findByStudentClub(studentClub, pageable);
+        Page<Receipt> receiptPage;
+
+        // 1. [정상] 년도와 월이 모두 있는 경우 -> 해당 월 조회
+        if (year != null && month != null) {
+            YearMonth yearMonth = YearMonth.of(year, month);
+            LocalDateTime startDateTime = yearMonth.atDay(1).atStartOfDay();
+            LocalDateTime endDateTime = yearMonth.atEndOfMonth().atTime(23, 59, 59);
+
+            receiptPage = searchByDateRange(studentClub, startDateTime, endDateTime, pageable);
+
+        }
+        // 2. [정상] 년도만 있는 경우 -> 해당 연도 전체(1월~12월) 조회
+        else if (year != null) {
+            LocalDateTime startDateTime = Year.of(year).atDay(1).atStartOfDay(); // 1월 1일 00:00:00
+            LocalDateTime endDateTime = Year.of(year).atMonth(12).atEndOfMonth().atTime(23, 59, 59); // 12월 31일 23:59:59
+
+            receiptPage = searchByDateRange(studentClub, startDateTime, endDateTime, pageable);
+        }
+        // 3. [에러] 월만 있는 경우 -> 년도 없이 월만 조회할 수 없음
+        else if (month != null) {
+            throw new CustomException(INVALID_DATE_SEARCH, 400);
+        }
+        // 4. [정상] 둘 다 없는 경우 -> 전체 조회
+        else {
+            receiptPage = receiptRepository.findByStudentClub(studentClub, pageable);
+        }
 
         Page<ReceiptDto> dtoPage = receiptPage.map(receiptMapper::toReceiptDto);
 
         // DTO 변환 및 반환
         return PagingReceiptDto.from(dtoPage);
+    }
+
+    private Page<Receipt> searchByDateRange(StudentClub club, LocalDateTime start, LocalDateTime end, Pageable pageable) {
+        Date startDate = Date.from(start.atZone(ZoneId.systemDefault()).toInstant());
+        Date endDate = Date.from(end.atZone(ZoneId.systemDefault()).toInstant());
+
+        return receiptRepository.findAllByStudentClubAndDateBetween(club, startDate, endDate, pageable);
     }
 
     @Transactional(readOnly = true)

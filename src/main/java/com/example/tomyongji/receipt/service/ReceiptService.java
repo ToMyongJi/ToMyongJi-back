@@ -34,6 +34,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +60,7 @@ public class ReceiptService {
     private final UserRepository userRepository;
     private final ReceiptMapper receiptMapper;
     private final CacheManager cacheManager;
+    private final StringRedisTemplate redisTemplate;
 
     @Transactional
     public ReceiptDto createReceipt(ReceiptCreateDto receiptDto, UserDetails currentUser) {
@@ -135,8 +138,8 @@ public class ReceiptService {
     }
 
     @Cacheable(
-        value = "'receiptList:' + #clubId",
-        key = "'p' + #page + '_s' + #size + '_' + #year + '_' + #month",
+        value = "receiptList",
+        key = "#clubId + ':p' + #page + '_s' + #size + '_' + #year + '_' + #month",
         sync = true
     )
     @Transactional(readOnly = true)
@@ -397,9 +400,11 @@ public class ReceiptService {
     }
 
     public void clearReceiptCache(Long clubId) {
-        Cache cache = cacheManager.getCache("receiptList:" + clubId);
-        if (cache != null) {
-            cache.clear();
+        String pattern = "receiptList::" + clubId + ":*";
+        Set<String> keys = redisTemplate.keys(pattern);
+
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
         }
     }
 }

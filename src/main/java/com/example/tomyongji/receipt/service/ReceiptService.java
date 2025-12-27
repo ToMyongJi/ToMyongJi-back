@@ -137,7 +137,6 @@ public class ReceiptService {
     @Cacheable(
         value = "'receiptList:' + #clubId",
         key = "'p' + #page + '_s' + #size + '_' + #year + '_' + #month",
-        unless = "#result == null",
         sync = true
     )
     @Transactional(readOnly = true)

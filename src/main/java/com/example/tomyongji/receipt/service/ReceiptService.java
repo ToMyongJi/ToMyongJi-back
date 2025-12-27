@@ -38,6 +38,9 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -54,6 +57,7 @@ public class ReceiptService {
     private final StudentClubRepository studentClubRepository;
     private final UserRepository userRepository;
     private final ReceiptMapper receiptMapper;
+    private final CacheManager cacheManager;
 
     @Transactional
     public ReceiptDto createReceipt(ReceiptCreateDto receiptDto, UserDetails currentUser) {
@@ -61,6 +65,7 @@ public class ReceiptService {
         User user = userRepository.findByUserId(receiptDto.getUserId())
             .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400)); //유저를 찾을 수 없는 경우
         StudentClub studentClub = user.getStudentClub();
+        Long clubId = studentClub.getId();
 
         //소속 검증
         checkClub(studentClub, currentUser);
@@ -83,6 +88,9 @@ public class ReceiptService {
         int balanceAdjustment = receiptDto.getDeposit() - receiptDto.getWithdrawal();
         studentClub.setBalance(studentClub.getBalance() + balanceAdjustment);
         studentClubRepository.save(studentClub);
+
+        //캐시 수동삭제
+        clearReceiptCache(clubId);
 
         //생성된 영수증 DTO 반환
         return receiptMapper.toReceiptDto(receipt);
@@ -126,6 +134,12 @@ public class ReceiptService {
             .collect(Collectors.toList());
     }
 
+    @Cacheable(
+        value = "'receiptList:' + #clubId",
+        key = "'p' + #page + '_s' + #size + '_' + #year + '_' + #month",
+        unless = "#result == null",
+        sync = true
+    )
     @Transactional(readOnly = true)
     public PagingReceiptDto getReceiptsByClubPaging(Long clubId, int page, int size, Integer year, Integer month) { // page, size를 파라미터로 받음
 
@@ -198,6 +212,7 @@ public class ReceiptService {
         //접근 권한: 다른 학생회인 경우
         StudentClub studentClub = receipt.getStudentClub();
         checkClub(studentClub, currentUser);
+        Long clubId = studentClub.getId();
 
         //영수증 삭제
         receiptRepository.delete(receipt);
@@ -209,6 +224,9 @@ public class ReceiptService {
 
         //영수증 비율 확인 및 학생회 상태 변경
         checkAndUpdateVerificationStatus(studentClub.getId());
+
+        //캐시 수동삭제
+        clearReceiptCache(clubId);
 
         //DTO 반환
         return receiptMapper.toReceiptDto(receipt);
@@ -225,6 +243,7 @@ public class ReceiptService {
 
         //영수증의 학생회와 접속한 유저의 학생회 비교
         checkClub(studentClub, currentUser);
+        Long clubId = studentClub.getId();
 
         int updatedDeposit = receiptDto.getDeposit();
         int updatedWithdrawal = receiptDto.getWithdrawal();
@@ -251,6 +270,9 @@ public class ReceiptService {
 
         studentClubRepository.save(studentClub);
         receiptRepository.save(existingReceipt);
+
+        //캐시 수동삭제
+        clearReceiptCache(clubId);
 
         return receiptMapper.toReceiptDto(existingReceipt);
     }
@@ -373,5 +395,12 @@ public class ReceiptService {
         return matchedReceipts.stream()
             .map(receiptMapper::toReceiptDto)
             .collect(Collectors.toList());
+    }
+
+    public void clearReceiptCache(Long clubId) {
+        Cache cache = cacheManager.getCache("receiptList:" + clubId);
+        if (cache != null) {
+            cache.clear();
+        }
     }
 }

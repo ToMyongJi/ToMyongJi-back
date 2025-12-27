@@ -14,17 +14,35 @@ services:
     networks:
       - app_network
 
+  redis:
+    image: redis:alpine
+    container_name: ${APP_NAME}${ENV_SUFFIX}-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru
+    # 컨테이너 자체 메모리 제한 (t2.micro 보호)
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+    networks:
+      - app_network
+
   app:
     image: ${DOCKER_USERNAME}/${APP_NAME}:${IMAGE_TAG}
     container_name: ${APP_NAME}${ENV_SUFFIX}-app
     depends_on:
       db:
         condition: service_started
+      redis:
+        condition: service_started
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILE}
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      # Redis 설정
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     ports:
       - "8080:8080"
     healthcheck:

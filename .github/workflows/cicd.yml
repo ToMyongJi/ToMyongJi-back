@@ -160,6 +160,9 @@ jobs:
             PROMTAIL_API_KEY=${{ steps.vars.outputs.PROMTAIL_API_KEY }}
             DB_NAME=${{ steps.vars.outputs.DB_NAME }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            # Redis 환경 변수 추가 (관리용)
+            REDIS_HOST=redis
+            REDIS_PORT=6379
             COMPOSE_PROFILES=${{ steps.vars.outputs.SPRING_PROFILE == 'prod' && 'monitoring' || '' }}
             EOF
             

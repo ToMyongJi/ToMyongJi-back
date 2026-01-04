@@ -1,0 +1,55 @@
+// 1. 로그 파일 탐색 (static_configs 역할)
+local.file_match "tomyongji_app_logs" {
+    path_targets = [
+        {
+            "__path__" = "/var/log/app/*.json",
+            "job" = "tomyongji-app",
+            "env"      = sys.env("SPRING_PROFILE")
+         },
+    ]
+}
+
+// 2. 로그 파일 읽기 및 전송
+loki.source.file "tomyongji_app_logs" {
+    targets    = local.file_match.tomyongji_app_logs.targets
+    forward_to = [loki.process.tomyongji_app_pipeline.receiver]
+}
+
+// 3. 로그 가공 파이프라인 (pipeline_stages 역할)
+loki.process "tomyongji_app_pipeline" {
+    // JSON 파싱 스테이지
+    stage.json {
+        expressions = {
+            level   = "level",
+            logger  = "logger",
+            message = "message",
+            action  = "action",
+            method  = "method",
+            args    = "args",
+        }
+    }
+
+    // 파싱된 필드를 레이블로 승격
+    stage.labels {
+        values = {
+            level   = null,
+            logger  = null,
+            action  = null,
+            method  = null,
+            env     = null,
+        }
+    }
+
+    forward_to = [loki.write.grafana_cloud_loki.receiver]
+}
+
+// 4. Loki 전송 설정 (clients 역할)
+loki.write "grafana_cloud_loki" {
+    endpoint {
+        url = "https://logs-prod-030.grafana.net/loki/api/v1/push"
+        basic_auth {
+            username = "1139056"
+            password = sys.env("PROMTAIL_API_KEY") // .env 파일의 값을 가져옴
+        }
+    }
+}

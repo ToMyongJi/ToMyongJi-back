@@ -95,9 +95,8 @@ jobs:
         run: |
           COMPOSE_FILE=$(cat ./config/docker-compose.yml)
           NGINX_FILE=$(cat ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf)
-          
-          PROMTAIL_CONFIG=$(cat ./config/promtail-config.yml)
-          
+          ALLOY_CONFIG=$(cat ./config/config.alloy)
+                    
           echo "compose_file<<EOF" >> $GITHUB_OUTPUT
           echo "$COMPOSE_FILE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -105,14 +104,10 @@ jobs:
           echo "nginx_file<<EOF" >> $GITHUB_OUTPUT
           echo "$NGINX_FILE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-
-          # Promtail 설정은 main(prod)일 때만 읽어옴
-          if [ "${{ steps.vars.outputs.SPRING_PROFILE }}" = "prod" ]; then
-            PROMTAIL_CONFIG=$(cat ./config/promtail-config.yml)
-            echo "promtail_config<<EOF" >> $GITHUB_OUTPUT 
-            echo "$PROMTAIL_CONFIG" >> $GITHUB_OUTPUT 
-            echo "EOF" >> $GITHUB_OUTPUT 
-          fi
+          
+          echo "alloy_config<<EOF" >> $GITHUB_OUTPUT
+          echo "$ALLOY_CONFIG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create and Deploy to EC2
         if: github.event_name == 'push'
@@ -138,12 +133,9 @@ jobs:
             ${{ steps.deploy_files.outputs.nginx_file }}
             EOF
 
-            # [수정] 운영 서버(prod)일 때만 Promtail 설정 파일 생성 및 치환
-            if [ "${{ steps.vars.outputs.SPRING_PROFILE }}" = "prod" ]; then
-            cat <<'EOF' > ./promtail-config.yml
-            ${{ steps.deploy_files.outputs.promtail_config }}
+            cat <<'EOF' > ./config.alloy
+            ${{ steps.deploy_files.outputs.alloy_config }}
             EOF
-            fi
             
             # 디버깅
             echo "--- [Debug] Current directory and permissions ---"
@@ -163,14 +155,8 @@ jobs:
             # Redis 환경 변수 추가 (관리용)
             REDIS_HOST=redis
             REDIS_PORT=6379
-            COMPOSE_PROFILES=${{ steps.vars.outputs.SPRING_PROFILE == 'prod' && 'monitoring' || '' }}
+            COMPOSE_PROFILES=monitoring
             EOF
-            
-            # [수정] 운영 서버일 때만 API Key 치환 작업 수행
-            if [ "${{ steps.vars.outputs.SPRING_PROFILE }}" = "prod" ]; then
-              export API_KEY_VALUE=$(grep PROMTAIL_API_KEY .env | cut -d '=' -f2)
-              sed -i "s|__PROMTAIL_API_KEY__|${API_KEY_VALUE}|g" ./promtail-config.yml
-            fi
 
             # application.properties 파일 생성
             cat <<'EOF' > ./application.properties

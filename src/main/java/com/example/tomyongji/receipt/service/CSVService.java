@@ -94,6 +94,8 @@ public class CSVService {
         } catch (IOException | CsvValidationException e) {
             LOGGER.log(Level.SEVERE, "Error reading CSV file", e);
         }
+        // 데이터 저장 후 캐시 삭제
+        receiptService.clearReceiptCache(studentClub.getId());
         
         receiptService.checkAndUpdateVerificationStatus(studentClub.getId());
         return receipts;

@@ -348,6 +348,9 @@ public class BreakDownServiceTest {
         verify(receiptRepository).saveAll(any());
         verify(studentClubRepository).save(studentClub);
         verify(mapper, times(2)).toReceiptDto(any(Receipt.class));
+
+        verify(receiptService).clearReceiptCache(studentClub.getId());
+
         // 성능 개선된 checkAndUpdateVerificationStatus 호출 검증
         verify(receiptService).checkAndUpdateVerificationStatus(studentClub.getId(), 2L, 2L);
     }
@@ -413,6 +416,9 @@ public class BreakDownServiceTest {
         verify(restClient).get();
         verify(receiptRepository).saveAll(any());
         verify(studentClubRepository).save(studentClub);
+
+        verify(receiptService).clearReceiptCache(studentClub.getId());
+
         verify(receiptService).checkAndUpdateVerificationStatus(studentClub.getId(), 1L, 1L);
     }
 

@@ -12,11 +12,14 @@ import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_USER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import java.util.Date;
 
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -70,6 +73,12 @@ public class ReceiptServiceTest {
 
     @Mock
     private ReceiptMapper receiptMapper;
+
+    @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache cache;
     @InjectMocks
     private ReceiptService receiptService;
 
@@ -145,9 +154,13 @@ public class ReceiptServiceTest {
             .content(receipt.getContent())
             .deposit(receipt.getDeposit())
             .build();
+
+        Long clubId = studentClub.getId();
+
         when(userRepository.findByUserId(receiptCreateDto.getUserId())).thenReturn(Optional.of(user));
         when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
         when(receiptMapper.toReceiptEntity(receiptCreateDto)).thenReturn(receipt);
+        when(cacheManager.getCache("receiptList:" + clubId)).thenReturn(cache);
         when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
 
         //When
@@ -159,6 +172,8 @@ public class ReceiptServiceTest {
         assertEquals(1000, result.getDeposit());
         verify(receiptRepository).save(receipt);
         verify(studentClubRepository).save(studentClub);
+        verify(cacheManager).getCache("receiptList:" + clubId);
+        verify(cache).clear();
     }
 
     @Test
@@ -492,10 +507,21 @@ public class ReceiptServiceTest {
             .deposit(receipt.getDeposit())
             .build();
 
+        Long clubId = studentClub.getId();
+
+        ReceiptRepository.ReceiptCount mockCount = mock(ReceiptRepository.ReceiptCount.class);
+        when(mockCount.getTotal()).thenReturn(10L);    // 전체 영수증 10개 가정
+        when(mockCount.getVerified()).thenReturn(5L); // 검증된 영수증 5개 가정
+
         when(receiptRepository.findById(receiptId)).thenReturn(Optional.of(receipt));
         when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
         when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
         when(studentClubRepository.findById(receipt.getStudentClub().getId())).thenReturn(Optional.of(studentClub));
+
+        when(receiptRepository.countTotalAndVerified(studentClub)).thenReturn(mockCount);
+
+        when(cacheManager.getCache("receiptList:" + clubId)).thenReturn(cache);
+
         //When
         ReceiptDto result = receiptService.deleteReceipt(receiptId, currentUser);
         //Then
@@ -506,6 +532,10 @@ public class ReceiptServiceTest {
         verify(receiptRepository).delete(receipt);
         verify(studentClubRepository).save(studentClub);
         verify(receiptMapper).toReceiptDto(receipt);
+
+        verify(receiptRepository).countTotalAndVerified(studentClub); // 뱃지 업데이트 로직 호출 확인
+        verify(cacheManager).getCache("receiptList:" + clubId);
+        verify(cache).clear();
     }
 
     @Test
@@ -553,9 +583,14 @@ public class ReceiptServiceTest {
             .deposit(receipt.getDeposit())
             .build();
 
+        Long clubId = studentClub.getId();
+
         when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
         when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
         when(receiptMapper.toReceiptDto(receipt)).thenReturn(updateDto);
+
+        when(cacheManager.getCache("receiptList:" + clubId)).thenReturn(cache);
+
         //When
         ReceiptDto result = receiptService.updateReceipt(updateDto, currentUser);
         //Then
@@ -565,6 +600,9 @@ public class ReceiptServiceTest {
         verify(receiptRepository).findById(existingId);
         verify(studentClubRepository).save(studentClub);
         verify(receiptRepository).save(receipt);
+
+        verify(cacheManager).getCache("receiptList:" + clubId);
+        verify(cache).clear();
     }
     @Test
     @DisplayName("특정 영수증 금액 수정 성공")
@@ -578,9 +616,14 @@ public class ReceiptServiceTest {
             .deposit(4500)
             .build();
 
+        Long clubId = studentClub.getId();
+
         when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
         when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
         when(receiptMapper.toReceiptDto(receipt)).thenReturn(updateDto);
+
+        when(cacheManager.getCache("receiptList:" + clubId)).thenReturn(cache);
+
         //When
         ReceiptDto result = receiptService.updateReceipt(updateDto, currentUser);
         //Then
@@ -590,6 +633,9 @@ public class ReceiptServiceTest {
         verify(receiptRepository).findById(existingId);
         verify(studentClubRepository).save(studentClub);
         verify(receiptRepository).save(receipt);
+
+        verify(cacheManager).getCache("receiptList:" + clubId);
+        verify(cache).clear();
     }
 
     @Test

@@ -14,17 +14,34 @@ services:
     networks:
       - app_network
 
+  redis:
+    image: redis:alpine
+    container_name: ${APP_NAME}${ENV_SUFFIX}-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+    networks:
+      - app_network
+
   app:
     image: ${DOCKER_USERNAME}/${APP_NAME}:${IMAGE_TAG}
     container_name: ${APP_NAME}${ENV_SUFFIX}-app
     depends_on:
       db:
         condition: service_started
+      redis:
+        condition: service_started
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILE}
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
+      # Redis 설정
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     ports:
       - "8080:8080"
     healthcheck:
@@ -78,23 +95,50 @@ services:
     networks:
       - app_network
 
-  promtail:
-    image: grafana/promtail:latest
-    profiles: ["monitoring"]
-    container_name: ${APP_NAME}${ENV_SUFFIX}-promtail
+  alloy:
+    image: grafana/alloy:latest
+    profiles: [ "monitoring" ]
+    container_name: ${APP_NAME}${ENV_SUFFIX}-alloy
+    ports:
+      - "12345:12345"
     volumes:
-      - ./promtail-config.yml:/etc/promtail/config.yml
-      # app이 공유한 호스트의 ./app-logs 폴더를 Promtail 컨테이너의 /var/log/app 경로로 연결
-      - ./app-logs:/var/log/app
-      - promtail-data:/var/lib/promtail
+      - ./config.alloy:/etc/alloy/config.alloy # 신규 설정 파일
+      - ./app-logs:/var/log/app               # 로그 폴더 공유
+      - alloy-data:/var/lib/alloy             # 위치 정보 저장용
     env_file: .env
-    command: -config.file=/etc/promtail/config.yml
+    # run 명령어와 UI 접속 허용 설정
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy /etc/alloy/config.alloy
+    deploy:
+      resources:
+        limits:
+          memory: 100M
     restart: unless-stopped
     networks:
       - app_network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: ${APP_NAME}${ENV_SUFFIX}-cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg
+    privileged: true
+    restart: unless-stopped
+    networks:
+      - app_network
+    profiles: [ "monitoring" ]
+    deploy:
+      resources:
+        limits:
+          memory: 80M
 
 networks:
   app_network:
     driver: bridge
 volumes:
-  promtail-data:
+  alloy-data:

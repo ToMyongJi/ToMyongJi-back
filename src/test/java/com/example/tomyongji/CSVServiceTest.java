@@ -16,6 +16,7 @@ import com.example.tomyongji.receipt.entity.Receipt;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.ReceiptRepository;
 import com.example.tomyongji.receipt.service.CSVService;
+import com.example.tomyongji.receipt.service.ReceiptService;
 import com.example.tomyongji.validation.CustomException;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -50,6 +51,8 @@ public class CSVServiceTest {
 
     @Mock
     private HttpServletResponse response;
+    @Mock
+    private ReceiptService receiptService;
 
     @InjectMocks
     private CSVService csvService;
@@ -148,7 +151,6 @@ public class CSVServiceTest {
 
         // When
         List<Receipt> result = csvService.loadDataFromCSV(csvFile, userIndexId, currentUser);
-
         // Then
         assertNotNull(result);
         assertEquals(3, result.size());
@@ -166,6 +168,7 @@ public class CSVServiceTest {
 
         verify(receiptRepository, times(3)).save(any(Receipt.class));
         verify(receiptRepository, times(3)).existsByDateAndContent(any(Date.class), anyString());
+        verify(receiptService).clearReceiptCache(studentClub.getId());
     }
 
     @Test

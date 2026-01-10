@@ -68,6 +68,7 @@ prometheus.scrape "spring_boot" {
         "env"         = sys.env("SPRING_PROFILE"),
     }]
     metrics_path = "/actuator/prometheus"
+    scrape_interval = "15s"
     forward_to   = [prometheus.remote_write.grafanacloud.receiver]
 }
 
@@ -78,6 +79,7 @@ prometheus.exporter.mysql "tomyongji_db" {
 
 prometheus.scrape "mysql" {
     targets    = prometheus.exporter.mysql.tomyongji_db.targets
+    scrape_interval = "15s"
     forward_to = [prometheus.remote_write.grafanacloud.receiver]
 }
 
@@ -88,6 +90,7 @@ prometheus.exporter.redis "tomyongji_redis" {
 
 prometheus.scrape "redis" {
     targets    = prometheus.exporter.redis.tomyongji_redis.targets
+    scrape_interval = "15s"
     forward_to = [prometheus.remote_write.grafanacloud.receiver]
 }
 

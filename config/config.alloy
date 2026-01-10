@@ -54,12 +54,6 @@ loki.write "grafana_cloud_loki" {
     }
 }
 
-// Prometheus 스크랩 타겟 설정 (static_configs 역할)
-argument "env" {
-    optional = true
-    default = sys.env("SPRING_PROFILE")
-}
-
 // A. Spring Boot 수집
 prometheus.scrape "spring_boot" {
     targets = [{
@@ -101,6 +95,7 @@ prometheus.scrape "cadvisor" {
         "job"         = "cadvisor",
         "env"         = sys.env("SPRING_PROFILE"),
     }]
+    scrape_interval = "15s"
     forward_to = [prometheus.remote_write.grafanacloud.receiver]
 }
 

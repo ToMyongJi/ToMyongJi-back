@@ -43,7 +43,7 @@ loki.process "tomyongji_app_pipeline" {
     forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
 
-// 4. Loki 전송 설정 (clients 역할)
+// 4-A. Loki 전송 설정 (clients 역할)
 loki.write "grafana_cloud_loki" {
     endpoint {
         url = "https://logs-prod-030.grafana.net/loki/api/v1/push"
@@ -52,4 +52,66 @@ loki.write "grafana_cloud_loki" {
             password = sys.env("PROMTAIL_API_KEY") // .env 파일의 값을 가져옴
         }
     }
+}
+
+// Prometheus 스크랩 타겟 설정 (static_configs 역할)
+argument "env" {
+    optional = true
+    default = sys.env("SPRING_PROFILE")
+}
+
+// A. Spring Boot 수집
+prometheus.scrape "spring_boot" {
+    targets = [{
+        "__address__" = "tomyongji-" + sys.env("SPRING_PROFILE") + "-app:8080",
+        "job"         = "tomyongji-app",
+        "env"         = sys.env("SPRING_PROFILE"),
+    }]
+    metrics_path = "/actuator/prometheus"
+    scrape_interval = "15s"
+    forward_to   = [prometheus.remote_write.grafanacloud.receiver]
+}
+
+// B. MySQL 수집
+prometheus.exporter.mysql "tomyongji_db" {
+    data_source_name = "root:" + sys.env("DB_PASSWORD") + "@(tomyongji-" + sys.env("SPRING_PROFILE") + "-db:3306)/"
+}
+
+prometheus.scrape "mysql" {
+    targets    = prometheus.exporter.mysql.tomyongji_db.targets
+    scrape_interval = "15s"
+    forward_to = [prometheus.remote_write.grafanacloud.receiver]
+}
+
+// C. Redis 수집
+prometheus.exporter.redis "tomyongji_redis" {
+    redis_addr = "tomyongji-" + sys.env("SPRING_PROFILE") + "-redis:6379"
+}
+
+prometheus.scrape "redis" {
+    targets    = prometheus.exporter.redis.tomyongji_redis.targets
+    scrape_interval = "15s"
+    forward_to = [prometheus.remote_write.grafanacloud.receiver]
+}
+
+// D. 컨테이너 자원 수집 (cAdvisor)
+prometheus.scrape "cadvisor" {
+    targets = [{
+        "__address__" = "cadvisor:8080", // docker-compose에 등록할 서비스 이름
+        "job"         = "cadvisor",
+        "env"         = sys.env("SPRING_PROFILE"),
+    }]
+    forward_to = [prometheus.remote_write.grafanacloud.receiver]
+}
+
+// 4-B. Prometheus 매트릭 전송
+prometheus.remote_write "grafanacloud" {
+  endpoint {
+    url = "https://prometheus-prod-49-prod-ap-northeast-0.grafana.net/api/prom/push"
+
+    basic_auth {
+      username = "2286757"
+      password = sys.env("PROMTAIL_API_KEY")
+    }
+  }
 }

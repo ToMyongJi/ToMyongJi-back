@@ -19,7 +19,6 @@ services:
     container_name: ${APP_NAME}${ENV_SUFFIX}-redis
     restart: unless-stopped
     command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru
-    # 컨테이너 자체 메모리 제한 (t2.micro 보호)
     deploy:
       resources:
         limits:
@@ -112,10 +111,31 @@ services:
     deploy:
       resources:
         limits:
-          memory: 100M # t2.micro를 위해 가볍게 제한
+          memory: 100M
     restart: unless-stopped
     networks:
       - app_network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: ${APP_NAME}${ENV_SUFFIX}-cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg
+    privileged: true
+    restart: unless-stopped
+    networks:
+      - app_network
+    profiles: [ "monitoring" ]
+    deploy:
+      resources:
+        limits:
+          memory: 80M
 
 networks:
   app_network:

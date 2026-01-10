@@ -116,6 +116,7 @@ jobs:
           host: ${{ steps.vars.outputs.HOST }}
           username: ubuntu
           key: ${{ steps.vars.outputs.KEY }}
+          command_timeout: 30m
           script: |
             # 서버에 디렉터리 생성
             mkdir -p ${{ steps.vars.outputs.APP_DIR }}/certbot/www

@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.auth;
 
 import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.admin.entity.Member;
@@ -17,9 +17,7 @@ import com.example.tomyongji.receipt.entity.College;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.CollegeRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
-import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +31,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;

@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.auth;
 
 import com.example.tomyongji.admin.entity.Member;
 import com.example.tomyongji.admin.entity.President;
@@ -9,21 +9,18 @@ import com.example.tomyongji.auth.dto.LoginRequestDto;
 import com.example.tomyongji.auth.dto.UserRequestDto;
 import com.example.tomyongji.auth.entity.ClubVerification;
 import com.example.tomyongji.auth.entity.EmailVerification;
-import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.jwt.JwtProvider;
 import com.example.tomyongji.auth.jwt.JwtToken;
 import com.example.tomyongji.auth.mapper.UserMapper;
 import com.example.tomyongji.auth.repository.ClubVerificationRepository;
 import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
-import com.example.tomyongji.auth.service.UserService;
 import com.example.tomyongji.auth.service.UserServiceImpl;
 import com.example.tomyongji.receipt.entity.College;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.CollegeRepository;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.validation.CustomException;
-import org.hibernate.mapping.Any;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

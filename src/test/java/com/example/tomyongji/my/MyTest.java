@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.my;
 
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
 import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.example.tomyongji.admin.dto.ApiResponse;
 import com.example.tomyongji.admin.dto.MemberDto;
-import com.example.tomyongji.admin.dto.PresidentDto;
 import com.example.tomyongji.admin.entity.Member;
 import com.example.tomyongji.admin.entity.President;
 import com.example.tomyongji.admin.repository.MemberRepository;
@@ -28,7 +27,7 @@ import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.validation.CustomException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,7 +50,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

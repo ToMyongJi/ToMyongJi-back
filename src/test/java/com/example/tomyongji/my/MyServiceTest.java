@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.my;
 
 import static com.example.tomyongji.validation.ErrorMsg.EXISTING_USER;
 import static com.example.tomyongji.validation.ErrorMsg.MISMATCHED_USER;
@@ -21,12 +21,10 @@ import static org.mockito.Mockito.when;
 import com.example.tomyongji.admin.dto.MemberDto;
 import com.example.tomyongji.admin.entity.Member;
 import com.example.tomyongji.admin.repository.MemberRepository;
-import com.example.tomyongji.auth.entity.ClubVerification;
 import com.example.tomyongji.auth.entity.User;
 import com.example.tomyongji.auth.repository.ClubVerificationRepository;
 import com.example.tomyongji.auth.repository.EmailVerificationRepository;
 import com.example.tomyongji.auth.repository.UserRepository;
-import com.example.tomyongji.auth.service.CustomUserDetails;
 import com.example.tomyongji.my.dto.MyDto;
 import com.example.tomyongji.my.dto.SaveMemberDto;
 import com.example.tomyongji.my.mapper.MyMapper;
@@ -34,14 +32,12 @@ import com.example.tomyongji.my.service.MyService;
 import com.example.tomyongji.receipt.entity.StudentClub;
 import com.example.tomyongji.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.validation.CustomException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
+
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.AfterEach;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

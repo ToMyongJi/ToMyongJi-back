@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.status;
 
 import com.example.tomyongji.status.dto.MaintenanceUpdateRequestDto;
 import com.example.tomyongji.status.dto.StatusResponseDto;

@@ -33,7 +33,7 @@ public class OCRController {
         OCRResultDto result = ocrService.processImage(file);
         ocrService.uploadOcrReceipt(result, userId, currentUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                new ApiResponse<>(201, "영수증 업로드 및 OCR 스캔에 성공했습니다.", result)
+                ApiResponse.onCreated(result)
         );
 
     }

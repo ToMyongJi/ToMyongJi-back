@@ -129,7 +129,7 @@ public class UserTest {
         );
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isNotNegative();
     }
 

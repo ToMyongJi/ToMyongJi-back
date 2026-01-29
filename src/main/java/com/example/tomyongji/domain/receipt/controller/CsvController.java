@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -27,14 +28,19 @@ public class CsvController {
     private final CSVService csvService;
 
     @PostMapping("/upload/{userIndexId}")
-    public ApiResponse readCsv(@RequestPart("file") MultipartFile file, @PathVariable long userIndexId, @AuthenticationPrincipal
+    public ResponseEntity<ApiResponse<List<Receipt>>> readCsv(@RequestPart("file") MultipartFile file, @PathVariable long userIndexId, @AuthenticationPrincipal
         UserDetails currentUser) {
         List<Receipt> receipts = csvService.loadDataFromCSV(file,userIndexId, currentUser);
-        return new ApiResponse(HttpStatus.OK.value(), "CSV file loaded successfully.", receipts);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+            ApiResponse.onSuccess(receipts)
+        );
     }
 
     @PostMapping("/export")
-    public void exportCsv(@RequestBody CsvExportDto csvExportDto, HttpServletResponse response, @AuthenticationPrincipal UserDetails currentUser) {
+    public ResponseEntity<ApiResponse<Void>> exportCsv(@RequestBody CsvExportDto csvExportDto, HttpServletResponse response, @AuthenticationPrincipal UserDetails currentUser) {
         csvService.writeCsv(response,csvExportDto, currentUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+            ApiResponse.onSuccess(null)
+        );
     }
 }

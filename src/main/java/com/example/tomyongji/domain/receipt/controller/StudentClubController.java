@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -25,29 +26,29 @@ public class StudentClubController {
 
     @Operation(summary = "모든 학생회 조회 api", description = "모든 학생회를 조회할때 사용합니다.")
     @GetMapping("api/club")
-    public ApiResponse<List<ClubDto>> getAllStudentClub() {
+    public ResponseEntity<ApiResponse<List<ClubDto>>> getAllStudentClub() {
         List<ClubDto> clubs = studentClubService.getAllStudentClub();
-        return new ApiResponse<>(200, "모든 학생회를 성공적으로 조회했습니다.", clubs); // 200 OK
+        return ResponseEntity.ok(ApiResponse.onSuccess(clubs));
     }
 
     @Operation(summary = "대학에 맞는 학생회 조회 api", description = "특정 대학에 속한 학생회를 조회합니다.")
     @GetMapping("api/club/{collegeId}")
-    public ApiResponse<List<ClubDto>> getStudentClubById(
+    public ResponseEntity<ApiResponse<List<ClubDto>>> getStudentClubById(
         @PathVariable("collegeId") Long collegeId) {
         List<ClubDto> clubs = studentClubService.getStudentClubById(collegeId);
-        return new ApiResponse<>(200, "해당 단과대의 학생회를 성공적으로 조회했습니다.", clubs); // 200 OK
+        return ResponseEntity.ok(ApiResponse.onSuccess(clubs));
     }
 
     @Operation(summary = "학생회 이월/이전 api", description = "학생회 정보를 이월 합니다.")
     @PostMapping("api/club/transfer")
-    public ApiResponse<TransferDto> transferStudentClub(
-            @RequestBody(required = false) PresidentDto request,
-            @AuthenticationPrincipal UserDetails currentUser
+    public ResponseEntity<ApiResponse<TransferDto>> transferStudentClub(
+        @RequestBody(required = false) PresidentDto request,
+        @AuthenticationPrincipal UserDetails currentUser
     ) {
         TransferDto result = studentClubService.transferStudentClub(
-                request,
-                currentUser
+            request,
+            currentUser
         );
-        return new ApiResponse<>(200, "학생회 이월이 성공적으로 완료되었습니다.", result);
+        return ResponseEntity.ok(ApiResponse.onSuccess(result));
     }
 }

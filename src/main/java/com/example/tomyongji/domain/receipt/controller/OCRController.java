@@ -6,6 +6,7 @@ import com.example.tomyongji.domain.receipt.service.OCRService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,11 +28,13 @@ public class OCRController {
     @Operation(summary = "영수증 업로드 api", description = "유저 아이디를 통해 특정 학생회의 영수증을 ocr 스캔을 통해 업로드합니다.")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/upload/{userId}")
-    public ApiResponse<OCRResultDto> uploadImageAndExtractText(@RequestPart("file") MultipartFile file, @PathVariable("userId") String userId, @AuthenticationPrincipal
+    public ResponseEntity<ApiResponse<OCRResultDto>> uploadImageAndExtractText(@RequestPart("file") MultipartFile file, @PathVariable("userId") String userId, @AuthenticationPrincipal
     UserDetails currentUser) {
         OCRResultDto result = ocrService.processImage(file);
         ocrService.uploadOcrReceipt(result, userId, currentUser);
-        return new ApiResponse<>(201, "영수증을 성공적으로 업로드했습니다.", result);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ApiResponse<>(201, "영수증 업로드 및 OCR 스캔에 성공했습니다.", result)
+        );
 
     }
 }

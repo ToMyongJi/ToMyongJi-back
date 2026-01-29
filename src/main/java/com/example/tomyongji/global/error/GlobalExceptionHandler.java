@@ -1,5 +1,6 @@
 package com.example.tomyongji.global.error;
 
+import com.example.tomyongji.global.common.response.ApiResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,41 +14,42 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 public class GlobalExceptionHandler {
 
     // 공통 응답 생성 메서드
-    private ResponseEntity<ErrorResponse> createErrorResponse(HttpStatus status, String message) {
+    private ResponseEntity<ApiResponse<Void>> createErrorResponse(HttpStatus status, String message) {
         return ResponseEntity
             .status(status)
-            .body(ErrorResponse.of(status.value(), message));
+            .body(ApiResponse.onFailure(status.value(), message));
     }
 
     // 400 Bad Request 시리즈
     @ExceptionHandler({IllegalArgumentException.class, MultipartException.class, RuntimeException.class})
-    public ResponseEntity<ErrorResponse> handleBadRequestExceptions(Exception ex) {
+    public ResponseEntity<ApiResponse<Void>> handleBadRequestExceptions(Exception ex) {
         return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     // 비즈니스 커스텀 예외
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleCustomException(CustomException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleCustomException(CustomException ex) {
+        // CustomException의 에러 코드가 정수형(int)이면 그대로 사용
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
-            .body(ErrorResponse.of(ex.getErrorCode(), ex.getMessage()));
+            .body(ApiResponse.onFailure(ex.getErrorCode(), ex.getMessage()));
     }
 
-    // DB 제약 조건 위반 (중복 데이터 등)
+    // DB 제약 조건 위반
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(DataIntegrityViolationException ex) {
         return createErrorResponse(HttpStatus.BAD_REQUEST, "중복된 데이터가 존재합니다.");
     }
 
     // 404 Not Found
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(NoResourceFoundException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(NoResourceFoundException ex) {
         return createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     // 500 Internal Server Error
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
+    public ResponseEntity<ApiResponse<Void>> handleAll(Exception ex) {
         return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     }
 }

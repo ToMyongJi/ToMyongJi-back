@@ -203,7 +203,7 @@ public class ReceiptTest {
         ApiResponse<ReceiptDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(201);
-        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 작성했습니다.");
+        assertThat(body.getMessage()).isEqualTo("영수증을 성공적으로 작성했습니다.");
     }
 
     @Test
@@ -226,7 +226,7 @@ public class ReceiptTest {
         ApiResponse<List<ReceiptDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("모든 영수증을 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("모든 영수증을 성공적으로 조회했습니다.");
     }
 
     @Test
@@ -257,7 +257,7 @@ public class ReceiptTest {
         ApiResponse<ReceiptByStudentClubDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("해당 학생회의 영수증들을 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("해당 학생회의 영수증들을 성공적으로 조회했습니다.");
     }
 
     @Test
@@ -286,7 +286,7 @@ public class ReceiptTest {
         ApiResponse<List<ReceiptDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("해당 학생회의 영수증들을 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("해당 학생회의 영수증들을 성공적으로 조회했습니다.");
     }
 
     @Test
@@ -321,7 +321,7 @@ public class ReceiptTest {
         ApiResponse<ReceiptDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("영수증을 성공적으로 조회했습니다.");
         assertThat(body.getData().getReceiptId()).isEqualTo(receiptId);
     }
 
@@ -360,7 +360,7 @@ public class ReceiptTest {
         ApiResponse<ReceiptDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 삭제했습니다.");
+        assertThat(body.getMessage()).isEqualTo("영수증을 성공적으로 삭제했습니다.");
         assertThat(body.getData().getReceiptId()).isEqualTo(receiptId);
     }
 
@@ -400,7 +400,7 @@ public class ReceiptTest {
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
         assertThat(body.getData().getContent()).isEqualTo(receiptUpdateDto.getContent());
-        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 수정했습니다.");
+        assertThat(body.getMessage()).isEqualTo("영수증을 성공적으로 수정했습니다.");
         assertThat(body.getData().getContent()).isEqualTo(receiptUpdateDto.getContent());
     }
 
@@ -424,7 +424,7 @@ public class ReceiptTest {
         ApiResponse<List<CollegesDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("모든 단과대를 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("모든 단과대를 성공적으로 조회했습니다.");
     }
 
     @Test
@@ -447,7 +447,7 @@ public class ReceiptTest {
         ApiResponse<List<ClubDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("모든 학생회를 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("모든 학생회를 성공적으로 조회했습니다.");
     }
 
     @Test
@@ -476,7 +476,7 @@ public class ReceiptTest {
         ApiResponse<List<ClubDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("해당 단과대의 학생회를 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("해당 단과대의 학생회를 성공적으로 조회했습니다.");
     }
 
     @Test
@@ -539,7 +539,7 @@ public class ReceiptTest {
         ApiResponse<List<ReceiptDto>> body = response.getBody();
         assertNotNull(body, "응답 Body는 null이 아니어야 합니다.");
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("영수증을 성공적으로 조회했습니다.");
 
         List<ReceiptDto> resultList = body.getData();
         assertNotNull(resultList, "응답 데이터(리스트)는 null이 아니어야 합니다.");

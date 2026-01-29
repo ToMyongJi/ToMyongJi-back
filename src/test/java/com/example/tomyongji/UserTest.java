@@ -154,7 +154,7 @@ public class UserTest {
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo(false);
     }
     @DisplayName("유저 아이디 찾기 테스트")
@@ -192,7 +192,7 @@ public class UserTest {
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo("tomyongji");
     }
     @DisplayName("부원 소속 인증 테스트")
@@ -228,7 +228,7 @@ public class UserTest {
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo(true);
     }
     @DisplayName("회장 소속 인증 테스트")
@@ -266,7 +266,7 @@ public class UserTest {
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo(true);
     }
 
@@ -310,7 +310,7 @@ public class UserTest {
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isNotNull();
     }
     @DisplayName("이메일 전송")

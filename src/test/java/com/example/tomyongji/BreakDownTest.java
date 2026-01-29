@@ -214,6 +214,6 @@ public class BreakDownTest {
         ApiResponse<List<ReceiptDto>> responseBody = response.getBody();
         assertNotNull(responseBody);
         assertThat(responseBody.getStatusCode()).isEqualTo(200);
-        assertThat(responseBody.getStatusMessage()).isEqualTo("PDF 파싱을 성공적으로 완료했습니다.");
+        assertThat(responseBody.getMessage()).isEqualTo("PDF 파싱을 성공적으로 완료했습니다.");
     }
 }

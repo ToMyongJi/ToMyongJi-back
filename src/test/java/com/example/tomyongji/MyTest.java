@@ -212,7 +212,7 @@ public class MyTest {
         ApiResponse<MyDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("내 정보 조회에 성공했습니다.");
+        assertThat(body.getMessage()).isEqualTo("내 정보 조회에 성공했습니다.");
         assertThat(body.getData().getStudentNum()).isEqualTo("60211665");
         UserDetails currentUser = (UserDetails) new org.springframework.security.core.userdetails.User("jinh9380", "password123!", Collections.emptyList());
         CustomException exception = assertThrows(CustomException.class, () -> {
@@ -263,7 +263,7 @@ public class MyTest {
         ApiResponse<List<MemberDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("소속 부원 조회에 성공했습니다.");
+        assertThat(body.getMessage()).isEqualTo("소속 부원 조회에 성공했습니다.");
         //테스트를 위해 미리 넣어둔 부원이 0번을 차지하여 1번부터 확인
         assertThat(body.getData().get(1).getStudentNum()).isEqualTo("60000001");
         assertThat(body.getData().get(2).getStudentNum()).isEqualTo("60000002");
@@ -302,7 +302,7 @@ public class MyTest {
         ApiResponse<MemberDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(201);
-        assertThat(body.getStatusMessage()).isEqualTo("소속 부원 정보 저장에 성공했습니다.");
+        assertThat(body.getMessage()).isEqualTo("소속 부원 정보 저장에 성공했습니다.");
     }
 
     @Test
@@ -340,7 +340,7 @@ public class MyTest {
         ApiResponse<MemberDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("소속 부원 삭제에 성공했습니다.");
+        assertThat(body.getMessage()).isEqualTo("소속 부원 삭제에 성공했습니다.");
         assertThat(body.getData().getStudentNum()).isEqualTo("60000003");
     }
 }

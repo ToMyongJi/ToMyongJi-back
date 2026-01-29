@@ -106,7 +106,7 @@ public class AdminTest {
         );
         //then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData().getClubId()).isEqualTo(33L);
         assertThat(response.getBody().getData().getStudentNum()).isEqualTo("60222024");
     }
@@ -138,7 +138,7 @@ public class AdminTest {
 
         //then
         assertThat(response.getStatusCode().value()).isEqualTo(201);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData().getStudentNum()).isEqualTo(presidentDto.getStudentNum());
     }
 
@@ -173,7 +173,7 @@ public class AdminTest {
                 uriVariables
         );
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData().get(0).getStudentNum()).isEqualTo(member.getStudentNum());
     }
 
@@ -204,7 +204,7 @@ public class AdminTest {
                 new ParameterizedTypeReference<ApiResponse<MemberDto>>() {}
         );
         assertThat(response.getStatusCode().value()).isEqualTo(201);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData().getStudentNum()).isEqualTo(adminSaveMemberDto.getStudentNum());
     }
     @Test
@@ -237,7 +237,7 @@ public class AdminTest {
                 uriVariables
         );
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData().getStudentNum()).isEqualTo(member.getStudentNum());
     }
 }

@@ -70,7 +70,7 @@ public class StatusTest {
         ApiResponse<StatusResponseDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("점검상태 호출에 성공했습니다.");
+        assertThat(body.getMessage()).isEqualTo("점검상태 호출에 성공했습니다.");
     }
 
     @Test
@@ -102,7 +102,7 @@ public class StatusTest {
 
         // then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(Objects.requireNonNull(response.getBody()).getStatusMessage()).isEqualTo("점검상태 변경에 성공했습니다.");
+        assertThat(Objects.requireNonNull(response.getBody()).getMessage()).isEqualTo("점검상태 변경에 성공했습니다.");
     }
 
     private String getAdminToken() {

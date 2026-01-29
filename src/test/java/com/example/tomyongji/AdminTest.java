@@ -1,20 +1,17 @@
 package com.example.tomyongji;
 
-import com.example.tomyongji.admin.dto.ApiResponse;
-import com.example.tomyongji.admin.dto.MemberDto;
-import com.example.tomyongji.admin.dto.PresidentDto;
-import com.example.tomyongji.admin.entity.Member;
-import com.example.tomyongji.admin.entity.President;
-import com.example.tomyongji.admin.repository.MemberRepository;
-import com.example.tomyongji.admin.repository.PresidentRepository;
-import com.example.tomyongji.auth.dto.LoginRequestDto;
-import com.example.tomyongji.auth.jwt.JwtToken;
-import com.example.tomyongji.my.dto.AdminSaveMemberDto;
-import com.example.tomyongji.receipt.entity.StudentClub;
-import com.example.tomyongji.receipt.repository.StudentClubRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
+import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.domain.admin.dto.MemberDto;
+import com.example.tomyongji.domain.admin.dto.PresidentDto;
+import com.example.tomyongji.domain.admin.entity.Member;
+import com.example.tomyongji.domain.admin.entity.President;
+import com.example.tomyongji.domain.admin.repository.MemberRepository;
+import com.example.tomyongji.domain.admin.repository.PresidentRepository;
+import com.example.tomyongji.domain.auth.dto.LoginRequestDto;
+import com.example.tomyongji.domain.auth.jwt.JwtToken;
+import com.example.tomyongji.domain.my.dto.AdminSaveMemberDto;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
+import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,8 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 

@@ -11,4 +11,9 @@ public class ErrorResponse {
         this.statusCode = statusCode;
         this.message = message;
     }
+
+    // 정적 팩토리 메서드 추가
+    public static ErrorResponse of(int statusCode, String message) {
+        return new ErrorResponse(statusCode, message);
+    }
 }

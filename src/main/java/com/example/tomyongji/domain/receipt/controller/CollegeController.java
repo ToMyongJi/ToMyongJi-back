@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,9 +22,9 @@ public class CollegeController {
 
     @Operation(summary = "모든 대학 조회 api", description = "모든 대학을 조회할때 사용합니다.")
     @GetMapping("api/collegesAndClubs")
-    public ApiResponse<List<CollegesDto>> getAllCollegesAndClubs() {
+    public ResponseEntity<ApiResponse<List<CollegesDto>>> getAllCollegesAndClubs() {
         List<CollegesDto> colleges = collegeService.getAllCollegesAndClubs();
-        return new ApiResponse<>(200, "모든 단과대를 성공적으로 조회했습니다.", colleges);
+        return ResponseEntity.ok(ApiResponse.onSuccess(colleges));
     }
 
 }

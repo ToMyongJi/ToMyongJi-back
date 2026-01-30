@@ -2,10 +2,10 @@ package com.example.tomyongji;
 
 import java.io.IOException;
 
-import static com.example.tomyongji.validation.ErrorMsg.EMPTY_FILE;
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
-import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_BELONGING;
+import static com.example.tomyongji.global.error.ErrorMsg.EMPTY_FILE;
+import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
+import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_USER;
+import static com.example.tomyongji.global.error.ErrorMsg.NO_AUTHORIZATION_BELONGING;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -13,18 +13,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-import com.example.tomyongji.auth.entity.User;
-import com.example.tomyongji.auth.repository.UserRepository;
-import com.example.tomyongji.receipt.dto.BreakDownDto;
-import com.example.tomyongji.receipt.dto.ReceiptDto;
-import com.example.tomyongji.receipt.entity.Receipt;
-import com.example.tomyongji.receipt.entity.StudentClub;
-import com.example.tomyongji.receipt.mapper.ReceiptMapper;
-import com.example.tomyongji.receipt.repository.ReceiptRepository;
-import com.example.tomyongji.receipt.repository.StudentClubRepository;
-import com.example.tomyongji.receipt.service.BreakDownService;
-import com.example.tomyongji.receipt.service.ReceiptService;
-import com.example.tomyongji.validation.CustomException;
+import com.example.tomyongji.domain.auth.entity.User;
+import com.example.tomyongji.domain.auth.repository.UserRepository;
+import com.example.tomyongji.domain.receipt.dto.BreakDownDto;
+import com.example.tomyongji.domain.receipt.dto.ReceiptDto;
+import com.example.tomyongji.domain.receipt.entity.Receipt;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
+import com.example.tomyongji.domain.receipt.mapper.ReceiptMapper;
+import com.example.tomyongji.domain.receipt.repository.ReceiptRepository;
+import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
+import com.example.tomyongji.domain.receipt.service.BreakDownService;
+import com.example.tomyongji.domain.receipt.service.ReceiptService;
+import com.example.tomyongji.global.error.CustomException;
 
 import java.text.ParseException;
 import java.util.List;

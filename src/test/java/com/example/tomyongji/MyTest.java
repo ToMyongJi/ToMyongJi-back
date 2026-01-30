@@ -1,34 +1,32 @@
 package com.example.tomyongji;
 
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
+import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
+import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_USER;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.example.tomyongji.admin.dto.ApiResponse;
-import com.example.tomyongji.admin.dto.MemberDto;
-import com.example.tomyongji.admin.dto.PresidentDto;
-import com.example.tomyongji.admin.entity.Member;
-import com.example.tomyongji.admin.entity.President;
-import com.example.tomyongji.admin.repository.MemberRepository;
-import com.example.tomyongji.admin.repository.PresidentRepository;
-import com.example.tomyongji.auth.dto.LoginRequestDto;
-import com.example.tomyongji.auth.entity.ClubVerification;
-import com.example.tomyongji.auth.entity.EmailVerification;
-import com.example.tomyongji.auth.entity.User;
-import com.example.tomyongji.auth.jwt.JwtToken;
-import com.example.tomyongji.auth.repository.ClubVerificationRepository;
-import com.example.tomyongji.auth.repository.EmailVerificationRepository;
-import com.example.tomyongji.auth.repository.UserRepository;
-import com.example.tomyongji.my.dto.MyDto;
-import com.example.tomyongji.my.dto.SaveMemberDto;
-import com.example.tomyongji.my.service.MyService;
-import com.example.tomyongji.receipt.entity.StudentClub;
-import com.example.tomyongji.receipt.repository.StudentClubRepository;
-import com.example.tomyongji.validation.CustomException;
+import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.domain.admin.dto.MemberDto;
+import com.example.tomyongji.domain.admin.entity.Member;
+import com.example.tomyongji.domain.admin.entity.President;
+import com.example.tomyongji.domain.admin.repository.MemberRepository;
+import com.example.tomyongji.domain.admin.repository.PresidentRepository;
+import com.example.tomyongji.domain.auth.dto.LoginRequestDto;
+import com.example.tomyongji.domain.auth.entity.ClubVerification;
+import com.example.tomyongji.domain.auth.entity.EmailVerification;
+import com.example.tomyongji.domain.auth.entity.User;
+import com.example.tomyongji.domain.auth.jwt.JwtToken;
+import com.example.tomyongji.domain.auth.repository.ClubVerificationRepository;
+import com.example.tomyongji.domain.auth.repository.EmailVerificationRepository;
+import com.example.tomyongji.domain.auth.repository.UserRepository;
+import com.example.tomyongji.domain.my.dto.MyDto;
+import com.example.tomyongji.domain.my.dto.SaveMemberDto;
+import com.example.tomyongji.domain.my.service.MyService;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
+import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
+import com.example.tomyongji.global.error.CustomException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,7 +49,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -215,7 +212,7 @@ public class MyTest {
         ApiResponse<MyDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("내 정보 조회에 성공했습니다.");
+        assertThat(body.getMessage()).isEqualTo("내 정보 조회에 성공했습니다.");
         assertThat(body.getData().getStudentNum()).isEqualTo("60211665");
         UserDetails currentUser = (UserDetails) new org.springframework.security.core.userdetails.User("jinh9380", "password123!", Collections.emptyList());
         CustomException exception = assertThrows(CustomException.class, () -> {
@@ -266,7 +263,7 @@ public class MyTest {
         ApiResponse<List<MemberDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("소속 부원 조회에 성공했습니다.");
+        assertThat(body.getMessage()).isEqualTo("소속 부원 조회에 성공했습니다.");
         //테스트를 위해 미리 넣어둔 부원이 0번을 차지하여 1번부터 확인
         assertThat(body.getData().get(1).getStudentNum()).isEqualTo("60000001");
         assertThat(body.getData().get(2).getStudentNum()).isEqualTo("60000002");
@@ -305,7 +302,7 @@ public class MyTest {
         ApiResponse<MemberDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(201);
-        assertThat(body.getStatusMessage()).isEqualTo("소속 부원 정보 저장에 성공했습니다.");
+        assertThat(body.getMessage()).isEqualTo("소속 부원 정보 저장에 성공했습니다.");
     }
 
     @Test
@@ -343,7 +340,7 @@ public class MyTest {
         ApiResponse<MemberDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("소속 부원 삭제에 성공했습니다.");
+        assertThat(body.getMessage()).isEqualTo("소속 부원 삭제에 성공했습니다.");
         assertThat(body.getData().getStudentNum()).isEqualTo("60000003");
     }
 }

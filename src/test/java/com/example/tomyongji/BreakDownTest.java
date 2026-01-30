@@ -1,26 +1,25 @@
 package com.example.tomyongji;
 
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
+import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.example.tomyongji.admin.dto.ApiResponse;
-import com.example.tomyongji.admin.entity.President;
-import com.example.tomyongji.admin.repository.PresidentRepository;
-import com.example.tomyongji.auth.dto.LoginRequestDto;
-import com.example.tomyongji.auth.entity.ClubVerification;
-import com.example.tomyongji.auth.entity.EmailVerification;
-import com.example.tomyongji.auth.entity.User;
-import com.example.tomyongji.auth.jwt.JwtToken;
-import com.example.tomyongji.auth.repository.ClubVerificationRepository;
-import com.example.tomyongji.auth.repository.EmailVerificationRepository;
-import com.example.tomyongji.auth.repository.UserRepository;
-import com.example.tomyongji.receipt.dto.ReceiptDto;
-import com.example.tomyongji.receipt.entity.StudentClub;
-import com.example.tomyongji.receipt.repository.ReceiptRepository;
-import com.example.tomyongji.receipt.repository.StudentClubRepository;
-import com.example.tomyongji.validation.CustomException;
+import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.domain.admin.entity.President;
+import com.example.tomyongji.domain.admin.repository.PresidentRepository;
+import com.example.tomyongji.domain.auth.dto.LoginRequestDto;
+import com.example.tomyongji.domain.auth.entity.ClubVerification;
+import com.example.tomyongji.domain.auth.entity.EmailVerification;
+import com.example.tomyongji.domain.auth.entity.User;
+import com.example.tomyongji.domain.auth.jwt.JwtToken;
+import com.example.tomyongji.domain.auth.repository.ClubVerificationRepository;
+import com.example.tomyongji.domain.auth.repository.EmailVerificationRepository;
+import com.example.tomyongji.domain.auth.repository.UserRepository;
+import com.example.tomyongji.domain.receipt.dto.ReceiptDto;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
+import com.example.tomyongji.domain.receipt.repository.ReceiptRepository;
+import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
+import com.example.tomyongji.global.error.CustomException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -215,6 +214,6 @@ public class BreakDownTest {
         ApiResponse<List<ReceiptDto>> responseBody = response.getBody();
         assertNotNull(responseBody);
         assertThat(responseBody.getStatusCode()).isEqualTo(200);
-        assertThat(responseBody.getStatusMessage()).isEqualTo("PDF 파싱을 성공적으로 완료했습니다.");
+        assertThat(responseBody.getMessage()).isEqualTo("PDF 파싱을 성공적으로 완료했습니다.");
     }
 }

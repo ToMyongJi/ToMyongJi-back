@@ -5,24 +5,35 @@ import com.example.tomyongji.qna.dto.request.AnswerSaveDto;
 import com.example.tomyongji.qna.dto.request.QuestionSaveDto;
 import com.example.tomyongji.qna.entity.QnaAnswer;
 import com.example.tomyongji.qna.entity.QnaQuestion;
+import com.example.tomyongji.qna.mapper.QnaMapper;
+import com.example.tomyongji.qna.repository.QnaAnswerRepository;
 import com.example.tomyongji.qna.repository.QnaQuestionRepository;
 import com.example.tomyongji.qna.service.QnaService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.ArrayList;
+import java.util.Optional;
 
 import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_QNAQUESTION;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@Transactional
-class QnaServiceTest {
+@ExtendWith(MockitoExtension.class)
+public class QnaServiceTest {
 
-    @Autowired private QnaService qnaService;
-    @Autowired private QnaQuestionRepository questionRepository;
+    @InjectMocks
+    private QnaService qnaService;
+
+    @Mock private QnaQuestionRepository questionRepository;
+    @Mock private QnaAnswerRepository answerRepository;
+    @Mock private QnaMapper qnaMapper;
 
     @Test
     @DisplayName("질문글 등록 테스트")
@@ -33,35 +44,63 @@ class QnaServiceTest {
                 .content("테스트 내용")
                 .build();
 
+        QnaQuestion savedQuestion = QnaQuestion.builder()
+                .id(1L)
+                .title("테스트 제목")
+                .content("테스트 내용")
+                .answers(new ArrayList<>())
+                .build();
+
+        when(qnaMapper.toQuestionEntity(dto)).thenReturn(savedQuestion);
+        when(questionRepository.save(savedQuestion))
+                .thenReturn(savedQuestion);
+
         // When
-        QnaQuestion savedQ = qnaService.createQuestion(dto);
+        QnaQuestion result = qnaService.createQuestion(dto);
 
         // Then
-        QnaQuestion foundQ = questionRepository.findById(savedQ.getId()).orElseThrow();
-        assertEquals("테스트 제목", foundQ.getTitle());
-        assertEquals("테스트 내용", foundQ.getContent());
+        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getTitle()).isEqualTo("테스트 제목");
+        assertThat(result.getContent()).isEqualTo("테스트 내용");
+        verify(qnaMapper).toQuestionEntity(dto);
+        verify(questionRepository).save(savedQuestion);
     }
 
     @Test
     @DisplayName("답변글 등록 테스트 - 성공")
     void createAnswerTest() {
         // Given
-        QnaQuestion q = qnaService.createQuestion(QuestionSaveDto.builder()
+        QnaQuestion question = QnaQuestion.builder()
+                .id(1L)
                 .title("질문 제목")
                 .content("질문 내용")
-                .build());
+                .answers(new ArrayList<>())
+                .build();
 
-        AnswerSaveDto aDto = AnswerSaveDto.builder()
+        AnswerSaveDto dto = AnswerSaveDto.builder()
                 .content("답변입니다")
                 .build();
 
+        QnaAnswer savedAnswer = QnaAnswer.builder()
+                .id(10L)
+                .content("답변입니다")
+                .question(question)
+                .build();
+
+        when(questionRepository.findById(1L)).thenReturn(Optional.of(question));
+        when(qnaMapper.toAnswerEntity(dto)).thenReturn(savedAnswer);
+        when(answerRepository.save(savedAnswer)).thenReturn(savedAnswer);
+
         // When
-        QnaAnswer savedA = qnaService.createAnswer(q.getId(), aDto);
+        QnaAnswer result = qnaService.createAnswer(1L, dto);
 
         // Then
-        assertNotNull(savedA.getId());
-        assertEquals("답변입니다", savedA.getContent());
-        assertEquals(q.getId(), savedA.getQuestion().getId());
+        assertThat(result.getId()).isEqualTo(10L);
+        assertThat(result.getContent()).isEqualTo("답변입니다");
+        assertThat(result.getQuestion().getId()).isEqualTo(1L);
+        verify(questionRepository).findById(1L);
+        verify(qnaMapper).toAnswerEntity(dto);
+        verify(answerRepository).save(savedAnswer);
     }
 
     @Test
@@ -69,16 +108,22 @@ class QnaServiceTest {
     void createAnswerFailTest() {
         // Given
         Long invalidQuestionId = -1L;
-        AnswerSaveDto aDto = AnswerSaveDto.builder()
+
+        AnswerSaveDto dto = AnswerSaveDto.builder()
                 .content("유령 질문에 다는 답변")
                 .build();
 
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class, () -> {
-            qnaService.createAnswer(invalidQuestionId, aDto);
-        }, "존재하지 않는 질문에 답변을 달면 CustomException이 발생해야 합니다.");
+        when(questionRepository.findById(invalidQuestionId))
+                .thenReturn(Optional.empty());
 
-        assertEquals(404, exception.getErrorCode());
-        assertEquals(NOT_FOUND_QNAQUESTION, exception.getMessage());
+        // When & Then
+        CustomException exception = assertThrows(CustomException.class, () ->
+                qnaService.createAnswer(invalidQuestionId, dto)
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(404);
+        assertThat(exception.getMessage()).isEqualTo(NOT_FOUND_QNAQUESTION);
+        verify(questionRepository).findById(invalidQuestionId);
+        verify(qnaMapper, never()).toAnswerEntity(any());
     }
 }

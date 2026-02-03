@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.receipt;
 
 import static com.example.tomyongji.global.error.ErrorMsg.DUPLICATED_FLOW;
 import static com.example.tomyongji.global.error.ErrorMsg.EMPTY_CONTENT;

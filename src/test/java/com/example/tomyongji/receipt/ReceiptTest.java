@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.receipt;
 
 import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
 import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_USER;
@@ -29,6 +29,7 @@ import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.global.error.CustomException;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

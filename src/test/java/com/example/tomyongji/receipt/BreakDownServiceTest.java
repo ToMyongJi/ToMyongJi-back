@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.receipt;
 
 import java.io.IOException;
 

@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.receipt;
 
 import static com.example.tomyongji.global.error.ErrorMsg.NO_AUTHORIZATION_BELONGING;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;

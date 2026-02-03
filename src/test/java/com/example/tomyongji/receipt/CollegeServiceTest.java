@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.receipt;
 
 import com.example.tomyongji.domain.receipt.dto.ClubDto;
 import com.example.tomyongji.domain.receipt.dto.CollegeDto;

@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.status;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

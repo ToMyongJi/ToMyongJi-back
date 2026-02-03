@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.admin;
 
 import com.example.tomyongji.domain.admin.dto.MemberDto;
 import com.example.tomyongji.domain.admin.dto.PresidentDto;

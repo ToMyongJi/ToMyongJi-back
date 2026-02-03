@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.my;
 
 import static com.example.tomyongji.global.error.ErrorMsg.EXISTING_USER;
 import static com.example.tomyongji.global.error.ErrorMsg.MISMATCHED_USER;
@@ -32,10 +32,12 @@ import com.example.tomyongji.domain.my.service.MyService;
 import com.example.tomyongji.domain.receipt.entity.StudentClub;
 import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.global.error.CustomException;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

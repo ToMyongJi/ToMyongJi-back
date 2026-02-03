@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.my;
 
 import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
 import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_USER;
@@ -26,6 +26,7 @@ import com.example.tomyongji.domain.my.service.MyService;
 import com.example.tomyongji.domain.receipt.entity.StudentClub;
 import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.global.error.CustomException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.Collections;

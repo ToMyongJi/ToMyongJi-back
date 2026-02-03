@@ -1,4 +1,4 @@
-package com.example.tomyongji;
+package com.example.tomyongji.auth;
 
 import com.example.tomyongji.domain.admin.entity.Member;
 import com.example.tomyongji.domain.admin.entity.President;
@@ -43,7 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.example.tomyongji.global.error.ErrorMsg.*;
+import static com.example.tomyongji.validation.ErrorMsg.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -80,7 +80,7 @@ public class UserServiceTest {
     AuthenticationManagerBuilder authenticationManagerBuilder;
 
     UserRequestDto studentRequestDto;
-    User user;
+    com.example.tomyongji.auth.entity.User user;
     College college;
     StudentClub studentClub;
     @BeforeEach
@@ -106,7 +106,7 @@ public class UserServiceTest {
                 .studentClubId(studentClub.getId())
                 .studentNum("60222024")
                 .build();
-        user = User.builder()
+        user = com.example.tomyongji.auth.entity.User.builder()
                 .id(1L)
                 .userId("tomyongji2024")
                 .name("투명지")
@@ -159,9 +159,9 @@ public class UserServiceTest {
         when(clubVerificationRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn((List<ClubVerification>) list);
         when(userMapper.toUser(studentRequestDto,studentClub)).thenReturn(user);
         doAnswer(invocation -> {
-            User savedUser = invocation.getArgument(0);
+            com.example.tomyongji.auth.entity.User savedUser = invocation.getArgument(0);
             return savedUser;
-        }).when(userRepository).save(any(User.class));
+        }).when(userRepository).save(any(com.example.tomyongji.auth.entity.User.class));
 
         doAnswer(invocation -> {
             EmailVerification savedEmailVerification = invocation.getArgument(0);

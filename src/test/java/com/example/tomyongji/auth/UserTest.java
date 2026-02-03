@@ -1,23 +1,28 @@
 package com.example.tomyongji.auth;
 
-import com.example.tomyongji.admin.dto.ApiResponse;
-import com.example.tomyongji.admin.entity.Member;
-import com.example.tomyongji.admin.entity.President;
-import com.example.tomyongji.admin.repository.MemberRepository;
-import com.example.tomyongji.admin.repository.PresidentRepository;
-import com.example.tomyongji.auth.dto.*;
-import com.example.tomyongji.auth.entity.ClubVerification;
-import com.example.tomyongji.auth.entity.EmailVerification;
-import com.example.tomyongji.auth.entity.User;
-import com.example.tomyongji.auth.jwt.JwtToken;
-import com.example.tomyongji.auth.repository.ClubVerificationRepository;
-import com.example.tomyongji.auth.repository.EmailVerificationRepository;
-import com.example.tomyongji.auth.repository.UserRepository;
-import com.example.tomyongji.receipt.entity.College;
-import com.example.tomyongji.receipt.entity.StudentClub;
-import com.example.tomyongji.receipt.repository.CollegeRepository;
-import com.example.tomyongji.receipt.repository.StudentClubRepository;
+import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.domain.admin.entity.Member;
+import com.example.tomyongji.domain.admin.entity.President;
+import com.example.tomyongji.domain.admin.repository.MemberRepository;
+import com.example.tomyongji.domain.admin.repository.PresidentRepository;
+import com.example.tomyongji.domain.auth.dto.ClubVerifyRequestDto;
+import com.example.tomyongji.domain.auth.dto.EmailDto;
+import com.example.tomyongji.domain.auth.dto.FindIdRequestDto;
+import com.example.tomyongji.domain.auth.dto.LoginRequestDto;
+import com.example.tomyongji.domain.auth.dto.UserRequestDto;
+import com.example.tomyongji.domain.auth.entity.ClubVerification;
+import com.example.tomyongji.domain.auth.entity.EmailVerification;
+import com.example.tomyongji.domain.auth.entity.User;
+import com.example.tomyongji.domain.auth.jwt.JwtToken;
+import com.example.tomyongji.domain.auth.repository.ClubVerificationRepository;
+import com.example.tomyongji.domain.auth.repository.EmailVerificationRepository;
+import com.example.tomyongji.domain.auth.repository.UserRepository;
+import com.example.tomyongji.domain.receipt.entity.College;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
+import com.example.tomyongji.domain.receipt.repository.CollegeRepository;
+import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -125,7 +131,7 @@ public class UserTest {
         );
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isNotNegative();
     }
 
@@ -150,7 +156,7 @@ public class UserTest {
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo(false);
     }
     @DisplayName("유저 아이디 찾기 테스트")
@@ -188,7 +194,7 @@ public class UserTest {
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo("tomyongji");
     }
     @DisplayName("부원 소속 인증 테스트")
@@ -224,7 +230,7 @@ public class UserTest {
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo(true);
     }
     @DisplayName("회장 소속 인증 테스트")
@@ -262,7 +268,7 @@ public class UserTest {
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isEqualTo(true);
     }
 
@@ -306,7 +312,7 @@ public class UserTest {
         //Then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
         assertThat(response.getBody().getStatusCode()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData()).isNotNull();
     }
     @DisplayName("이메일 전송")

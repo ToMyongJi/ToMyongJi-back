@@ -1,34 +1,35 @@
 package com.example.tomyongji.receipt;
 
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
+import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
+import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_USER;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.example.tomyongji.admin.dto.ApiResponse;
-import com.example.tomyongji.admin.entity.President;
-import com.example.tomyongji.admin.repository.PresidentRepository;
-import com.example.tomyongji.auth.dto.LoginRequestDto;
-import com.example.tomyongji.auth.entity.ClubVerification;
-import com.example.tomyongji.auth.entity.EmailVerification;
-import com.example.tomyongji.auth.entity.User;
-import com.example.tomyongji.auth.jwt.JwtToken;
-import com.example.tomyongji.auth.repository.ClubVerificationRepository;
-import com.example.tomyongji.auth.repository.EmailVerificationRepository;
-import com.example.tomyongji.auth.repository.UserRepository;
-import com.example.tomyongji.receipt.dto.ClubDto;
-import com.example.tomyongji.receipt.dto.CollegesDto;
-import com.example.tomyongji.receipt.dto.ReceiptByStudentClubDto;
-import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
-import com.example.tomyongji.receipt.dto.ReceiptDto;
-import com.example.tomyongji.receipt.entity.Receipt;
-import com.example.tomyongji.receipt.entity.StudentClub;
-import com.example.tomyongji.receipt.repository.CollegeRepository;
-import com.example.tomyongji.receipt.repository.ReceiptRepository;
-import com.example.tomyongji.receipt.repository.StudentClubRepository;
-import com.example.tomyongji.validation.CustomException;
+import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.domain.admin.entity.President;
+import com.example.tomyongji.domain.admin.repository.PresidentRepository;
+import com.example.tomyongji.domain.auth.dto.LoginRequestDto;
+import com.example.tomyongji.domain.auth.entity.ClubVerification;
+import com.example.tomyongji.domain.auth.entity.EmailVerification;
+import com.example.tomyongji.domain.auth.entity.User;
+import com.example.tomyongji.domain.auth.jwt.JwtToken;
+import com.example.tomyongji.domain.auth.repository.ClubVerificationRepository;
+import com.example.tomyongji.domain.auth.repository.EmailVerificationRepository;
+import com.example.tomyongji.domain.auth.repository.UserRepository;
+import com.example.tomyongji.domain.receipt.dto.ClubDto;
+import com.example.tomyongji.domain.receipt.dto.CollegesDto;
+import com.example.tomyongji.domain.receipt.dto.ReceiptByStudentClubDto;
+import com.example.tomyongji.domain.receipt.dto.ReceiptCreateDto;
+import com.example.tomyongji.domain.receipt.dto.ReceiptDto;
+import com.example.tomyongji.domain.receipt.entity.Receipt;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
+import com.example.tomyongji.domain.receipt.repository.CollegeRepository;
+import com.example.tomyongji.domain.receipt.repository.ReceiptRepository;
+import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
+import com.example.tomyongji.global.error.CustomException;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -203,7 +204,7 @@ public class ReceiptTest {
         ApiResponse<ReceiptDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(201);
-        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 작성했습니다.");
+        assertThat(body.getMessage()).isEqualTo("영수증을 성공적으로 작성했습니다.");
     }
 
     @Test
@@ -226,7 +227,7 @@ public class ReceiptTest {
         ApiResponse<List<ReceiptDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("모든 영수증을 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("모든 영수증을 성공적으로 조회했습니다.");
     }
 
     @Test
@@ -257,7 +258,7 @@ public class ReceiptTest {
         ApiResponse<ReceiptByStudentClubDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("해당 학생회의 영수증들을 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("해당 학생회의 영수증들을 성공적으로 조회했습니다.");
     }
 
     @Test
@@ -286,7 +287,7 @@ public class ReceiptTest {
         ApiResponse<List<ReceiptDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("해당 학생회의 영수증들을 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("해당 학생회의 영수증들을 성공적으로 조회했습니다.");
     }
 
     @Test
@@ -321,7 +322,7 @@ public class ReceiptTest {
         ApiResponse<ReceiptDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("영수증을 성공적으로 조회했습니다.");
         assertThat(body.getData().getReceiptId()).isEqualTo(receiptId);
     }
 
@@ -360,7 +361,7 @@ public class ReceiptTest {
         ApiResponse<ReceiptDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 삭제했습니다.");
+        assertThat(body.getMessage()).isEqualTo("영수증을 성공적으로 삭제했습니다.");
         assertThat(body.getData().getReceiptId()).isEqualTo(receiptId);
     }
 
@@ -400,7 +401,7 @@ public class ReceiptTest {
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
         assertThat(body.getData().getContent()).isEqualTo(receiptUpdateDto.getContent());
-        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 수정했습니다.");
+        assertThat(body.getMessage()).isEqualTo("영수증을 성공적으로 수정했습니다.");
         assertThat(body.getData().getContent()).isEqualTo(receiptUpdateDto.getContent());
     }
 
@@ -424,7 +425,7 @@ public class ReceiptTest {
         ApiResponse<List<CollegesDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("모든 단과대를 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("모든 단과대를 성공적으로 조회했습니다.");
     }
 
     @Test
@@ -447,7 +448,7 @@ public class ReceiptTest {
         ApiResponse<List<ClubDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("모든 학생회를 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("모든 학생회를 성공적으로 조회했습니다.");
     }
 
     @Test
@@ -476,7 +477,7 @@ public class ReceiptTest {
         ApiResponse<List<ClubDto>> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("해당 단과대의 학생회를 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("해당 단과대의 학생회를 성공적으로 조회했습니다.");
     }
 
     @Test
@@ -539,7 +540,7 @@ public class ReceiptTest {
         ApiResponse<List<ReceiptDto>> body = response.getBody();
         assertNotNull(body, "응답 Body는 null이 아니어야 합니다.");
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("영수증을 성공적으로 조회했습니다.");
+        assertThat(body.getMessage()).isEqualTo("영수증을 성공적으로 조회했습니다.");
 
         List<ReceiptDto> resultList = body.getData();
         assertNotNull(resultList, "응답 데이터(리스트)는 null이 아니어야 합니다.");

@@ -1,9 +1,9 @@
 package com.example.tomyongji.config;
 
-import static com.example.tomyongji.validation.ErrorMsg.AUTENTICITY_FAILURE;
-import static com.example.tomyongji.validation.ErrorMsg.EXTERNAL_SERVER_ERROR;
+import static com.example.tomyongji.global.error.ErrorMsg.AUTENTICITY_FAILURE;
+import static com.example.tomyongji.global.error.ErrorMsg.EXTERNAL_SERVER_ERROR;
 
-import com.example.tomyongji.validation.CustomException;
+import com.example.tomyongji.global.error.CustomException;
 import java.time.Duration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

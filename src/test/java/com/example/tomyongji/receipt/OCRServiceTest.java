@@ -1,6 +1,6 @@
 package com.example.tomyongji.receipt;
 
-import static com.example.tomyongji.validation.ErrorMsg.NOT_FOUND_USER;
+import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_USER;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -8,16 +8,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import com.example.tomyongji.auth.entity.User;
-import com.example.tomyongji.auth.repository.UserRepository;
-import com.example.tomyongji.receipt.dto.OCRResultDto;
-import com.example.tomyongji.receipt.dto.ReceiptCreateDto;
-import com.example.tomyongji.receipt.dto.ReceiptDto;
-import com.example.tomyongji.receipt.entity.StudentClub;
-import com.example.tomyongji.receipt.mapper.ReceiptMapper;
-import com.example.tomyongji.receipt.service.OCRService;
-import com.example.tomyongji.receipt.service.ReceiptService;
-import com.example.tomyongji.validation.CustomException;
+import com.example.tomyongji.domain.auth.entity.User;
+import com.example.tomyongji.domain.auth.repository.UserRepository;
+import com.example.tomyongji.domain.receipt.dto.OCRResultDto;
+import com.example.tomyongji.domain.receipt.dto.ReceiptCreateDto;
+import com.example.tomyongji.domain.receipt.dto.ReceiptDto;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
+import com.example.tomyongji.domain.receipt.mapper.ReceiptMapper;
+import com.example.tomyongji.domain.receipt.service.OCRService;
+import com.example.tomyongji.domain.receipt.service.ReceiptService;
+import com.example.tomyongji.global.error.CustomException;
 
 import java.lang.reflect.Field;
 import java.util.Date;

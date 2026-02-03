@@ -1,6 +1,6 @@
 package com.example.tomyongji.receipt;
 
-import static com.example.tomyongji.validation.ErrorMsg.NO_AUTHORIZATION_BELONGING;
+import static com.example.tomyongji.global.error.ErrorMsg.NO_AUTHORIZATION_BELONGING;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -9,15 +9,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-import com.example.tomyongji.auth.entity.User;
-import com.example.tomyongji.auth.repository.UserRepository;
-import com.example.tomyongji.receipt.dto.CsvExportDto;
-import com.example.tomyongji.receipt.entity.Receipt;
-import com.example.tomyongji.receipt.entity.StudentClub;
-import com.example.tomyongji.receipt.repository.ReceiptRepository;
-import com.example.tomyongji.receipt.service.CSVService;
-import com.example.tomyongji.receipt.service.ReceiptService;
-import com.example.tomyongji.validation.CustomException;
+import com.example.tomyongji.domain.auth.entity.User;
+import com.example.tomyongji.domain.auth.repository.UserRepository;
+import com.example.tomyongji.domain.receipt.dto.CsvExportDto;
+import com.example.tomyongji.domain.receipt.entity.Receipt;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
+import com.example.tomyongji.domain.receipt.repository.ReceiptRepository;
+import com.example.tomyongji.domain.receipt.service.CSVService;
+import com.example.tomyongji.domain.receipt.service.ReceiptService;
+import com.example.tomyongji.global.error.CustomException;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;

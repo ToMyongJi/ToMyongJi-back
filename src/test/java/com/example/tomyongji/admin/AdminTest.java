@@ -1,17 +1,17 @@
 package com.example.tomyongji.admin;
 
-import com.example.tomyongji.admin.dto.ApiResponse;
-import com.example.tomyongji.admin.dto.MemberDto;
-import com.example.tomyongji.admin.dto.PresidentDto;
-import com.example.tomyongji.admin.entity.Member;
-import com.example.tomyongji.admin.entity.President;
-import com.example.tomyongji.admin.repository.MemberRepository;
-import com.example.tomyongji.admin.repository.PresidentRepository;
-import com.example.tomyongji.auth.dto.LoginRequestDto;
-import com.example.tomyongji.auth.jwt.JwtToken;
-import com.example.tomyongji.my.dto.AdminSaveMemberDto;
-import com.example.tomyongji.receipt.entity.StudentClub;
-import com.example.tomyongji.receipt.repository.StudentClubRepository;
+import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.domain.admin.dto.MemberDto;
+import com.example.tomyongji.domain.admin.dto.PresidentDto;
+import com.example.tomyongji.domain.admin.entity.Member;
+import com.example.tomyongji.domain.admin.entity.President;
+import com.example.tomyongji.domain.admin.repository.MemberRepository;
+import com.example.tomyongji.domain.admin.repository.PresidentRepository;
+import com.example.tomyongji.domain.auth.dto.LoginRequestDto;
+import com.example.tomyongji.domain.auth.jwt.JwtToken;
+import com.example.tomyongji.domain.my.dto.AdminSaveMemberDto;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
+import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -106,7 +106,7 @@ public class AdminTest {
         );
         //then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData().getClubId()).isEqualTo(33L);
         assertThat(response.getBody().getData().getStudentNum()).isEqualTo("60222024");
     }
@@ -138,7 +138,7 @@ public class AdminTest {
 
         //then
         assertThat(response.getStatusCode().value()).isEqualTo(201);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData().getStudentNum()).isEqualTo(presidentDto.getStudentNum());
     }
 
@@ -173,7 +173,7 @@ public class AdminTest {
                 uriVariables
         );
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData().get(0).getStudentNum()).isEqualTo(member.getStudentNum());
     }
 
@@ -204,7 +204,7 @@ public class AdminTest {
                 new ParameterizedTypeReference<ApiResponse<MemberDto>>() {}
         );
         assertThat(response.getStatusCode().value()).isEqualTo(201);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData().getStudentNum()).isEqualTo(adminSaveMemberDto.getStudentNum());
     }
     @Test
@@ -237,7 +237,7 @@ public class AdminTest {
                 uriVariables
         );
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody().getStatusMessage()).isNotEmpty();
+        assertThat(response.getBody().getMessage()).isNotEmpty();
         assertThat(response.getBody().getData().getStudentNum()).isEqualTo(member.getStudentNum());
     }
 }

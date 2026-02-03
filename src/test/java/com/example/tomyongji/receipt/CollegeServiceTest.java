@@ -1,14 +1,14 @@
 package com.example.tomyongji.receipt;
 
-import com.example.tomyongji.receipt.dto.ClubDto;
-import com.example.tomyongji.receipt.dto.CollegeDto;
-import com.example.tomyongji.receipt.dto.CollegesDto;
-import com.example.tomyongji.receipt.entity.College;
-import com.example.tomyongji.receipt.entity.StudentClub;
-import com.example.tomyongji.receipt.mapper.CollegeMapper;
-import com.example.tomyongji.receipt.repository.CollegeRepository;
-import com.example.tomyongji.receipt.repository.StudentClubRepository;
-import com.example.tomyongji.receipt.service.CollegeService;
+import com.example.tomyongji.domain.receipt.dto.ClubDto;
+import com.example.tomyongji.domain.receipt.dto.CollegeDto;
+import com.example.tomyongji.domain.receipt.dto.CollegesDto;
+import com.example.tomyongji.domain.receipt.entity.College;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
+import com.example.tomyongji.domain.receipt.mapper.CollegeMapper;
+import com.example.tomyongji.domain.receipt.repository.CollegeRepository;
+import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
+import com.example.tomyongji.domain.receipt.service.CollegeService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,29 +1,27 @@
 package com.example.tomyongji;
 
-import com.example.tomyongji.admin.entity.Member;
-import com.example.tomyongji.admin.entity.President;
-import com.example.tomyongji.admin.repository.MemberRepository;
-import com.example.tomyongji.admin.repository.PresidentRepository;
-import com.example.tomyongji.auth.dto.ClubVerifyRequestDto;
-import com.example.tomyongji.auth.dto.LoginRequestDto;
-import com.example.tomyongji.auth.dto.UserRequestDto;
-import com.example.tomyongji.auth.entity.ClubVerification;
-import com.example.tomyongji.auth.entity.EmailVerification;
-import com.example.tomyongji.auth.entity.User;
-import com.example.tomyongji.auth.jwt.JwtProvider;
-import com.example.tomyongji.auth.jwt.JwtToken;
-import com.example.tomyongji.auth.mapper.UserMapper;
-import com.example.tomyongji.auth.repository.ClubVerificationRepository;
-import com.example.tomyongji.auth.repository.EmailVerificationRepository;
-import com.example.tomyongji.auth.repository.UserRepository;
-import com.example.tomyongji.auth.service.UserService;
-import com.example.tomyongji.auth.service.UserServiceImpl;
-import com.example.tomyongji.receipt.entity.College;
-import com.example.tomyongji.receipt.entity.StudentClub;
-import com.example.tomyongji.receipt.repository.CollegeRepository;
-import com.example.tomyongji.receipt.repository.StudentClubRepository;
-import com.example.tomyongji.validation.CustomException;
-import org.hibernate.mapping.Any;
+import com.example.tomyongji.domain.admin.entity.Member;
+import com.example.tomyongji.domain.admin.entity.President;
+import com.example.tomyongji.domain.admin.repository.MemberRepository;
+import com.example.tomyongji.domain.admin.repository.PresidentRepository;
+import com.example.tomyongji.domain.auth.dto.ClubVerifyRequestDto;
+import com.example.tomyongji.domain.auth.dto.LoginRequestDto;
+import com.example.tomyongji.domain.auth.dto.UserRequestDto;
+import com.example.tomyongji.domain.auth.entity.ClubVerification;
+import com.example.tomyongji.domain.auth.entity.EmailVerification;
+import com.example.tomyongji.domain.auth.jwt.JwtProvider;
+import com.example.tomyongji.domain.auth.jwt.JwtToken;
+import com.example.tomyongji.domain.auth.mapper.UserMapper;
+import com.example.tomyongji.domain.auth.entity.User;
+import com.example.tomyongji.domain.auth.repository.ClubVerificationRepository;
+import com.example.tomyongji.domain.auth.repository.EmailVerificationRepository;
+import com.example.tomyongji.domain.auth.repository.UserRepository;
+import com.example.tomyongji.domain.auth.service.UserServiceImpl;
+import com.example.tomyongji.domain.receipt.entity.College;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
+import com.example.tomyongji.domain.receipt.repository.CollegeRepository;
+import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
+import com.example.tomyongji.global.error.CustomException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,7 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.example.tomyongji.validation.ErrorMsg.*;
+import static com.example.tomyongji.global.error.ErrorMsg.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -82,7 +80,7 @@ public class UserServiceTest {
     AuthenticationManagerBuilder authenticationManagerBuilder;
 
     UserRequestDto studentRequestDto;
-    com.example.tomyongji.auth.entity.User user;
+    User user;
     College college;
     StudentClub studentClub;
     @BeforeEach
@@ -108,7 +106,7 @@ public class UserServiceTest {
                 .studentClubId(studentClub.getId())
                 .studentNum("60222024")
                 .build();
-        user = com.example.tomyongji.auth.entity.User.builder()
+        user = User.builder()
                 .id(1L)
                 .userId("tomyongji2024")
                 .name("투명지")
@@ -161,9 +159,9 @@ public class UserServiceTest {
         when(clubVerificationRepository.findByStudentNum(studentRequestDto.getStudentNum())).thenReturn((List<ClubVerification>) list);
         when(userMapper.toUser(studentRequestDto,studentClub)).thenReturn(user);
         doAnswer(invocation -> {
-            com.example.tomyongji.auth.entity.User savedUser = invocation.getArgument(0);
+            User savedUser = invocation.getArgument(0);
             return savedUser;
-        }).when(userRepository).save(any(com.example.tomyongji.auth.entity.User.class));
+        }).when(userRepository).save(any(User.class));
 
         doAnswer(invocation -> {
             EmailVerification savedEmailVerification = invocation.getArgument(0);

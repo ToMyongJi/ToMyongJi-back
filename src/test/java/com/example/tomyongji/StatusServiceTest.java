@@ -1,10 +1,10 @@
 package com.example.tomyongji;
 
-import com.example.tomyongji.status.dto.MaintenanceUpdateRequestDto;
-import com.example.tomyongji.status.dto.StatusResponseDto;
-import com.example.tomyongji.status.entity.MaintenanceConfig;
-import com.example.tomyongji.status.repository.MaintenanceConfigRepository;
-import com.example.tomyongji.status.service.StatusService;
+import com.example.tomyongji.domain.status.dto.MaintenanceUpdateRequestDto;
+import com.example.tomyongji.domain.status.dto.StatusResponseDto;
+import com.example.tomyongji.domain.status.entity.MaintenanceConfig;
+import com.example.tomyongji.domain.status.repository.MaintenanceConfigRepository;
+import com.example.tomyongji.domain.status.service.StatusService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

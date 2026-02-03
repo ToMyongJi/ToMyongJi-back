@@ -3,13 +3,13 @@ package com.example.tomyongji;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.example.tomyongji.admin.dto.ApiResponse;
-import com.example.tomyongji.auth.dto.LoginRequestDto;
-import com.example.tomyongji.auth.jwt.JwtToken;
-import com.example.tomyongji.status.dto.MaintenanceUpdateRequestDto;
-import com.example.tomyongji.status.dto.StatusResponseDto;
-import com.example.tomyongji.status.entity.MaintenanceConfig;
-import com.example.tomyongji.status.repository.MaintenanceConfigRepository;
+import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.domain.auth.dto.LoginRequestDto;
+import com.example.tomyongji.domain.auth.jwt.JwtToken;
+import com.example.tomyongji.domain.status.dto.MaintenanceUpdateRequestDto;
+import com.example.tomyongji.domain.status.dto.StatusResponseDto;
+import com.example.tomyongji.domain.status.entity.MaintenanceConfig;
+import com.example.tomyongji.domain.status.repository.MaintenanceConfigRepository;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import org.junit.jupiter.api.AfterEach;
@@ -70,7 +70,7 @@ public class StatusTest {
         ApiResponse<StatusResponseDto> body = response.getBody();
         assertNotNull(body);
         assertThat(body.getStatusCode()).isEqualTo(200);
-        assertThat(body.getStatusMessage()).isEqualTo("점검상태 호출에 성공했습니다.");
+        assertThat(body.getMessage()).isEqualTo("점검상태 호출에 성공했습니다.");
     }
 
     @Test
@@ -102,7 +102,7 @@ public class StatusTest {
 
         // then
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(Objects.requireNonNull(response.getBody()).getStatusMessage()).isEqualTo("점검상태 변경에 성공했습니다.");
+        assertThat(Objects.requireNonNull(response.getBody()).getMessage()).isEqualTo("점검상태 변경에 성공했습니다.");
     }
 
     private String getAdminToken() {

@@ -1,0 +1,16 @@
+package com.example.tomyongji.domain.receipt.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ClubDto {
+    private long studentClubId;
+    private String studentClubName;
+    private boolean verification;
+}

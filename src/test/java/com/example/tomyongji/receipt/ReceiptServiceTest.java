@@ -7,29 +7,41 @@ import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_RECEIPT;
 import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
 import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_USER;
 import static com.example.tomyongji.global.error.ErrorMsg.NO_AUTHORIZATION_BELONGING;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import java.util.Date;
 
-import org.springframework.cache.Cache;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.mockito.ArgumentCaptor;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import com.example.tomyongji.domain.receipt.dto.PagingReceiptDto;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
+import com.example.tomyongji.domain.receipt.dto.PagingReceiptDto;
 import com.example.tomyongji.domain.receipt.dto.ReceiptByStudentClubDto;
 import com.example.tomyongji.domain.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.domain.receipt.dto.ReceiptDto;
@@ -40,20 +52,9 @@ import com.example.tomyongji.domain.receipt.repository.ReceiptRepository;
 import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.domain.receipt.service.ReceiptService;
 import com.example.tomyongji.global.error.CustomException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.userdetails.UserDetails;
 
 @ExtendWith(MockitoExtension.class)
-public class ReceiptServiceTest {
+class ReceiptServiceTest {
 
     @Mock
     private ReceiptRepository receiptRepository;
@@ -61,15 +62,13 @@ public class ReceiptServiceTest {
     private StudentClubRepository studentClubRepository;
     @Mock
     private UserRepository userRepository;
-
     @Mock
     private ReceiptMapper receiptMapper;
-
     @Mock
     private CacheManager cacheManager;
-
     @Mock
-    private Cache cache;
+    private org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
+
     @InjectMocks
     private ReceiptService receiptService;
 
@@ -77,840 +76,966 @@ public class ReceiptServiceTest {
     private StudentClub anotherStudentClub;
     private User user;
     private User anotherUser;
-    private ReceiptCreateDto receiptCreateDto;
     private Receipt receipt;
     private UserDetails currentUser;
     private UserDetails anotherCurrentUser;
 
     @BeforeEach
     void setUp() {
-        studentClub = StudentClub.builder()
-            .id(30L)
-            .studentClubName("스마트시스템공과대학 학생회")
-            .build();
-
-        anotherStudentClub = StudentClub.builder()
-            .id(35L)
-            .studentClubName("아너칼리지(자연)")
-            .build();
-
-        user = User.builder()
-            .id(1L)
-            .userId("testUser")
-            .name("test name")
-            .studentNum("60000000")
-            .collegeName("스마트시스템공과대학")
-            .email("test@example.com")
-            .password("password123")
-            .role("PRESIDENT")
-            .studentClub(studentClub)
-            .build();
-
-        anotherUser = User.builder()
-            .id(2L)
-            .userId("anotherUser")
-            .name("test name2")
-            .studentNum("60000001")
-            .collegeName("아너칼리지")
-            .email("test2@example.com")
-            .password("password123")
-            .role("PRESIDENT")
-            .studentClub(anotherStudentClub)
-            .build();
-
-        receiptCreateDto = ReceiptCreateDto.builder()
-            .userId("testUser")
-            .content("영수증 테스트")
-            .deposit(1000)
-            .build();
-
-        receipt = Receipt.builder()
-            .id(1L) // ID 설정
-            .content("영수증 테스트")
-            .deposit(1000)
-            .studentClub(studentClub)
-            .build();
-
-        currentUser = (UserDetails) new org.springframework.security.core.userdetails.User("testUser","password123", Collections.emptyList());
-        anotherCurrentUser = (UserDetails) new org.springframework.security.core.userdetails.User("anotherUser","password123", Collections.emptyList());
-
-    }
-
-    @Test
-    @DisplayName("영수증 생성 성공")
-    void createReceipt_Success() {
-        //Given
-        ReceiptDto receiptDto = ReceiptDto.builder()
-            .receiptId(receipt.getId())
-            .content(receipt.getContent())
-            .deposit(receipt.getDeposit())
-            .build();
-
-        Long clubId = studentClub.getId();
-
-        when(userRepository.findByUserId(receiptCreateDto.getUserId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        when(receiptMapper.toReceiptEntity(receiptCreateDto)).thenReturn(receipt);
-        when(cacheManager.getCache("receiptList:" + clubId)).thenReturn(cache);
-        when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
-
-        //When
-        ReceiptDto result = receiptService.createReceipt(receiptCreateDto, currentUser);
-
-        //Then
-        assertNotNull(result);
-        assertEquals("영수증 테스트", result.getContent());
-        assertEquals(1000, result.getDeposit());
-        verify(receiptRepository).save(receipt);
-        verify(studentClubRepository).save(studentClub);
-        verify(cacheManager).getCache("receiptList:" + clubId);
-        verify(cache).clear();
-    }
-
-    @Test
-    @DisplayName("유저 조회 실패로 인한 영수증 생성 실패")
-    void createReceipt_NotFoundUser() {
-        //Given
-        ReceiptCreateDto receiptCreateDtoWithWrongUserId = ReceiptCreateDto.builder()
-            .userId("wrongtUser")
-            .content("영수증 테스트")
-            .deposit(1000)
-            .build();
-        when(userRepository.findByUserId(receiptCreateDtoWithWrongUserId.getUserId())).thenReturn(Optional.empty());
-
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class, () -> receiptService.createReceipt(
-            receiptCreateDtoWithWrongUserId, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_USER, exception.getMessage());
-        verify(userRepository).findByUserId(receiptCreateDtoWithWrongUserId.getUserId());
-    }
-
-    @Test
-    @DisplayName("타소속의 접근으로 인한 특정 영수증 생성 실패")
-    void savaReceipt_NoAuthorizationBelonging() {
-        //Given
-        when(userRepository.findByUserId(receiptCreateDto.getUserId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(anotherUser.getUserId())).thenReturn(Optional.of(anotherUser));
-        //When
-        CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.createReceipt(receiptCreateDto, anotherCurrentUser));
-        //Then
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NO_AUTHORIZATION_BELONGING, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("입출금 모두 작성으로 인한 영수증 생성 실패")
-    void createReceipt_DuplicatedFlow() {
-        //Given
-        ReceiptCreateDto receiptCreateDtoWithDuplicatedFlow = ReceiptCreateDto.builder()
-            .userId(user.getUserId())
-            .content("영수증 테스트")
-            .deposit(1000)
-            .withdrawal(1000)
-            .build();
-        when(userRepository.findByUserId(receiptCreateDto.getUserId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class, () -> receiptService.createReceipt(
-            receiptCreateDtoWithDuplicatedFlow, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(DUPLICATED_FLOW, exception.getMessage());
-        verify(userRepository, times(2)).findByUserId(receiptCreateDtoWithDuplicatedFlow.getUserId());
-
-    }
-
-    @Test
-    @DisplayName("입출금 모두 공백으로 인한 영수증 생성 실패")
-    void createReceipt_EmptyFlow() {
-        //Given
-        ReceiptCreateDto receiptCreateDtoWithEmptyFlow = ReceiptCreateDto.builder()
-            .userId("testUser")
-            .content("영수증 테스트")
-            .deposit(0)
-            .withdrawal(0)
-            .build();
-        when(userRepository.findByUserId(receiptCreateDtoWithEmptyFlow.getUserId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class, () -> receiptService.createReceipt(
-            receiptCreateDtoWithEmptyFlow, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(DUPLICATED_FLOW, exception.getMessage());
-        verify(userRepository, times(2)).findByUserId(receiptCreateDtoWithEmptyFlow.getUserId());
-    }
-
-    @Test
-    @DisplayName("영수증 내용 공백으로 인한 영수증 생성 실패")
-    void createReceipt_EmptyContent() {
-        //Given
-        ReceiptCreateDto receiptCreateDtoWithEmptyContent = ReceiptCreateDto.builder()
-            .userId("testUser")
-            .deposit(1000)
-            .build();
-        when(userRepository.findByUserId(receiptCreateDtoWithEmptyContent.getUserId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class, () -> receiptService.createReceipt(
-            receiptCreateDtoWithEmptyContent, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(EMPTY_CONTENT, exception.getMessage());
-        verify(userRepository, times(2)).findByUserId(receiptCreateDtoWithEmptyContent.getUserId());
-    }
-    @Test
-    @DisplayName("모든 영수증 불러오기 성공")
-    void getAllReceipts_Success() {
-        //Given
-        Receipt receipt1 = Receipt.builder()
-            .id(2L)
-            .content("영수증 테스트1")
-            .deposit(2000)
-            .studentClub(studentClub)
-            .build();
-        Receipt receipt2 = Receipt.builder()
-            .id(3L)
-            .content("영수증 테스트2")
-            .deposit(3000)
-            .studentClub(studentClub)
-            .build();
-
-        List<Receipt> receiptList = List.of(receipt1, receipt2);
-
-        ReceiptDto receiptDto1 = ReceiptDto.builder()
-            .receiptId(2L)
-            .content("영수증 테스트1")
-            .deposit(2000)
-            .build();
-        ReceiptDto receiptDto2 = ReceiptDto.builder()
-            .receiptId(3L)
-            .content("영수증 테스트2")
-            .deposit(3000)
-            .build();
-
-        when(receiptRepository.findAll()).thenReturn(receiptList);
-        when(receiptMapper.toReceiptDto(receipt1)).thenReturn(receiptDto1);
-        when(receiptMapper.toReceiptDto(receipt2)).thenReturn(receiptDto2);
-
-        //When
-        List<ReceiptDto> result = receiptService.getAllReceipts();
-
-        //Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(receiptDto1, result.get(0));
-        assertEquals(receiptDto2, result.get(1));
-        verify(receiptRepository).findAll();
-    }
-
-    @Test
-    @DisplayName("특정 학생회 영수증 조회 성공")
-    void getReceiptsByClub_Success() {
-        //Given
-        Long id = user.getId();
-        Receipt receipt1 = Receipt.builder()
-            .id(2L)
-            .content("영수증 테스트1")
-            .deposit(2000)
-            .studentClub(studentClub)
-            .build();
-        Receipt receipt2 = Receipt.builder()
-            .id(3L)
-            .content("영수증 테스트2")
-            .deposit(3000)
-            .studentClub(studentClub)
-            .build();
-        List<Receipt> receiptList = List.of(receipt1, receipt2);
-        ReceiptDto receiptDto1 = ReceiptDto.builder()
-            .receiptId(2L)
-            .content("영수증 테스트1")
-            .deposit(2000)
-            .build();
-        ReceiptDto receiptDto2 = ReceiptDto.builder()
-            .receiptId(3L)
-            .content("영수증 테스트2")
-            .deposit(3000)
-            .build();
-        List<ReceiptDto> receiptDtoList = List.of(receiptDto1, receiptDto2);
-
-        when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(
-            Optional.of(user));
-        when(receiptRepository.findAllByStudentClubOrderByIdDesc(any(StudentClub.class))).thenReturn(receiptList);
-        when(receiptMapper.toReceiptDto(any(Receipt.class))).thenAnswer(invocation -> {
-            Receipt arg = invocation.getArgument(0);
-            if (arg.getId() == 2L) return receiptDto1;
-            if (arg.getId() == 3L) return receiptDto2;
-            return null;
-        });
-        //When
-        ReceiptByStudentClubDto result = receiptService.getReceiptsByClub(id, currentUser);
-        //Then
-        assertNotNull(result);
-        assertEquals(result.getReceiptList().get(0), receiptDto1);
-        assertEquals(result.getReceiptList().get(1), receiptDto2);
-        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(studentClub);
-    }
-
-    @Test
-    @DisplayName("유저 조회 실패로 인한 특정 학생회 영수증 조회 실패")
-    void getReceiptsByClub_NotFoundStudentClub() {
-        //Given
-        Long wrongId= 999L;
-
-        when(userRepository.findById(wrongId)).thenReturn(Optional.empty());
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.getReceiptsByClub(wrongId, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_USER, exception.getMessage());
-        verify(userRepository).findById(wrongId);
-    }
-
-    @Test
-    @DisplayName("타소속 접근으로 인한 특정 학생회 영수증 조회 실패")
-    void getReceiptsByClub_NoAuthorizationBelonging() {
-        //Given
-        Long id = user.getId();
-
-        when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(anotherUser.getUserId())).thenReturn(Optional.of(anotherUser));
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.getReceiptsByClub(id, anotherCurrentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NO_AUTHORIZATION_BELONGING, exception.getMessage());
-        verify(userRepository).findById(id);
-    }
-
-    @Test
-    @DisplayName("특정 학생회 영수증 조회 학생용 성공")
-    void getReceiptsByClubForStudent_Success() {
-        //Given
-        Long clubId = studentClub.getId();
-        Receipt receipt1 = Receipt.builder()
-            .id(2L)
-            .content("영수증 테스트1")
-            .deposit(2000)
-            .studentClub(studentClub)
-            .build();
-        Receipt receipt2 = Receipt.builder()
-            .id(3L)
-            .content("영수증 테스트2")
-            .deposit(3000)
-            .studentClub(studentClub)
-            .build();
-        List<Receipt> receiptList = List.of(receipt1, receipt2);
-        ReceiptDto receiptDto1 = ReceiptDto.builder()
-            .receiptId(2L)
-            .content("영수증 테스트1")
-            .deposit(2000)
-            .build();
-        ReceiptDto receiptDto2 = ReceiptDto.builder()
-            .receiptId(3L)
-            .content("영수증 테스트2")
-            .deposit(3000)
-            .build();
-        List<ReceiptDto> receiptDtoList = List.of(receiptDto1, receiptDto2);
-
-        when(studentClubRepository.findById(clubId)).thenReturn(Optional.of(studentClub));
-        when(receiptRepository.findAllByStudentClubOrderByIdDesc(studentClub)).thenReturn(receiptList);
-        when(receiptMapper.toReceiptDto(receipt1)).thenReturn(receiptDto1);
-        when(receiptMapper.toReceiptDto(receipt2)).thenReturn(receiptDto2);
-        //When
-        List<ReceiptDto> result = receiptService.getReceiptsByClubForStudent(clubId);
-        //Then
-        assertNotNull(result);
-        assertEquals(result.get(0), receiptDto1);
-        assertEquals(result.get(1), receiptDto2);
-        verify(studentClubRepository).findById(clubId);
-        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(studentClub);
-    }
-
-    @Test
-    @DisplayName("학생회 조회 실패로 인한 특정 학생회 영수증 조회 학생용 실패")
-    void getReceiptsByClubForStudent_NotFoundStudentClub() {
-        //Given
-        Long clubId = 999L;
-
-        when(studentClubRepository.findById(clubId)).thenReturn(Optional.empty());
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.getReceiptsByClubForStudent(clubId));
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_STUDENT_CLUB, exception.getMessage());
-        verify(studentClubRepository).findById(clubId);
-    }
-
-    @Test
-    @DisplayName("특정 영수증 조회 성공")
-    void getReceiptById_Success() {
-        //Given
-        Long receiptId = receipt.getId();
-        ReceiptDto receiptDto = ReceiptDto.builder()
-            .receiptId(receipt.getId())
-            .date(receipt.getDate())
-            .content(receipt.getContent())
-            .deposit(receipt.getDeposit())
-            .build();
-
-        when(receiptRepository.findById(receiptId)).thenReturn(Optional.of(receipt));
-        when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
-        //When
-        ReceiptDto result = receiptService.getReceiptById(receiptId);
-        //Then
-        assertNotNull(result);
-        assertEquals(result, receiptDto);
-        verify(receiptRepository).findById(receiptId);
-        verify(receiptMapper).toReceiptDto(receipt);
-    }
-    @Test
-    @DisplayName("학생회 조회 실패로 인한 특정 영수증 조회 실패")
-    void getReceiptById_NotFoundReceipt() {
-        //Given
-        Long wrongReceiptId = 999L;
-
-        when(receiptRepository.findById(wrongReceiptId)).thenReturn(Optional.empty());
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.getReceiptById(wrongReceiptId));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_RECEIPT, exception.getMessage());
-        verify(receiptRepository).findById(wrongReceiptId);
-    }
-
-    @Test
-    @DisplayName("특정 영수증 삭제 성공")
-    void deleteReceipt_Success() {
-        //Given
-        Long receiptId = receipt.getId();
-        ReceiptDto receiptDto = ReceiptDto.builder()
-            .receiptId(receipt.getId())
-            .date(receipt.getDate())
-            .content(receipt.getContent())
-            .deposit(receipt.getDeposit())
-            .build();
-
-        Long clubId = studentClub.getId();
-
-        ReceiptRepository.ReceiptCount mockCount = mock(ReceiptRepository.ReceiptCount.class);
-        when(mockCount.getTotal()).thenReturn(10L);    // 전체 영수증 10개 가정
-        when(mockCount.getVerified()).thenReturn(5L); // 검증된 영수증 5개 가정
-
-        when(receiptRepository.findById(receiptId)).thenReturn(Optional.of(receipt));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
-        when(studentClubRepository.findById(receipt.getStudentClub().getId())).thenReturn(Optional.of(studentClub));
-
-        when(receiptRepository.countTotalAndVerified(studentClub)).thenReturn(mockCount);
-
-        when(cacheManager.getCache("receiptList:" + clubId)).thenReturn(cache);
-
-        //When
-        ReceiptDto result = receiptService.deleteReceipt(receiptId, currentUser);
-        //Then
-        assertNotNull(result);
-        assertEquals(result, receiptDto);
-        assertEquals(user.getUserId(), currentUser.getUsername());
-        verify(receiptRepository).findById(receiptId);
-        verify(receiptRepository).delete(receipt);
-        verify(studentClubRepository).save(studentClub);
-        verify(receiptMapper).toReceiptDto(receipt);
-
-        verify(receiptRepository).countTotalAndVerified(studentClub); // 뱃지 업데이트 로직 호출 확인
-        verify(cacheManager).getCache("receiptList:" + clubId);
-        verify(cache).clear();
-    }
-
-    @Test
-    @DisplayName("영수증 조회 실패로 인한 특정 영수증 삭제 실패")
-    void deleteReceipt_NotFoundReceipt() {
-        //Given
-        Long wrongReceiptId = 999L;
-
-        when(receiptRepository.findById(wrongReceiptId)).thenReturn(Optional.empty());
-        //When
-        CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.deleteReceipt(wrongReceiptId, currentUser));
-        //Then
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_RECEIPT, exception.getMessage());
-        verify(receiptRepository).findById(wrongReceiptId);
-    }
-
-    @Test
-    @DisplayName("타소속의 접근으로 인한 특정 영수증 삭제 실패")
-    void deleteReceipt_NoAuthorizationBelonging() {
-        //Given
-        Long receiptId = receipt.getId();
-
-        when(receiptRepository.findById(receiptId)).thenReturn(Optional.of(receipt));
-        when(userRepository.findByUserId(anotherCurrentUser.getUsername())).thenReturn(Optional.of(anotherUser));
-        //When
-        CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.deleteReceipt(receiptId, anotherCurrentUser));
-        //Then
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NO_AUTHORIZATION_BELONGING, exception.getMessage());
-        verify(receiptRepository).findById(receiptId);
-    }
-
-    @Test
-    @DisplayName("특정 영수증 내역 수정 성공")
-    void updateReceipt_SuccessForUpdatingContent() {
-        //Given
-        Long existingId = receipt.getId();
-        ReceiptDto updateDto = ReceiptDto.builder()
-            .receiptId(receipt.getId())
-            .date(receipt.getDate())
-            .content("수정된 내용")
-            .deposit(receipt.getDeposit())
-            .build();
-
-        Long clubId = studentClub.getId();
-
-        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        when(receiptMapper.toReceiptDto(receipt)).thenReturn(updateDto);
-
-        when(cacheManager.getCache("receiptList:" + clubId)).thenReturn(cache);
-
-        //When
-        ReceiptDto result = receiptService.updateReceipt(updateDto, currentUser);
-        //Then
-        assertNotNull(result);
-        assertEquals(result.getContent(), "수정된 내용");
-        assertEquals(result.getDeposit(), 1000);
-        verify(receiptRepository).findById(existingId);
-        verify(studentClubRepository).save(studentClub);
-        verify(receiptRepository).save(receipt);
-
-        verify(cacheManager).getCache("receiptList:" + clubId);
-        verify(cache).clear();
-    }
-    @Test
-    @DisplayName("특정 영수증 금액 수정 성공")
-    void updateReceipt_SuccessForUpdatingFlow() {
-        //Given
-        Long existingId = receipt.getId();
-        ReceiptDto updateDto = ReceiptDto.builder()
-            .receiptId(receipt.getId())
-            .date(receipt.getDate())
-            .content(receipt.getContent())
-            .deposit(4500)
-            .build();
-
-        Long clubId = studentClub.getId();
-
-        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        when(receiptMapper.toReceiptDto(receipt)).thenReturn(updateDto);
-
-        when(cacheManager.getCache("receiptList:" + clubId)).thenReturn(cache);
-
-        //When
-        ReceiptDto result = receiptService.updateReceipt(updateDto, currentUser);
-        //Then
-        assertNotNull(result);
-        assertEquals(result.getContent(), receipt.getContent());
-        assertEquals(result.getDeposit(), 4500);
-        verify(receiptRepository).findById(existingId);
-        verify(studentClubRepository).save(studentClub);
-        verify(receiptRepository).save(receipt);
-
-        verify(cacheManager).getCache("receiptList:" + clubId);
-        verify(cache).clear();
-    }
-
-    @Test
-    @DisplayName("영수증 조회 실패로 인한 영수증 수정 실패")
-    void updateReceipt_NotFoundReceipt() {
-        Long wrongReceiptId = 999L;
-        ReceiptDto receiptDtoWithWrongId = ReceiptDto.builder()
-            .receiptId(wrongReceiptId)
-            .content("테스트")
-            .deposit(1000)
-            .build();
-        when(receiptRepository.findById(wrongReceiptId)).thenReturn(Optional.empty());
-        //When
-        CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.updateReceipt(receiptDtoWithWrongId, currentUser));
-        //Then
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_RECEIPT, exception.getMessage());
-        verify(receiptRepository).findById(wrongReceiptId);
-    }
-
-    @Test
-    @DisplayName("타소속의 접근으로 인한 특정 영수증 생성 실패")
-    void updateReceipt_NoAuthorizationBelonging() {
-        //Given
-        Long existingId = receipt.getId();
-        ReceiptDto updateDto = ReceiptDto.builder()
-            .receiptId(receipt.getId())
-            .date(receipt.getDate())
-            .content("수정된 내용")
-            .deposit(receipt.getDeposit())
-            .build();
-        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
-        when(userRepository.findByUserId(anotherCurrentUser.getUsername())).thenReturn(Optional.of(anotherUser));
-        //When
-        CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.updateReceipt(updateDto, anotherCurrentUser));
-        //Then
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NO_AUTHORIZATION_BELONGING, exception.getMessage());
-        verify(receiptRepository).findById(existingId);
-    }
-
-    @Test
-    @DisplayName("입출금 모두 작성으로 인한 영수증 생성 실패")
-    void updateReceipt_DuplicatedFlow() {
-        //Given
-        Long existingId = receipt.getId();
-        ReceiptDto receiptDtoWithDuplicatedFlow = ReceiptDto.builder()
-            .receiptId(receipt.getId())
-            .content(receipt.getContent())
-            .deposit(1000)
-            .withdrawal(1000)
-            .build();
-        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class, () -> receiptService.updateReceipt(
-            receiptDtoWithDuplicatedFlow, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(DUPLICATED_FLOW, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("입출금 모두 공백으로 인한 영수증 생성 실패")
-    void updateReceipt_EmptyFlow() {
-        //Given
-        Long existingId = receipt.getId();
-        ReceiptDto receiptDtoWithEmptyFlow = ReceiptDto.builder()
-            .receiptId(receipt.getId())
-            .content(receipt.getContent())
-            .deposit(0)
-            .withdrawal(0)
-            .build();
-        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class, () -> receiptService.updateReceipt(
-            receiptDtoWithEmptyFlow, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(DUPLICATED_FLOW, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("영수증 내용 공백으로 인한 영수증 생성 실패")
-    void updateReceipt_EmptyContent() {
-        //Given
-        Long existingId = receipt.getId();
-        ReceiptDto updateDto = ReceiptDto.builder()
-            .receiptId(receipt.getId())
-            .date(receipt.getDate())
-            .content(" ")
-            .deposit(receipt.getDeposit())
-            .build();
-        when(receiptRepository.findById(existingId)).thenReturn(Optional.of(receipt));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class, () -> receiptService.updateReceipt(
-            updateDto, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(EMPTY_CONTENT, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("키워드 검색 성공")
-    void searchReceiptByKeyword_Success() {
-        // Given
-        String keyword = "테스트";
-        Receipt receipt = Receipt.builder()
-            .id(1L)
-            .content("테스트 영수증")
-            .studentClub(studentClub)
-            .build();
-        ReceiptDto receiptDto = ReceiptDto.builder()
-            .receiptId(1L)
-            .content("테스트 영수증")
-            .build();
-
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        when(receiptRepository.findByStudentClubAndContent(studentClub.getId(), keyword))
-            .thenReturn(List.of(receipt));
-        when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
-
-        // When
-        List<ReceiptDto> result = receiptService.searchReceiptByKeyword(keyword, currentUser);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(receiptDto, result.get(0));
-    }
-
-    @Test
-    @DisplayName("키워드가 2글자 미만인 경우 실패")
-    void searchReceiptByKeyword_InvalidKeyword() {
-        // Given
-        String invalidKeyword = "a";
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-
-        // When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.searchReceiptByKeyword(invalidKeyword, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(INVALID_KEYWORD, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("현재 사용자가 존재하지 않는 경우 실패")
-    void searchReceiptByKeyword_NotFoundUser() {
-        // Given
-        String keyword = "테스트";
-
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.empty());
-
-        // When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.searchReceiptByKeyword(keyword, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_USER, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("영수증 페이징 조회 성공 - 정렬 조건 확인")
-    void getReceiptsByClubPaging_Success() {
-        // Given
-        Long clubId = studentClub.getId();
-        int page = 0;
-        int size = 10;
-
-        // 테스트용 더미 데이터 생성
-        List<Receipt> receipts = List.of(receipt);
-        Page<Receipt> receiptPage = new PageImpl<>(receipts, PageRequest.of(page, size), 1);
-
-        // DTO 매핑 결과
-        ReceiptDto receiptDto = ReceiptDto.builder()
-            .receiptId(receipt.getId())
-            .content(receipt.getContent())
-            .deposit(receipt.getDeposit())
-            .build();
-
-        // Mock 설정
-        when(studentClubRepository.findById(clubId)).thenReturn(Optional.of(studentClub));
-        // any(Pageable.class)를 사용하여 Pageable 객체가 무엇이든 간에 receiptPage를 반환하도록 설정
-        when(receiptRepository.findByStudentClub(eq(studentClub), any(Pageable.class)))
-            .thenReturn(receiptPage);
-        when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
-
-        // When
-        PagingReceiptDto result = receiptService.getReceiptsByClubPaging(clubId, page, size, null, null);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.getTotalElements());
-        assertEquals(1, result.getReceiptDtoList().size());
-        assertEquals(receipt.getContent(), result.getReceiptDtoList().get(0).getContent());
-
-        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(receiptRepository).findByStudentClub(eq(studentClub), pageableCaptor.capture());
-
-        Pageable capturedPageable = pageableCaptor.getValue();
-        Sort sort = capturedPageable.getSort();
-
-        // 정렬 조건 검증
-        assertNotNull(sort.getOrderFor("date"));
-        assertEquals(Sort.Direction.DESC, sort.getOrderFor("date").getDirection());
-        assertNotNull(sort.getOrderFor("id"));
-        assertEquals(Sort.Direction.DESC, sort.getOrderFor("id").getDirection());
-    }
-
-    @Test
-    @DisplayName("영수증 월별 필터링 조회 성공")
-    void getReceiptsByClubPaging_WithDateFilter_Success() {
-        // Given
-        Long clubId = studentClub.getId();
-        int page = 0;
-        int size = 10;
-        Integer year = 2025;
-        Integer month = 5;
-
-        // 테스트용 더미 데이터
-        List<Receipt> receipts = List.of(receipt);
-        Page<Receipt> receiptPage = new PageImpl<>(receipts, PageRequest.of(page, size), 1);
-
-        ReceiptDto receiptDto = ReceiptDto.builder()
-            .receiptId(receipt.getId())
-            .content(receipt.getContent())
-            .build();
-
-        // Mock 설정
-        when(studentClubRepository.findById(clubId)).thenReturn(Optional.of(studentClub));
-
-        // year, month가 있을 때는 findAllByStudentClubAndDateBetween이 호출되어야 함
-        // 날짜 계산은 Service 내부 로직이므로, 입력값은 any(Date.class)로 처리하여 유연하게 검증
-        when(receiptRepository.findAllByStudentClubAndDateBetween(
-            eq(studentClub),
-            any(Date.class),
-            any(Date.class),
-            any(Pageable.class))
-        ).thenReturn(receiptPage);
-
-        when(receiptMapper.toReceiptDto(receipt)).thenReturn(receiptDto);
-
-        // When
-        PagingReceiptDto result = receiptService.getReceiptsByClubPaging(clubId, page, size, year, month);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.getTotalElements());
-
-        // 검증: 기존 findByStudentClub이 아니라, DateBetween 메서드가 호출되었는지 확인!
-        verify(receiptRepository).findAllByStudentClubAndDateBetween(
-            eq(studentClub),
-            any(Date.class),
-            any(Date.class),
-            any(Pageable.class)
+        studentClub = createStudentClub(30L, "스마트시스템공과대학 학생회");
+        anotherStudentClub = createStudentClub(35L, "아너칼리지(자연)");
+
+        user = createUser(
+                1L, "testUser", "test name", "60000000",
+                studentClub, "스마트시스템공과대학",
+                "test@example.com", "password123", "PRESIDENT"
         );
 
-        // 검증: 기존 메서드는 호출되지 않아야 함
-        verify(receiptRepository, times(0)).findByStudentClub(any(), any());
+        anotherUser = createUser(
+                2L, "anotherUser", "test name2", "60000001",
+                anotherStudentClub, "아너칼리지",
+                "test2@example.com", "password123", "PRESIDENT"
+        );
+
+        receipt = createReceipt(1L, "영수증 테스트", 1000, 0, studentClub);
+
+        currentUser = createUserDetails("testUser", "password123");
+        anotherCurrentUser = createUserDetails("anotherUser", "password123");
     }
 
-    @Test
-    @DisplayName("학생회 조회 실패로 인한 영수증 페이징 조회 실패")
-    void getReceiptsByClubPaging_NotFoundStudentClub() {
-        // Given
-        Long wrongClubId = 999L;
-        int page = 0;
-        int size = 10;
+    private StudentClub createStudentClub(Long id, String name) {
+        return StudentClub.builder()
+                .id(id)
+                .studentClubName(name)
+                .build();
+    }
 
-        when(studentClubRepository.findById(wrongClubId)).thenReturn(Optional.empty());
+    private User createUser(Long id, String userId, String name, String studentNum,
+                            StudentClub studentClub, String collegeName, String email,
+                            String password, String role) {
+        return User.builder()
+                .id(id)
+                .userId(userId)
+                .name(name)
+                .studentNum(studentNum)
+                .collegeName(collegeName)
+                .email(email)
+                .password(password)
+                .role(role)
+                .studentClub(studentClub)
+                .build();
+    }
 
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> receiptService.getReceiptsByClubPaging(wrongClubId, page, size, null, null));
+    private Receipt createReceipt(Long id, String content, int deposit, int withdrawal, StudentClub studentClub) {
+        return Receipt.builder()
+                .id(id)
+                .content(content)
+                .deposit(deposit)
+                .withdrawal(withdrawal)
+                .studentClub(studentClub)
+                .build();
+    }
 
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_STUDENT_CLUB, exception.getMessage());
+    private ReceiptDto createReceiptDto(Long id, String content, int deposit, int withdrawal) {
+        return ReceiptDto.builder()
+                .receiptId(id)
+                .content(content)
+                .deposit(deposit)
+                .withdrawal(withdrawal)
+                .build();
+    }
 
-        // 예외 발생 시 리포지토리 조회 메서드가 호출되지 않았는지 확인
-        verify(receiptRepository, times(0)).findByStudentClub(any(), any());
+    private ReceiptCreateDto createReceiptCreateDto(String userId, String content, int deposit, int withdrawal) {
+        return ReceiptCreateDto.builder()
+                .userId(userId)
+                .content(content)
+                .deposit(deposit)
+                .withdrawal(withdrawal)
+                .build();
+    }
+
+    private UserDetails createUserDetails(String username, String password) {
+        return new org.springframework.security.core.userdetails.User(
+                username,
+                password,
+                Collections.emptyList()
+        );
+    }
+
+
+    @Nested
+    @DisplayName("createReceipt 메서드는")
+    class Describe_createReceipt {
+
+        @Nested
+        @DisplayName("유효한 영수증 정보가 주어지면")
+        class Context_with_valid_receipt {
+
+            @Test
+            @DisplayName("영수증을 성공적으로 생성한다")
+            void it_creates_successfully() {
+                // given
+                ReceiptCreateDto receiptCreateDto = createReceiptCreateDto("testUser", "영수증 테스트", 1000, 0);
+                ReceiptDto receiptDto = createReceiptDto(1L, "영수증 테스트", 1000, 0);
+                Long clubId = studentClub.getId();
+                String cachePattern = "receiptList::" + clubId + ":*";
+
+                given(userRepository.findByUserId(receiptCreateDto.getUserId())).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+                given(receiptMapper.toReceiptEntity(receiptCreateDto)).willReturn(receipt);
+                given(redisTemplate.keys(cachePattern)).willReturn(java.util.Set.of("receiptList::" + clubId + ":p0_s10_null_null"));
+                given(receiptMapper.toReceiptDto(receipt)).willReturn(receiptDto);
+
+                // when
+                ReceiptDto result = receiptService.createReceipt(receiptCreateDto, currentUser);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getContent()).isEqualTo("영수증 테스트");
+                assertThat(result.getDeposit()).isEqualTo(1000);
+
+                then(receiptRepository).should().save(receipt);
+                then(studentClubRepository).should().save(studentClub);
+                then(redisTemplate).should().keys(cachePattern);
+                then(redisTemplate).should().delete(any(java.util.Set.class));
+            }
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 유저 ID가 주어지면")
+        class Context_with_user_not_found {
+
+            @Test
+            @DisplayName("NOT_FOUND_USER 예외를 던진다")
+            void it_throws_not_found_user_exception() {
+                // given
+                ReceiptCreateDto receiptCreateDto = createReceiptCreateDto("wrongUser", "영수증 테스트", 1000, 0);
+                given(userRepository.findByUserId(receiptCreateDto.getUserId())).willReturn(Optional.empty());
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.createReceipt(receiptCreateDto, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NOT_FOUND_USER);
+
+                then(userRepository).should().findByUserId(receiptCreateDto.getUserId());
+            }
+        }
+
+        @Nested
+        @DisplayName("다른 소속의 유저가 접근하면")
+        class Context_with_unauthorized_user {
+
+            @Test
+            @DisplayName("NO_AUTHORIZATION_BELONGING 예외를 던진다")
+            void it_throws_no_authorization_exception() {
+                // given
+                ReceiptCreateDto receiptCreateDto = createReceiptCreateDto("testUser", "영수증 테스트", 1000, 0);
+                given(userRepository.findByUserId(receiptCreateDto.getUserId())).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(anotherUser.getUserId())).willReturn(Optional.of(anotherUser));
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.createReceipt(receiptCreateDto, anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NO_AUTHORIZATION_BELONGING);
+            }
+        }
+
+        @Nested
+        @DisplayName("입금과 출금이 모두 입력되면")
+        class Context_with_both_deposit_and_withdrawal {
+
+            @Test
+            @DisplayName("DUPLICATED_FLOW 예외를 던진다")
+            void it_throws_duplicated_flow_exception() {
+                // given
+                ReceiptCreateDto receiptCreateDto = createReceiptCreateDto("testUser", "영수증 테스트", 1000, 1000);
+                given(userRepository.findByUserId(receiptCreateDto.getUserId())).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.createReceipt(receiptCreateDto, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", DUPLICATED_FLOW);
+
+                then(userRepository).should(times(2)).findByUserId(receiptCreateDto.getUserId());
+            }
+        }
+
+        @Nested
+        @DisplayName("입금과 출금이 모두 0이면")
+        class Context_with_both_zero {
+
+            @Test
+            @DisplayName("DUPLICATED_FLOW 예외를 던진다")
+            void it_throws_duplicated_flow_exception() {
+                // given
+                ReceiptCreateDto receiptCreateDto = createReceiptCreateDto("testUser", "영수증 테스트", 0, 0);
+                given(userRepository.findByUserId(receiptCreateDto.getUserId())).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.createReceipt(receiptCreateDto, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", DUPLICATED_FLOW);
+
+                then(userRepository).should(times(2)).findByUserId(receiptCreateDto.getUserId());
+            }
+        }
+
+        @Nested
+        @DisplayName("영수증 내용이 비어있으면")
+        class Context_with_empty_content {
+
+            @Test
+            @DisplayName("EMPTY_CONTENT 예외를 던진다")
+            void it_throws_empty_content_exception() {
+                // given
+                ReceiptCreateDto receiptCreateDto = ReceiptCreateDto.builder()
+                        .userId("testUser")
+                        .deposit(1000)
+                        .build();
+                given(userRepository.findByUserId(receiptCreateDto.getUserId())).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.createReceipt(receiptCreateDto, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", EMPTY_CONTENT);
+
+                then(userRepository).should(times(2)).findByUserId(receiptCreateDto.getUserId());
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("getAllReceipts 메서드는")
+    class Describe_getAllReceipts {
+
+        @Nested
+        @DisplayName("영수증이 존재하면")
+        class Context_with_receipts {
+
+            @Test
+            @DisplayName("모든 영수증을 반환한다")
+            void it_returns_all_receipts() {
+                // given
+                Receipt receipt1 = createReceipt(2L, "영수증 테스트1", 2000, 0, studentClub);
+                Receipt receipt2 = createReceipt(3L, "영수증 테스트2", 3000, 0, studentClub);
+                List<Receipt> receiptList = List.of(receipt1, receipt2);
+
+                ReceiptDto receiptDto1 = createReceiptDto(2L, "영수증 테스트1", 2000, 0);
+                ReceiptDto receiptDto2 = createReceiptDto(3L, "영수증 테스트2", 3000, 0);
+
+                given(receiptRepository.findAll()).willReturn(receiptList);
+                given(receiptMapper.toReceiptDto(receipt1)).willReturn(receiptDto1);
+                given(receiptMapper.toReceiptDto(receipt2)).willReturn(receiptDto2);
+
+                // when
+                List<ReceiptDto> result = receiptService.getAllReceipts();
+
+                // then
+                assertThat(result).isNotNull()
+                        .hasSize(2);
+                assertThat(result.get(0)).isEqualTo(receiptDto1);
+                assertThat(result.get(1)).isEqualTo(receiptDto2);
+
+                then(receiptRepository).should().findAll();
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("getReceiptsByClub 메서드는")
+    class Describe_getReceiptsByClub {
+
+        @Nested
+        @DisplayName("유효한 유저 ID가 주어지면")
+        class Context_with_valid_user_id {
+
+            @Test
+            @DisplayName("해당 학생회의 모든 영수증을 반환한다")
+            void it_returns_all_receipts_of_club() {
+                // given
+                Long id = user.getId();
+                Receipt receipt1 = createReceipt(2L, "영수증 테스트1", 2000, 0, studentClub);
+                Receipt receipt2 = createReceipt(3L, "영수증 테스트2", 3000, 0, studentClub);
+                List<Receipt> receiptList = List.of(receipt1, receipt2);
+
+                ReceiptDto receiptDto1 = createReceiptDto(2L, "영수증 테스트1", 2000, 0);
+                ReceiptDto receiptDto2 = createReceiptDto(3L, "영수증 테스트2", 3000, 0);
+
+                given(userRepository.findById(id)).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+                given(receiptRepository.findAllByStudentClubOrderByIdDesc(any(StudentClub.class))).willReturn(receiptList);
+                given(receiptMapper.toReceiptDto(any(Receipt.class))).willAnswer(invocation -> {
+                    Receipt arg = invocation.getArgument(0);
+                    if (arg.getId() == 2L) return receiptDto1;
+                    if (arg.getId() == 3L) return receiptDto2;
+                    return null;
+                });
+
+                // when
+                ReceiptByStudentClubDto result = receiptService.getReceiptsByClub(id, currentUser);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getReceiptList().get(0)).isEqualTo(receiptDto1);
+                assertThat(result.getReceiptList().get(1)).isEqualTo(receiptDto2);
+
+                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(studentClub);
+            }
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 유저 ID가 주어지면")
+        class Context_with_user_not_found {
+
+            @Test
+            @DisplayName("NOT_FOUND_USER 예외를 던진다")
+            void it_throws_not_found_user_exception() {
+                // given
+                Long wrongId = 999L;
+                given(userRepository.findById(wrongId)).willReturn(Optional.empty());
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.getReceiptsByClub(wrongId, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NOT_FOUND_USER);
+
+                then(userRepository).should().findById(wrongId);
+            }
+        }
+
+        @Nested
+        @DisplayName("다른 소속의 유저가 접근하면")
+        class Context_with_unauthorized_user {
+
+            @Test
+            @DisplayName("NO_AUTHORIZATION_BELONGING 예외를 던진다")
+            void it_throws_no_authorization_exception() {
+                // given
+                Long id = user.getId();
+                given(userRepository.findById(id)).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(anotherUser.getUserId())).willReturn(Optional.of(anotherUser));
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.getReceiptsByClub(id, anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NO_AUTHORIZATION_BELONGING);
+
+                then(userRepository).should().findById(id);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("getReceiptsByClubForStudent 메서드는")
+    class Describe_getReceiptsByClubForStudent {
+
+        @Nested
+        @DisplayName("유효한 학생회 ID가 주어지면")
+        class Context_with_valid_club_id {
+
+            @Test
+            @DisplayName("해당 학생회의 모든 영수증을 반환한다")
+            void it_returns_all_receipts() {
+                // given
+                Long clubId = studentClub.getId();
+                Receipt receipt1 = createReceipt(2L, "영수증 테스트1", 2000, 0, studentClub);
+                Receipt receipt2 = createReceipt(3L, "영수증 테스트2", 3000, 0, studentClub);
+                List<Receipt> receiptList = List.of(receipt1, receipt2);
+
+                ReceiptDto receiptDto1 = createReceiptDto(2L, "영수증 테스트1", 2000, 0);
+                ReceiptDto receiptDto2 = createReceiptDto(3L, "영수증 테스트2", 3000, 0);
+
+                given(studentClubRepository.findById(clubId)).willReturn(Optional.of(studentClub));
+                given(receiptRepository.findAllByStudentClubOrderByIdDesc(studentClub)).willReturn(receiptList);
+                given(receiptMapper.toReceiptDto(receipt1)).willReturn(receiptDto1);
+                given(receiptMapper.toReceiptDto(receipt2)).willReturn(receiptDto2);
+
+                // when
+                List<ReceiptDto> result = receiptService.getReceiptsByClubForStudent(clubId);
+
+                // then
+                assertThat(result).isNotNull()
+                        .hasSize(2);
+                assertThat(result.get(0)).isEqualTo(receiptDto1);
+                assertThat(result.get(1)).isEqualTo(receiptDto2);
+
+                then(studentClubRepository).should().findById(clubId);
+                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(studentClub);
+            }
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 학생회 ID가 주어지면")
+        class Context_with_student_club_not_found {
+
+            @Test
+            @DisplayName("NOT_FOUND_STUDENT_CLUB 예외를 던진다")
+            void it_throws_not_found_student_club_exception() {
+                // given
+                Long clubId = 999L;
+                given(studentClubRepository.findById(clubId)).willReturn(Optional.empty());
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.getReceiptsByClubForStudent(clubId))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NOT_FOUND_STUDENT_CLUB);
+
+                then(studentClubRepository).should().findById(clubId);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("getReceiptById 메서드는")
+    class Describe_getReceiptById {
+
+        @Nested
+        @DisplayName("유효한 영수증 ID가 주어지면")
+        class Context_with_valid_receipt_id {
+
+            @Test
+            @DisplayName("해당 영수증을 반환한다")
+            void it_returns_receipt() {
+                // given
+                Long receiptId = receipt.getId();
+                ReceiptDto receiptDto = createReceiptDto(receipt.getId(), receipt.getContent(), receipt.getDeposit(), 0);
+
+                given(receiptRepository.findById(receiptId)).willReturn(Optional.of(receipt));
+                given(receiptMapper.toReceiptDto(receipt)).willReturn(receiptDto);
+
+                // when
+                ReceiptDto result = receiptService.getReceiptById(receiptId);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result).isEqualTo(receiptDto);
+
+                then(receiptRepository).should().findById(receiptId);
+                then(receiptMapper).should().toReceiptDto(receipt);
+            }
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 영수증 ID가 주어지면")
+        class Context_with_receipt_not_found {
+
+            @Test
+            @DisplayName("NOT_FOUND_RECEIPT 예외를 던진다")
+            void it_throws_not_found_receipt_exception() {
+                // given
+                Long wrongReceiptId = 999L;
+                given(receiptRepository.findById(wrongReceiptId)).willReturn(Optional.empty());
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.getReceiptById(wrongReceiptId))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NOT_FOUND_RECEIPT);
+
+                then(receiptRepository).should().findById(wrongReceiptId);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("deleteReceipt 메서드는")
+    class Describe_deleteReceipt {
+
+        @Nested
+        @DisplayName("유효한 영수증 ID가 주어지면")
+        class Context_with_valid_receipt_id {
+
+            @Test
+            @DisplayName("영수증을 성공적으로 삭제한다")
+            void it_deletes_successfully() {
+                // given
+                Long receiptId = receipt.getId();
+                Long clubId = studentClub.getId();
+                ReceiptDto receiptDto = createReceiptDto(receipt.getId(), receipt.getContent(), receipt.getDeposit(), 0);
+                String cachePattern = "receiptList::" + clubId + ":*";
+
+                ReceiptRepository.ReceiptCount mockCount = mock(ReceiptRepository.ReceiptCount.class);
+                given(mockCount.getTotal()).willReturn(10L);
+                given(mockCount.getVerified()).willReturn(5L);
+
+                given(receiptRepository.findById(receiptId)).willReturn(Optional.of(receipt));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+                given(receiptMapper.toReceiptDto(receipt)).willReturn(receiptDto);
+                given(studentClubRepository.findById(receipt.getStudentClub().getId())).willReturn(Optional.of(studentClub));
+                given(receiptRepository.countTotalAndVerified(studentClub)).willReturn(mockCount);
+                given(redisTemplate.keys(cachePattern)).willReturn(java.util.Set.of("receiptList::" + clubId + ":p0_s10_null_null"));
+
+                // when
+                ReceiptDto result = receiptService.deleteReceipt(receiptId, currentUser);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result).isEqualTo(receiptDto);
+                assertThat(user.getUserId()).isEqualTo(currentUser.getUsername());
+
+                then(receiptRepository).should().findById(receiptId);
+                then(receiptRepository).should().delete(receipt);
+                then(studentClubRepository).should().save(studentClub);
+                then(receiptMapper).should().toReceiptDto(receipt);
+                then(receiptRepository).should().countTotalAndVerified(studentClub);
+                then(redisTemplate).should().keys(cachePattern);
+                then(redisTemplate).should().delete(any(java.util.Set.class));
+            }
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 영수증 ID가 주어지면")
+        class Context_with_receipt_not_found {
+
+            @Test
+            @DisplayName("NOT_FOUND_RECEIPT 예외를 던진다")
+            void it_throws_not_found_receipt_exception() {
+                // given
+                Long wrongReceiptId = 999L;
+                given(receiptRepository.findById(wrongReceiptId)).willReturn(Optional.empty());
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.deleteReceipt(wrongReceiptId, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NOT_FOUND_RECEIPT);
+
+                then(receiptRepository).should().findById(wrongReceiptId);
+            }
+        }
+
+        @Nested
+        @DisplayName("다른 소속의 유저가 접근하면")
+        class Context_with_unauthorized_user {
+
+            @Test
+            @DisplayName("NO_AUTHORIZATION_BELONGING 예외를 던진다")
+            void it_throws_no_authorization_exception() {
+                // given
+                Long receiptId = receipt.getId();
+                given(receiptRepository.findById(receiptId)).willReturn(Optional.of(receipt));
+                given(userRepository.findByUserId(anotherCurrentUser.getUsername())).willReturn(Optional.of(anotherUser));
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.deleteReceipt(receiptId, anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NO_AUTHORIZATION_BELONGING);
+
+                then(receiptRepository).should().findById(receiptId);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("updateReceipt 메서드는")
+    class Describe_updateReceipt {
+
+        @Nested
+        @DisplayName("영수증 내용을 수정하면")
+        class Context_with_content_update {
+
+            @Test
+            @DisplayName("내용이 성공적으로 수정된다")
+            void it_updates_content_successfully() {
+                // given
+                Long existingId = receipt.getId();
+                Long clubId = studentClub.getId();
+                String cachePattern = "receiptList::" + clubId + ":*";
+                ReceiptDto updateDto = ReceiptDto.builder()
+                        .receiptId(receipt.getId())
+                        .date(receipt.getDate())
+                        .content("수정된 내용")
+                        .deposit(receipt.getDeposit())
+                        .build();
+
+                given(receiptRepository.findById(existingId)).willReturn(Optional.of(receipt));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+                given(receiptMapper.toReceiptDto(receipt)).willReturn(updateDto);
+                given(redisTemplate.keys(cachePattern)).willReturn(java.util.Set.of("receiptList::" + clubId + ":p0_s10_null_null"));
+
+                // when
+                ReceiptDto result = receiptService.updateReceipt(updateDto, currentUser);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getContent()).isEqualTo("수정된 내용");
+                assertThat(result.getDeposit()).isEqualTo(1000);
+
+                then(receiptRepository).should().findById(existingId);
+                then(studentClubRepository).should().save(studentClub);
+                then(receiptRepository).should().save(receipt);
+                then(redisTemplate).should().keys(cachePattern);
+                then(redisTemplate).should().delete(any(java.util.Set.class));
+            }
+        }
+
+        @Nested
+        @DisplayName("영수증 금액을 수정하면")
+        class Context_with_amount_update {
+
+            @Test
+            @DisplayName("금액이 성공적으로 수정된다")
+            void it_updates_amount_successfully() {
+                // given
+                Long existingId = receipt.getId();
+                Long clubId = studentClub.getId();
+                String cachePattern = "receiptList::" + clubId + ":*";
+                ReceiptDto updateDto = ReceiptDto.builder()
+                        .receiptId(receipt.getId())
+                        .date(receipt.getDate())
+                        .content(receipt.getContent())
+                        .deposit(4500)
+                        .build();
+
+                given(receiptRepository.findById(existingId)).willReturn(Optional.of(receipt));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+                given(receiptMapper.toReceiptDto(receipt)).willReturn(updateDto);
+                given(redisTemplate.keys(cachePattern)).willReturn(java.util.Set.of("receiptList::" + clubId + ":p0_s10_null_null"));
+
+                // when
+                ReceiptDto result = receiptService.updateReceipt(updateDto, currentUser);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getContent()).isEqualTo(receipt.getContent());
+                assertThat(result.getDeposit()).isEqualTo(4500);
+
+                then(receiptRepository).should().findById(existingId);
+                then(studentClubRepository).should().save(studentClub);
+                then(receiptRepository).should().save(receipt);
+                then(redisTemplate).should().keys(cachePattern);
+                then(redisTemplate).should().delete(any(java.util.Set.class));
+            }
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 영수증 ID가 주어지면")
+        class Context_with_receipt_not_found {
+
+            @Test
+            @DisplayName("NOT_FOUND_RECEIPT 예외를 던진다")
+            void it_throws_not_found_receipt_exception() {
+                // given
+                Long wrongReceiptId = 999L;
+                ReceiptDto receiptDto = createReceiptDto(wrongReceiptId, "테스트", 1000, 0);
+                given(receiptRepository.findById(wrongReceiptId)).willReturn(Optional.empty());
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.updateReceipt(receiptDto, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NOT_FOUND_RECEIPT);
+
+                then(receiptRepository).should().findById(wrongReceiptId);
+            }
+        }
+
+        @Nested
+        @DisplayName("다른 소속의 유저가 접근하면")
+        class Context_with_unauthorized_user {
+
+            @Test
+            @DisplayName("NO_AUTHORIZATION_BELONGING 예외를 던진다")
+            void it_throws_no_authorization_exception() {
+                // given
+                Long existingId = receipt.getId();
+                ReceiptDto updateDto = ReceiptDto.builder()
+                        .receiptId(receipt.getId())
+                        .date(receipt.getDate())
+                        .content("수정된 내용")
+                        .deposit(receipt.getDeposit())
+                        .build();
+
+                given(receiptRepository.findById(existingId)).willReturn(Optional.of(receipt));
+                given(userRepository.findByUserId(anotherCurrentUser.getUsername())).willReturn(Optional.of(anotherUser));
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.updateReceipt(updateDto, anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NO_AUTHORIZATION_BELONGING);
+
+                then(receiptRepository).should().findById(existingId);
+            }
+        }
+
+        @Nested
+        @DisplayName("입금과 출금이 모두 입력되면")
+        class Context_with_both_deposit_and_withdrawal {
+
+            @Test
+            @DisplayName("DUPLICATED_FLOW 예외를 던진다")
+            void it_throws_duplicated_flow_exception() {
+                // given
+                Long existingId = receipt.getId();
+                ReceiptDto receiptDto = ReceiptDto.builder()
+                        .receiptId(receipt.getId())
+                        .content(receipt.getContent())
+                        .deposit(1000)
+                        .withdrawal(1000)
+                        .build();
+
+                given(receiptRepository.findById(existingId)).willReturn(Optional.of(receipt));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.updateReceipt(receiptDto, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", DUPLICATED_FLOW);
+            }
+        }
+
+        @Nested
+        @DisplayName("입금과 출금이 모두 0이면")
+        class Context_with_both_zero {
+
+            @Test
+            @DisplayName("DUPLICATED_FLOW 예외를 던진다")
+            void it_throws_duplicated_flow_exception() {
+                // given
+                Long existingId = receipt.getId();
+                ReceiptDto receiptDto = ReceiptDto.builder()
+                        .receiptId(receipt.getId())
+                        .content(receipt.getContent())
+                        .deposit(0)
+                        .withdrawal(0)
+                        .build();
+
+                given(receiptRepository.findById(existingId)).willReturn(Optional.of(receipt));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.updateReceipt(receiptDto, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", DUPLICATED_FLOW);
+            }
+        }
+
+        @Nested
+        @DisplayName("영수증 내용이 비어있으면")
+        class Context_with_empty_content {
+
+            @Test
+            @DisplayName("EMPTY_CONTENT 예외를 던진다")
+            void it_throws_empty_content_exception() {
+                // given
+                Long existingId = receipt.getId();
+                ReceiptDto updateDto = ReceiptDto.builder()
+                        .receiptId(receipt.getId())
+                        .date(receipt.getDate())
+                        .content(" ")
+                        .deposit(receipt.getDeposit())
+                        .build();
+
+                given(receiptRepository.findById(existingId)).willReturn(Optional.of(receipt));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.updateReceipt(updateDto, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", EMPTY_CONTENT);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("searchReceiptByKeyword 메서드는")
+    class Describe_searchReceiptByKeyword {
+
+        @Nested
+        @DisplayName("유효한 키워드가 주어지면")
+        class Context_with_valid_keyword {
+
+            @Test
+            @DisplayName("키워드를 포함한 영수증을 반환한다")
+            void it_returns_receipts_with_keyword() {
+                // given
+                String keyword = "테스트";
+                Receipt receipt = createReceipt(1L, "테스트 영수증", 0, 0, studentClub);
+                ReceiptDto receiptDto = createReceiptDto(1L, "테스트 영수증", 0, 0);
+
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+                given(receiptRepository.findByStudentClubAndContent(studentClub.getId(), keyword))
+                        .willReturn(List.of(receipt));
+                given(receiptMapper.toReceiptDto(receipt)).willReturn(receiptDto);
+
+                // when
+                List<ReceiptDto> result = receiptService.searchReceiptByKeyword(keyword, currentUser);
+
+                // then
+                assertThat(result).isNotNull()
+                        .hasSize(1);
+                assertThat(result.get(0)).isEqualTo(receiptDto);
+            }
+        }
+
+        @Nested
+        @DisplayName("2글자 미만의 키워드가 주어지면")
+        class Context_with_invalid_keyword {
+
+            @Test
+            @DisplayName("INVALID_KEYWORD 예외를 던진다")
+            void it_throws_invalid_keyword_exception() {
+                // given
+                String invalidKeyword = "a";
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.searchReceiptByKeyword(invalidKeyword, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", INVALID_KEYWORD);
+            }
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 유저가 검색하면")
+        class Context_with_user_not_found {
+
+            @Test
+            @DisplayName("NOT_FOUND_USER 예외를 던진다")
+            void it_throws_not_found_user_exception() {
+                // given
+                String keyword = "테스트";
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.empty());
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.searchReceiptByKeyword(keyword, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NOT_FOUND_USER);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("getReceiptsByClubPaging 메서드는")
+    class Describe_getReceiptsByClubPaging {
+
+        @Nested
+        @DisplayName("유효한 페이징 요청이 주어지면")
+        class Context_with_valid_paging_request {
+
+            @Test
+            @DisplayName("정렬 조건에 맞게 페이징된 영수증 목록을 반환한다")
+            void it_returns_paged_receipts_with_sorting() {
+                // given
+                Long clubId = studentClub.getId();
+                int page = 0;
+                int size = 10;
+
+                List<Receipt> receipts = List.of(receipt);
+                Page<Receipt> receiptPage = new PageImpl<>(receipts, PageRequest.of(page, size), 1);
+                ReceiptDto receiptDto = createReceiptDto(receipt.getId(), receipt.getContent(), receipt.getDeposit(), 0);
+
+                given(studentClubRepository.findById(clubId)).willReturn(Optional.of(studentClub));
+                given(receiptRepository.findByStudentClub(eq(studentClub), any(Pageable.class)))
+                        .willReturn(receiptPage);
+                given(receiptMapper.toReceiptDto(receipt)).willReturn(receiptDto);
+
+                // when
+                PagingReceiptDto result = receiptService.getReceiptsByClubPaging(clubId, page, size, null, null);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getTotalElements()).isEqualTo(1);
+                assertThat(result.getReceiptDtoList()).hasSize(1);
+                assertThat(result.getReceiptDtoList().get(0).getContent()).isEqualTo(receipt.getContent());
+
+                ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+                then(receiptRepository).should().findByStudentClub(eq(studentClub), pageableCaptor.capture());
+
+                Pageable capturedPageable = pageableCaptor.getValue();
+                Sort sort = capturedPageable.getSort();
+
+                assertThat(sort.getOrderFor("date")).isNotNull();
+                assertThat(sort.getOrderFor("date").getDirection()).isEqualTo(Sort.Direction.DESC);
+                assertThat(sort.getOrderFor("id")).isNotNull();
+                assertThat(sort.getOrderFor("id").getDirection()).isEqualTo(Sort.Direction.DESC);
+            }
+        }
+
+        @Nested
+        @DisplayName("연도와 월 필터가 주어지면")
+        class Context_with_date_filter {
+
+            @Test
+            @DisplayName("해당 기간의 영수증만 반환한다")
+            void it_returns_filtered_receipts() {
+                // given
+                Long clubId = studentClub.getId();
+                int page = 0;
+                int size = 10;
+                Integer year = 2025;
+                Integer month = 5;
+
+                List<Receipt> receipts = List.of(receipt);
+                Page<Receipt> receiptPage = new PageImpl<>(receipts, PageRequest.of(page, size), 1);
+                ReceiptDto receiptDto = createReceiptDto(receipt.getId(), receipt.getContent(), 0, 0);
+
+                given(studentClubRepository.findById(clubId)).willReturn(Optional.of(studentClub));
+                given(receiptRepository.findAllByStudentClubAndDateBetween(
+                        eq(studentClub),
+                        any(Date.class),
+                        any(Date.class),
+                        any(Pageable.class))
+                ).willReturn(receiptPage);
+                given(receiptMapper.toReceiptDto(receipt)).willReturn(receiptDto);
+
+                // when
+                PagingReceiptDto result = receiptService.getReceiptsByClubPaging(clubId, page, size, year, month);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getTotalElements()).isEqualTo(1);
+
+                then(receiptRepository).should().findAllByStudentClubAndDateBetween(
+                        eq(studentClub),
+                        any(Date.class),
+                        any(Date.class),
+                        any(Pageable.class)
+                );
+                then(receiptRepository).should(never()).findByStudentClub(any(), any());
+            }
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 학생회 ID가 주어지면")
+        class Context_with_student_club_not_found {
+
+            @Test
+            @DisplayName("NOT_FOUND_STUDENT_CLUB 예외를 던진다")
+            void it_throws_not_found_student_club_exception() {
+                // given
+                Long wrongClubId = 999L;
+                int page = 0;
+                int size = 10;
+
+                given(studentClubRepository.findById(wrongClubId)).willReturn(Optional.empty());
+
+                // when & then
+                assertThatThrownBy(() -> receiptService.getReceiptsByClubPaging(wrongClubId, page, size, null, null))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NOT_FOUND_STUDENT_CLUB);
+
+                then(receiptRepository).should(never()).findByStudentClub(any(), any());
+            }
+        }
     }
 }

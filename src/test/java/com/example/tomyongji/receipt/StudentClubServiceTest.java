@@ -1,11 +1,13 @@
 package com.example.tomyongji.receipt;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
+import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_USER;
+import static com.example.tomyongji.global.error.ErrorMsg.NO_AUTHORIZATION_BELONGING;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import com.example.tomyongji.domain.admin.dto.PresidentDto;
 import com.example.tomyongji.domain.admin.service.AdminService;
@@ -22,11 +24,13 @@ import com.example.tomyongji.domain.receipt.repository.ReceiptRepository;
 import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.domain.receipt.service.StudentClubService;
 import com.example.tomyongji.global.error.CustomException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -35,7 +39,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @ExtendWith(MockitoExtension.class)
-public class StudentClubServiceTest {
+class StudentClubServiceTest {
 
     @Mock
     private StudentClubRepository studentClubRepository;
@@ -51,17 +55,12 @@ public class StudentClubServiceTest {
     private AdminService adminService;
 
     @InjectMocks
-    StudentClubService studentClubService;
+    private StudentClubService studentClubService;
 
     private College college;
     private StudentClub convergenceSoftware;
     private StudentClub digitalContentsDesign;
     private StudentClub business;
-    private ClubDto convergenceSoftwareDto;
-    private ClubDto digitalContentsDesignDto;
-    private ClubDto businessDto;
-
-    // 학생회 이전 기능 테스트 사용 필드
     private User president;
     private User student1;
     private User nextPresident;
@@ -71,229 +70,277 @@ public class StudentClubServiceTest {
 
     @BeforeEach
     void setUp() {
-        college = College.builder()
-            .id(1L)
-            .collegeName("ICT 융합대학")
-            .build();
-        convergenceSoftware = StudentClub.builder()
-            .id(1L)
-            .studentClubName("융합소프트웨어학부 학생회")
-            .Balance(1000)
-            .college(college)
-            .build();
-        digitalContentsDesign = StudentClub.builder()
-            .id(2L)
-            .studentClubName("디지털콘텐츠디자인전공 학생회")
-            .Balance(1000)
-            .college(college)
-            .build();
-        business = StudentClub.builder()
-            .id(3L)
-            .studentClubName("경영전공 학생회")
-            .Balance(1000)
-            .build();
-        convergenceSoftwareDto = ClubDto.builder()
-            .studentClubId(convergenceSoftware.getId())
-            .studentClubName(convergenceSoftware.getStudentClubName())
-            .build();
-        digitalContentsDesignDto = ClubDto.builder()
-            .studentClubId(digitalContentsDesign.getId())
-            .studentClubName(digitalContentsDesign.getStudentClubName())
-            .build();
-        businessDto = ClubDto.builder()
-            .studentClubId(business.getId())
-            .studentClubName(business.getStudentClubName())
-            .build();
+        college = createCollege(1L, "ICT 융합대학");
 
+        convergenceSoftware = createStudentClub(1L, "융합소프트웨어학부 학생회", 1000, college);
+        digitalContentsDesign = createStudentClub(2L, "디지털콘텐츠디자인전공 학생회", 1000, college);
+        business = createStudentClub(3L, "경영전공 학생회", 1000, null);
 
-        president = User.builder()
-                .id(1L)
-                .userId("president123")
-                .name("정우주")
-                .studentNum("60221317")
-                .collegeName("ICT 융합대학")
-                .email("president@mju.ac.kr")
-                .password("password")
-                .role("PRESIDENT")
-                .studentClub(convergenceSoftware)
-                .build();
+        president = createUser(
+                1L, "president123", "정우주", "60221317",
+                convergenceSoftware, "ICT 융합대학",
+                "president@mju.ac.kr", "password", "PRESIDENT"
+        );
 
-        student1 = User.builder()
-                .id(2L)
-                .userId("student1")
-                .name("홍길동")
-                .studentNum("60221111")
-                .collegeName("ICT 융합대학")
-                .email("student1@mju.ac.kr")
-                .password("password")
-                .role("STU")
-                .studentClub(convergenceSoftware)
-                .build();
+        student1 = createUser(
+                2L, "student1", "홍길동", "60221111",
+                convergenceSoftware, "ICT 융합대학",
+                "student1@mju.ac.kr", "password", "STU"
+        );
 
-        nextPresident = User.builder()
-                .id(3L)
-                .userId("nextPresident")
-                .name("박진형")
-                .studentNum("60221318")
-                .collegeName("ICT 융합대학")
-                .email("np@mju.ac.kr")
-                .password("password")
-                .role("STU")
-                .studentClub(convergenceSoftware)
-                .build();
+        nextPresident = createUser(
+                3L, "nextPresident", "박진형", "60221318",
+                convergenceSoftware, "ICT 융합대학",
+                "np@mju.ac.kr", "password", "STU"
+        );
 
-        receipt1 = Receipt.builder()
-                .id(1L)
-                .deposit(5000)
-                .withdrawal(0)
-                .studentClub(convergenceSoftware)
-                .build();
+        receipt1 = createReceipt(1L, 5000, 0, convergenceSoftware);
+        receipt2 = createReceipt(2L, 0, 2000, convergenceSoftware);
 
-        receipt2 = Receipt.builder()
-                .id(2L)
-                .deposit(0)
-                .withdrawal(2000)
-                .studentClub(convergenceSoftware)
-                .build();
+        currentUser = createUserDetails("president123", "password", "PRESIDENT");
+    }
 
-        currentUser = org.springframework.security.core.userdetails.User
-                .withUsername("president123")
-                .password("password")
-                .roles("PRESIDENT")
+    // ==================== Fixture Methods ====================
+
+    private College createCollege(Long id, String name) {
+        return College.builder()
+                .id(id)
+                .collegeName(name)
                 .build();
     }
 
-    @Test
-    @DisplayName("모든 학생회 조회 성공")
-    void getAllStudentClub_Success() {
-        //Given
-        List<StudentClub> studentClubList = List.of(convergenceSoftware, digitalContentsDesign, business);
-        when(studentClubRepository.findAll()).thenReturn(studentClubList);
-        when(studentClubMapper.toClubDto(convergenceSoftware)).thenReturn(convergenceSoftwareDto);
-        when(studentClubMapper.toClubDto(digitalContentsDesign)).thenReturn(digitalContentsDesignDto);
-        when(studentClubMapper.toClubDto(business)).thenReturn(businessDto);
-
-        //When
-        List<ClubDto> result = studentClubService.getAllStudentClub();
-        //Then
-        assertNotNull(result);
-        assertEquals(result.size(), 3);
-        assertEquals(result.get(0), convergenceSoftwareDto);
-        assertEquals(result.get(1), digitalContentsDesignDto);
-        assertEquals(result.get(2), businessDto);
-        verify(studentClubRepository).findAll();
-    }
-
-    @Test
-    @DisplayName("대학에 맞는 학생회 조회 성공")
-    void getStudentClubById_Success() {
-        //Given
-        Long collegeId = college.getId();
-        List<StudentClub> ictStudentClubList = List.of(convergenceSoftware, digitalContentsDesign);
-        when(studentClubRepository.findAllByCollege_Id(collegeId)).thenReturn(ictStudentClubList);
-        when(studentClubMapper.toClubDto(convergenceSoftware)).thenReturn(convergenceSoftwareDto);
-        when(studentClubMapper.toClubDto(digitalContentsDesign)).thenReturn(digitalContentsDesignDto);
-        //When
-        List<ClubDto> result = studentClubService.getStudentClubById(collegeId);
-        //Then
-        assertNotNull(result);
-        assertEquals(result.size(), 2);
-        assertEquals(result.get(0), convergenceSoftwareDto);
-        assertEquals(result.get(1), digitalContentsDesignDto);
-        verify(studentClubRepository).findAllByCollege_Id(collegeId);
-    }
-
-    @Test
-    @DisplayName("다음 회장이 확정되지 않았을 경우 학생회 이전 성공")
-    void transferStudentClub_Success() {
-        //Given
-        List<Receipt> receipts = List.of(receipt1, receipt2);
-
-        when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
-        when(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).thenReturn(receipts);
-        when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
-        when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of(student1));
-
-        //When
-        TransferDto result = studentClubService.transferStudentClub(null, currentUser);
-
-
-        //Then
-        assertNotNull(result);
-        assertEquals("융합소프트웨어학부 학생회", result.getStudentClubName());
-        assertEquals(3000, result.getTotalDeposit());
-        assertEquals(3000, result.getNetAmount());
-
-        verify(userRepository).findByUserId("president123");
-        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(convergenceSoftware);
-
-        verify(receiptRepository).deleteAll(receipts);
-        verify(receiptRepository).save(any(Receipt.class));
-        verify(studentClubRepository).save(convergenceSoftware);
-        verify(userService).deleteUser("president123");
-        verify(userService).deleteUser("student1");
-    }
-
-    @Test
-    @DisplayName("다음 회장이 존재하는 경우 학생회 이전 성공")
-    void transferStudentClub_WithNextPresident_Success() {
-        //Given
-        Receipt depositReceipt = Receipt.builder()
-                .id(1L)
-                .deposit(10000)
-                .withdrawal(0)
-                .studentClub(convergenceSoftware)
+    private StudentClub createStudentClub(Long id, String name, int balance, College college) {
+        return StudentClub.builder()
+                .id(id)
+                .studentClubName(name)
+                .Balance(balance)
+                .college(college)
                 .build();
-        List<Receipt> receipts = List.of(depositReceipt);
-
-        PresidentDto nextPresidentDto = PresidentDto.builder()
-                .clubId(0L)
-                .studentNum("60221318")
-                .name("박진형")
-                .build();
-
-        when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
-        when(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).thenReturn(receipts);
-        when(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).thenReturn(president);
-        when(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).thenReturn(List.of());
-
-        //When
-        TransferDto result = studentClubService.transferStudentClub(nextPresidentDto, currentUser);
-
-
-        //Then
-        assertNotNull(result);
-        assertEquals("융합소프트웨어학부 학생회", result.getStudentClubName());
-        assertEquals(10000, result.getTotalDeposit());
-        assertEquals(10000, result.getNetAmount());
-
-        verify(userRepository).findByUserId("president123");
-        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(convergenceSoftware);
-        verify(receiptRepository).deleteAll(receipts);
-        verify(receiptRepository).save(any(Receipt.class));
-        verify(studentClubRepository).save(convergenceSoftware);
-        verify(userService).deleteUser("president123");
-        verify(adminService).savePresident(any(PresidentDto.class));
     }
 
-    @Test
-    @DisplayName("영수증이 0개일 경우 학생회 이전 실패")
-    void transferStudentClub_EmptyReceipts_Failure() {
-        //Given
-        List<Receipt> receipts = List.of();
+    private User createUser(Long id, String userId, String name, String studentNum,
+                            StudentClub studentClub, String collegeName, String email,
+                            String password, String role) {
+        return User.builder()
+                .id(id)
+                .userId(userId)
+                .name(name)
+                .studentNum(studentNum)
+                .studentClub(studentClub)
+                .collegeName(collegeName)
+                .email(email)
+                .password(password)
+                .role(role)
+                .build();
+    }
 
-        when(userRepository.findByUserId("president123")).thenReturn(Optional.of(president));
-        when(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).thenReturn(receipts);
+    private Receipt createReceipt(Long id, int deposit, int withdrawal, StudentClub studentClub) {
+        return Receipt.builder()
+                .id(id)
+                .deposit(deposit)
+                .withdrawal(withdrawal)
+                .studentClub(studentClub)
+                .build();
+    }
 
-        //When & Then
-        CustomException exception = assertThrows(CustomException.class, () -> {
-            studentClubService.transferStudentClub(null, currentUser);
-        });
+    private ClubDto createClubDto(Long id, String name) {
+        return ClubDto.builder()
+                .studentClubId(id)
+                .studentClubName(name)
+                .build();
+    }
 
-        assertEquals("이월할 영수증이 없습니다.", exception.getMessage());
-        assertEquals(400, exception.getErrorCode());
+    private UserDetails createUserDetails(String username, String password, String role) {
+        return org.springframework.security.core.userdetails.User
+                .withUsername(username)
+                .password(password)
+                .roles(role)
+                .build();
+    }
 
-        verify(userRepository).findByUserId("president123");
-        verify(receiptRepository).findAllByStudentClubOrderByIdDesc(convergenceSoftware);
+    private PresidentDto createPresidentDto(Long clubId, String studentNum, String name) {
+        return PresidentDto.builder()
+                .clubId(clubId)
+                .studentNum(studentNum)
+                .name(name)
+                .build();
+    }
+
+    // ==================== getAllStudentClub 테스트 ====================
+
+    @Nested
+    @DisplayName("getAllStudentClub 메서드는")
+    class Describe_getAllStudentClub {
+
+        @Nested
+        @DisplayName("학생회가 존재하면")
+        class Context_with_student_clubs {
+
+            @Test
+            @DisplayName("모든 학생회 목록을 반환한다")
+            void it_returns_all_student_clubs() {
+                // given
+                List<StudentClub> studentClubList = List.of(convergenceSoftware, digitalContentsDesign, business);
+                ClubDto convergenceSoftwareDto = createClubDto(convergenceSoftware.getId(), convergenceSoftware.getStudentClubName());
+                ClubDto digitalContentsDesignDto = createClubDto(digitalContentsDesign.getId(), digitalContentsDesign.getStudentClubName());
+                ClubDto businessDto = createClubDto(business.getId(), business.getStudentClubName());
+
+                given(studentClubRepository.findAll()).willReturn(studentClubList);
+                given(studentClubMapper.toClubDto(convergenceSoftware)).willReturn(convergenceSoftwareDto);
+                given(studentClubMapper.toClubDto(digitalContentsDesign)).willReturn(digitalContentsDesignDto);
+                given(studentClubMapper.toClubDto(business)).willReturn(businessDto);
+
+                // when
+                List<ClubDto> result = studentClubService.getAllStudentClub();
+
+                // then
+                assertThat(result).isNotNull()
+                        .hasSize(3);
+                assertThat(result.get(0)).isEqualTo(convergenceSoftwareDto);
+                assertThat(result.get(1)).isEqualTo(digitalContentsDesignDto);
+                assertThat(result.get(2)).isEqualTo(businessDto);
+
+                then(studentClubRepository).should().findAll();
+            }
+        }
+    }
+
+    // ==================== getStudentClubById 테스트 ====================
+
+    @Nested
+    @DisplayName("getStudentClubById 메서드는")
+    class Describe_getStudentClubById {
+
+        @Nested
+        @DisplayName("유효한 단과대 ID가 주어지면")
+        class Context_with_valid_college_id {
+
+            @Test
+            @DisplayName("해당 단과대의 모든 학생회를 반환한다")
+            void it_returns_student_clubs_of_college() {
+                // given
+                Long collegeId = college.getId();
+                List<StudentClub> ictStudentClubList = List.of(convergenceSoftware, digitalContentsDesign);
+                ClubDto convergenceSoftwareDto = createClubDto(convergenceSoftware.getId(), convergenceSoftware.getStudentClubName());
+                ClubDto digitalContentsDesignDto = createClubDto(digitalContentsDesign.getId(), digitalContentsDesign.getStudentClubName());
+
+                given(studentClubRepository.findAllByCollege_Id(collegeId)).willReturn(ictStudentClubList);
+                given(studentClubMapper.toClubDto(convergenceSoftware)).willReturn(convergenceSoftwareDto);
+                given(studentClubMapper.toClubDto(digitalContentsDesign)).willReturn(digitalContentsDesignDto);
+
+                // when
+                List<ClubDto> result = studentClubService.getStudentClubById(collegeId);
+
+                // then
+                assertThat(result).isNotNull()
+                        .hasSize(2);
+                assertThat(result.get(0)).isEqualTo(convergenceSoftwareDto);
+                assertThat(result.get(1)).isEqualTo(digitalContentsDesignDto);
+
+                then(studentClubRepository).should().findAllByCollege_Id(collegeId);
+            }
+        }
+    }
+
+    // ==================== transferStudentClub 테스트 ====================
+
+    @Nested
+    @DisplayName("transferStudentClub 메서드는")
+    class Describe_transferStudentClub {
+
+        @Nested
+        @DisplayName("다음 회장이 확정되지 않은 경우")
+        class Context_without_next_president {
+
+            @Test
+            @DisplayName("학생회를 성공적으로 이전한다")
+            void it_transfers_successfully() {
+                // given
+                List<Receipt> receipts = List.of(receipt1, receipt2);
+
+                given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
+                given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
+                given(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).willReturn(president);
+                given(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).willReturn(List.of(student1));
+
+                // when
+                TransferDto result = studentClubService.transferStudentClub(null, currentUser);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getStudentClubName()).isEqualTo("융합소프트웨어학부 학생회");
+                assertThat(result.getTotalDeposit()).isEqualTo(3000);
+                assertThat(result.getNetAmount()).isEqualTo(3000);
+
+                then(userRepository).should().findByUserId("president123");
+                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
+                then(receiptRepository).should().deleteAll(receipts);
+                then(receiptRepository).should().save(any(Receipt.class));
+                then(studentClubRepository).should().save(convergenceSoftware);
+                then(userService).should().deleteUser("president123");
+                then(userService).should().deleteUser("student1");
+            }
+        }
+
+        @Nested
+        @DisplayName("다음 회장이 존재하는 경우")
+        class Context_with_next_president {
+
+            @Test
+            @DisplayName("다음 회장을 등록하고 학생회를 이전한다")
+            void it_transfers_with_new_president() {
+                // given
+                Receipt depositReceipt = createReceipt(1L, 10000, 0, convergenceSoftware);
+                List<Receipt> receipts = List.of(depositReceipt);
+
+                PresidentDto nextPresidentDto = createPresidentDto(0L, "60221318", "박진형");
+
+                given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
+                given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
+                given(userRepository.findFirstByStudentClubAndRole(convergenceSoftware, "PRESIDENT")).willReturn(president);
+                given(userRepository.findByStudentClubAndRole(convergenceSoftware, "STU")).willReturn(Collections.emptyList());
+
+                // when
+                TransferDto result = studentClubService.transferStudentClub(nextPresidentDto, currentUser);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getStudentClubName()).isEqualTo("융합소프트웨어학부 학생회");
+                assertThat(result.getTotalDeposit()).isEqualTo(10000);
+                assertThat(result.getNetAmount()).isEqualTo(10000);
+
+                then(userRepository).should().findByUserId("president123");
+                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
+                then(receiptRepository).should().deleteAll(receipts);
+                then(receiptRepository).should().save(any(Receipt.class));
+                then(studentClubRepository).should().save(convergenceSoftware);
+                then(userService).should().deleteUser("president123");
+                then(adminService).should().savePresident(any(PresidentDto.class));
+            }
+        }
+
+        @Nested
+        @DisplayName("영수증이 0개인 경우")
+        class Context_with_empty_receipts {
+
+            @Test
+            @DisplayName("이월할 영수증이 없다는 예외를 던진다")
+            void it_throws_empty_receipts_exception() {
+                // given
+                List<Receipt> receipts = Collections.emptyList();
+
+                given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
+                given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
+
+                // when & then
+                assertThatThrownBy(() -> studentClubService.transferStudentClub(null, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasMessage("이월할 영수증이 없습니다.");
+
+                then(userRepository).should().findByUserId("president123");
+                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
+            }
+        }
     }
 }

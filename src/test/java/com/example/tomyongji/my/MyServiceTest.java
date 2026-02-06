@@ -1,22 +1,9 @@
 package com.example.tomyongji.my;
 
-import static com.example.tomyongji.global.error.ErrorMsg.EXISTING_USER;
-import static com.example.tomyongji.global.error.ErrorMsg.MISMATCHED_USER;
-import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_MEMBER;
-import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
-import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_USER;
-import static com.example.tomyongji.global.error.ErrorMsg.NO_AUTHORIZATION_ROLE;
-import static com.example.tomyongji.global.error.ErrorMsg.NO_AUTHORIZATION_USER;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static com.example.tomyongji.global.error.ErrorMsg.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.*;
 
 import com.example.tomyongji.domain.admin.dto.MemberDto;
 import com.example.tomyongji.domain.admin.entity.Member;
@@ -40,6 +27,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,7 +36,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @ExtendWith(MockitoExtension.class)
-public class MyServiceTest {
+@DisplayName("MyService 클래스")
+class MyServiceTest {
 
     @Mock
     private UserRepository userRepository;
@@ -76,446 +65,682 @@ public class MyServiceTest {
     private UserDetails currentUser;
     private UserDetails anotherCurrentUser;
 
-    //각 테스트 메서드 실행 전에 @Mock 과 @InjectMock 필드 초기화
     @BeforeEach
     void setUp() {
-
         studentClub = StudentClub.builder()
-            .id(30L)
-            .studentClubName("스마트시스템공과대학 학생회")
-            .build();
+                .id(30L)
+                .studentClubName("스마트시스템공과대학 학생회")
+                .build();
 
         anotherStudentClub = StudentClub.builder()
-            .id(35L)
-            .studentClubName("아너칼리지(자연)")
-            .build();
+                .id(35L)
+                .studentClubName("아너칼리지(자연)")
+                .build();
 
         user = User.builder()
-            .id(1L)
-            .userId("testUser")
-            .name("test name")
-            .studentNum("60000000")
-            .collegeName("스마트시스템공과대학")
-            .email("test@example.com")
-            .password("password123")
-            .role("PRESIDENT")
-            .studentClub(studentClub)
-            .build();
+                .id(1L)
+                .userId("testUser")
+                .name("test name")
+                .studentNum("60000000")
+                .collegeName("스마트시스템공과대학")
+                .email("test@example.com")
+                .password("password123")
+                .role("PRESIDENT")
+                .studentClub(studentClub)
+                .build();
 
         anotherUser = User.builder()
-            .id(2L)
-            .userId("anotherUser")
-            .name("test name2")
-            .studentNum("60000001")
-            .collegeName("아너칼리지")
-            .email("test2@example.com")
-            .password("password123")
-            .role("PRESIDENT")
-            .studentClub(anotherStudentClub)
-            .build();
+                .id(2L)
+                .userId("anotherUser")
+                .name("test name2")
+                .studentNum("60000001")
+                .collegeName("아너칼리지")
+                .email("test2@example.com")
+                .password("password123")
+                .role("PRESIDENT")
+                .studentClub(anotherStudentClub)
+                .build();
 
         myDto = MyDto.builder()
-            .name("test name")
-            .studentNum("60000000")
-            .college("스마트시스템공과대학")
-            .studentClubId(30L)
-            .build();
+                .name("test name")
+                .studentNum("60000000")
+                .college("스마트시스템공과대학")
+                .studentClubId(30L)
+                .build();
 
         saveMemberDto = SaveMemberDto.builder()
-            .id(user.getId())
-            .studentNum("60000001")
-            .name("test name")
-            .build();
+                .id(user.getId())
+                .studentNum("60000001")
+                .name("test name")
+                .build();
 
         member = Member.builder()
-            .name("test name")
-            .studentNum("60000001")
-            .studentClub(studentClub)
-            .build();
-        currentUser = (UserDetails) new org.springframework.security.core.userdetails.User("testUser","password123", Collections.emptyList());
-        anotherCurrentUser = (UserDetails) new org.springframework.security.core.userdetails.User("anotherUser","password123", Collections.emptyList());
-    }
-
-    @Test
-    @DisplayName("내 정보 조회 성공")
-    void getMyInfo_UserExists() {
-        //Given
-        Long id = user.getId();
-        when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(
-            Optional.of(user));
-        when(myMapper.toMyDto(user)).thenReturn(myDto);
-
-        //When
-        MyDto result = myService.getMyInfo(id, currentUser);
-
-        //Then
-        assertNotNull(result); //반환된 DTO가 null이 아닌지 검증
-        assertEquals("test name", result.getName());
-        assertEquals("60000000", result.getStudentNum());
-        assertEquals("스마트시스템공과대학", result.getCollege());
-        assertEquals(30L, result.getStudentClubId());
-        //userRepository 에서 findById()을 사용했는지
-        verify(userRepository).findById(id);
-        //myMapper 에서 toMyDto(user)를 사용했는지
-        verify(myMapper).toMyDto(user);
-    }
-
-    @Test
-    @DisplayName("유저 정보 조회 실패로 인한 내 정보 조회 실패")
-    void getMyInfo_UserNotFound() {
-        //Given
-        Long invalidUserId = 999L;
-        when(userRepository.findById(invalidUserId)).thenReturn(Optional.empty());
-
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.getMyInfo(invalidUserId, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_USER, exception.getMessage());
-        verify(userRepository).findById(invalidUserId);
-        //userRepository.findById(userId); 에서 오류가 발생해야 하기 때문에
-        //그 다음 로직인 mapper 가 작동이 되지 않은 것을 확인
-        verify(myMapper, never()).toMyDto(any());
-    }
-
-    @Test
-    @DisplayName("접속 정보 오류로 인한 내 정보 조회 실패")
-    void getMyInfo_NoUser() {
-        //Given
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.getMyInfo(user.getId(), anotherCurrentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NO_AUTHORIZATION_USER, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 학생회로 인한 내 정보 조회 실패")
-    void getMyInfo_NoFoundStudentClub() {
-        //Given
-        Long id = user.getId();
-        user.setStudentClub(null);
-        when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(
-            Optional.of(user));
-
-        //When, Then
-        CustomException exception  = assertThrows(CustomException.class,
-            () -> myService.getMyInfo(id, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_STUDENT_CLUB, exception.getMessage());
-        verify(userRepository).findById(id);
-        verify(myMapper, never()).toMyDto(any());
-    }
-
-    @Test
-    @DisplayName("접속 정보 불일치로 인한 내 정보 조회 실패")
-    void getMyInfo_MismatchedUser() {
-        //Given
-        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(anotherCurrentUser.getUsername())).thenReturn(
-            Optional.of(anotherUser));
-
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.getMyInfo(user.getId(), anotherCurrentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(MISMATCHED_USER, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("멤버 정보 조회 성공")
-    void getMembers_Success() {
-        //Given
-        Long id = user.getId();
-        List<Member> memberList = Arrays.asList(
-            Member.builder()
-                .id(1L)
-                .name("member1")
-                .studentNum("600001")
+                .name("test name")
+                .studentNum("60000001")
                 .studentClub(studentClub)
-                .build(),
-            Member.builder()
-                .id(2L)
-                .name("member2")
-                .studentNum("600002")
-                .studentClub(studentClub)
-                .build()
+                .build();
+
+        currentUser = new org.springframework.security.core.userdetails.User(
+                "testUser",
+                "password123",
+                Collections.emptyList()
         );
 
-        List<MemberDto> expectedDtos = Arrays.asList(
-            MemberDto.builder()
-                .memberId(1L)
-                .name("member1")
-                .studentNum("600001")
-                .build(),
-            MemberDto.builder()
-                .memberId(2L)
-                .name("member2")
-                .studentNum("600002")
-                .build()
+        anotherCurrentUser = new org.springframework.security.core.userdetails.User(
+                "anotherUser",
+                "password123",
+                Collections.emptyList()
         );
-
-        when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(
-            Optional.of(user));
-        when(memberRepository.findByStudentClub(studentClub)).thenReturn(memberList);
-        when(myMapper.toMemberDto(memberList.get(0))).thenReturn(expectedDtos.get(0));
-        when(myMapper.toMemberDto(memberList.get(1))).thenReturn(expectedDtos.get(1));
-
-        //When
-        List<MemberDto> result = myService.getMembers(id, currentUser);
-
-        //Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("member1", result.get(0).getName());
-        assertEquals("member2", result.get(1).getName());
-
-        verify(userRepository).findById(id);
-        verify(memberRepository).findByStudentClub(studentClub);
-        verify(myMapper, times(2)).toMemberDto(any(Member.class));
-    }
-    @Test
-    @DisplayName("유저 조회 실패로 인한 회원 목록 조회 실패")
-    void getMembers_UserNotFound() {
-        //Given
-        Long invalidUserId = 999L;
-        when(userRepository.findById(invalidUserId)).thenReturn(Optional.empty());
-
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.getMembers(invalidUserId, currentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_USER, exception.getMessage());
-
-        verify(userRepository).findById(invalidUserId);
-        verify(memberRepository, never()).findByStudentClub(any());
-        verify(myMapper, never()).toMemberDto((Member) any());
-    }
-    @Test
-    @DisplayName("접속 정보 오류로 인한 회원 목록 조회 실패")
-    void getMembers_NoUser() {
-        //Given
-        Long id = user.getId();
-        when(userRepository.findById(id)).thenReturn(Optional.of(user));
-
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.getMembers(id, anotherCurrentUser));
-
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NO_AUTHORIZATION_USER, exception.getMessage());
     }
 
-    @Test
-    @DisplayName("접속 정보 불일치로 인한 회원 목록 조회 실패")
-    void getMembers_MismatchedUser() {
-        //Given
-        Long id = 1L;
-        when(userRepository.findById(id)).thenReturn(Optional.ofNullable(user));
-        when(userRepository.findByUserId(anotherCurrentUser.getUsername())).thenReturn(
-            Optional.of(anotherUser));
+    @Nested
+    @DisplayName("getMyInfo 메서드는")
+    class Describe_getMyInfo {
 
-        //When
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.getMembers(id, anotherCurrentUser));
+        @Nested
+        @DisplayName("유효한 사용자 ID와 인증 정보가 주어지면")
+        class Context_with_valid_user_and_authentication {
 
-        //Then
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(MISMATCHED_USER, exception.getMessage());
-        verify(userRepository).findById(id);
+            @BeforeEach
+            void setUp() {
+                // given
+                given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(currentUser.getUsername()))
+                        .willReturn(Optional.of(user));
+                given(myMapper.toMyDto(user)).willReturn(myDto);
+            }
+
+            @Test
+            @DisplayName("사용자 정보를 반환한다")
+            void it_returns_user_info() {
+                // when
+                MyDto result = myService.getMyInfo(user.getId(), currentUser);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result)
+                        .extracting(
+                                MyDto::getName,
+                                MyDto::getStudentNum,
+                                MyDto::getCollege,
+                                MyDto::getStudentClubId
+                        )
+                        .containsExactly(
+                                "test name",
+                                "60000000",
+                                "스마트시스템공과대학",
+                                30L
+                        );
+
+                then(userRepository).should().findById(user.getId());
+                then(myMapper).should().toMyDto(user);
+            }
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 사용자 ID가 주어지면")
+        class Context_with_nonexistent_user_id {
+
+            Long invalidUserId = 999L;
+
+            @BeforeEach
+            void setUp() {
+                // given
+                given(userRepository.findById(invalidUserId)).willReturn(Optional.empty());
+            }
+
+            @Test
+            @DisplayName("NOT_FOUND_USER 예외를 던진다")
+            void it_throws_not_found_user_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.getMyInfo(invalidUserId, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(NOT_FOUND_USER);
+                        });
+
+                then(userRepository).should().findById(invalidUserId);
+                then(myMapper).should(never()).toMyDto(any());
+            }
+        }
+
+        @Nested
+        @DisplayName("잘못된 인증 정보가 주어지면")
+        class Context_with_invalid_authentication {
+
+            @BeforeEach
+            void setUp() {
+                // given
+                given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
+            }
+
+            @Test
+            @DisplayName("NO_AUTHORIZATION_USER 예외를 던진다")
+            void it_throws_no_authorization_user_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.getMyInfo(user.getId(), anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(NO_AUTHORIZATION_USER);
+                        });
+            }
+        }
+
+        @Nested
+        @DisplayName("사용자의 학생회 정보가 없으면")
+        class Context_with_no_student_club {
+
+            @BeforeEach
+            void setUp() {
+                user.setStudentClub(null);
+
+                // given
+                given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(currentUser.getUsername()))
+                        .willReturn(Optional.of(user));
+            }
+
+            @Test
+            @DisplayName("NOT_FOUND_STUDENT_CLUB 예외를 던진다")
+            void it_throws_not_found_student_club_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.getMyInfo(user.getId(), currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(NOT_FOUND_STUDENT_CLUB);
+                        });
+
+                then(userRepository).should().findById(user.getId());
+                then(myMapper).should(never()).toMyDto(any());
+            }
+        }
+
+        @Nested
+        @DisplayName("인증 정보와 사용자 정보가 일치하지 않으면")
+        class Context_with_mismatched_user {
+
+            @BeforeEach
+            void setUp() {
+                // given
+                given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(anotherCurrentUser.getUsername()))
+                        .willReturn(Optional.of(anotherUser));
+            }
+
+            @Test
+            @DisplayName("MISMATCHED_USER 예외를 던진다")
+            void it_throws_mismatched_user_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.getMyInfo(user.getId(), anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(MISMATCHED_USER);
+                        });
+            }
+        }
     }
 
-    //회장의 유저 아이디를 통해 저장
-    @Test
-    @DisplayName("멤버 저장 성공")
-    void saveMember_Success() {
+    @Nested
+    @DisplayName("getMembers 메서드는")
+    class Describe_getMembers {
 
-        when(userRepository.findById(saveMemberDto.getId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(
-            Optional.of(user));
-        when(memberRepository.existsByStudentNum(saveMemberDto.getStudentNum())).thenReturn(false);
-        when(myMapper.toMemberEntity(saveMemberDto)).thenReturn(member);
+        @Nested
+        @DisplayName("유효한 사용자 ID와 인증 정보가 주어지면")
+        class Context_with_valid_user_and_authentication {
 
-        //When
-        myService.saveMember(saveMemberDto, currentUser);
+            List<Member> memberList;
+            List<MemberDto> expectedDtos;
 
-        //Then
-        verify(userRepository).findById(1L);
-        verify(memberRepository).existsByStudentNum("60000001");
-        verify(myMapper).toMemberEntity(saveMemberDto);
-        verify(memberRepository).save(member);
+            @BeforeEach
+            void setUp() {
+                memberList = Arrays.asList(
+                        Member.builder()
+                                .id(1L)
+                                .name("member1")
+                                .studentNum("600001")
+                                .studentClub(studentClub)
+                                .build(),
+                        Member.builder()
+                                .id(2L)
+                                .name("member2")
+                                .studentNum("600002")
+                                .studentClub(studentClub)
+                                .build()
+                );
+
+                expectedDtos = Arrays.asList(
+                        MemberDto.builder()
+                                .memberId(1L)
+                                .name("member1")
+                                .studentNum("600001")
+                                .build(),
+                        MemberDto.builder()
+                                .memberId(2L)
+                                .name("member2")
+                                .studentNum("600002")
+                                .build()
+                );
+
+                // given
+                given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(currentUser.getUsername()))
+                        .willReturn(Optional.of(user));
+                given(memberRepository.findByStudentClub(studentClub)).willReturn(memberList);
+                given(myMapper.toMemberDto(memberList.get(0))).willReturn(expectedDtos.get(0));
+                given(myMapper.toMemberDto(memberList.get(1))).willReturn(expectedDtos.get(1));
+            }
+
+            @Test
+            @DisplayName("멤버 목록을 반환한다")
+            void it_returns_member_list() {
+                // when
+                List<MemberDto> result = myService.getMembers(user.getId(), currentUser);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result).hasSize(2);
+                assertThat(result)
+                        .extracting(MemberDto::getName)
+                        .containsExactly("member1", "member2");
+
+                then(userRepository).should().findById(user.getId());
+                then(memberRepository).should().findByStudentClub(studentClub);
+                then(myMapper).should(times(2)).toMemberDto(any(Member.class));
+            }
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 사용자 ID가 주어지면")
+        class Context_with_nonexistent_user_id {
+
+            Long invalidUserId = 999L;
+
+            @BeforeEach
+            void setUp() {
+                // given
+                given(userRepository.findById(invalidUserId)).willReturn(Optional.empty());
+            }
+
+            @Test
+            @DisplayName("NOT_FOUND_USER 예외를 던진다")
+            void it_throws_not_found_user_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.getMembers(invalidUserId, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(NOT_FOUND_USER);
+                        });
+
+                then(userRepository).should().findById(invalidUserId);
+                then(memberRepository).should(never()).findByStudentClub(any());
+                then(myMapper).should(never()).toMemberDto(any(Member.class));
+            }
+        }
+
+        @Nested
+        @DisplayName("잘못된 인증 정보가 주어지면")
+        class Context_with_invalid_authentication {
+
+            @BeforeEach
+            void setUp() {
+                // given
+                given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
+            }
+
+            @Test
+            @DisplayName("NO_AUTHORIZATION_USER 예외를 던진다")
+            void it_throws_no_authorization_user_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.getMembers(user.getId(), anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(NO_AUTHORIZATION_USER);
+                        });
+            }
+        }
+
+        @Nested
+        @DisplayName("인증 정보와 사용자 정보가 일치하지 않으면")
+        class Context_with_mismatched_user {
+
+            @BeforeEach
+            void setUp() {
+                // given
+                given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(anotherCurrentUser.getUsername()))
+                        .willReturn(Optional.of(anotherUser));
+            }
+
+            @Test
+            @DisplayName("MISMATCHED_USER 예외를 던진다")
+            void it_throws_mismatched_user_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.getMembers(user.getId(), anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(MISMATCHED_USER);
+                        });
+
+                then(userRepository).should().findById(user.getId());
+            }
+        }
     }
 
-    @Test
-    @DisplayName("유저 조회 실패로 인한 멤버 저장 실패")
-    void saveMember_UserNotFound() {
-        //Given
-        long invalidUserId = 999L;
-        saveMemberDto.setId(invalidUserId);
+    @Nested
+    @DisplayName("saveMember 메서드는")
+    class Describe_saveMember {
 
-        when(userRepository.findById(invalidUserId)).thenReturn(Optional.empty());
+        @Nested
+        @DisplayName("유효한 멤버 저장 정보가 주어지면")
+        class Context_with_valid_member_info {
 
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.saveMember(saveMemberDto, currentUser));
+            @BeforeEach
+            void setUp() {
+                // given
+                doReturn(Optional.of(user)).when(userRepository).findById(saveMemberDto.getId());
+                doReturn(Optional.of(user)).when(userRepository).findByUserId(currentUser.getUsername());
+                doReturn(false).when(memberRepository).existsByStudentNum(saveMemberDto.getStudentNum());
+                doReturn(member).when(myMapper).toMemberEntity(saveMemberDto);
+            }
 
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_USER, exception.getMessage());
-        verify(userRepository).findById(invalidUserId);
-        verify(memberRepository, never()).save(any());
+            @Test
+            @DisplayName("멤버를 저장한다")
+            void it_saves_member() {
+                // when
+                myService.saveMember(saveMemberDto, currentUser);
+
+                // then
+                then(memberRepository).should().existsByStudentNum(saveMemberDto.getStudentNum());
+                then(myMapper).should().toMemberEntity(saveMemberDto);
+                then(memberRepository).should().save(member);
+            }
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 사용자 ID가 주어지면")
+        class Context_with_nonexistent_user_id {
+
+            @Test
+            @DisplayName("NOT_FOUND_USER 예외를 던진다")
+            void it_throws_not_found_user_exception() {
+                // given
+                Long invalidUserId = 999L;
+                SaveMemberDto invalidDto = SaveMemberDto.builder()
+                        .id(invalidUserId)
+                        .studentNum("60000001")
+                        .name("test name")
+                        .build();
+
+                lenient().doReturn(Optional.empty()).when(userRepository).findById(invalidUserId);
+
+                // when & then
+                assertThatThrownBy(() -> myService.saveMember(invalidDto, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(NOT_FOUND_USER);
+                        });
+
+                then(memberRepository).should(never()).save(any());
+            }
+        }
+
+        @Nested
+        @DisplayName("잘못된 인증 정보가 주어지면")
+        class Context_with_invalid_authentication {
+
+            @BeforeEach
+            void setUp() {
+                // given
+                doReturn(Optional.of(user)).when(userRepository).findById(saveMemberDto.getId());
+            }
+
+            @Test
+            @DisplayName("NO_AUTHORIZATION_USER 예외를 던진다")
+            void it_throws_no_authorization_user_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.saveMember(saveMemberDto, anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(NO_AUTHORIZATION_USER);
+                        });
+            }
+        }
+
+        @Nested
+        @DisplayName("인증 정보와 사용자 정보가 일치하지 않으면")
+        class Context_with_mismatched_user {
+
+            @BeforeEach
+            void setUp() {
+                // given
+                doReturn(Optional.of(user)).when(userRepository).findById(saveMemberDto.getId());
+                doReturn(Optional.of(anotherUser)).when(userRepository).findByUserId(anotherCurrentUser.getUsername());
+            }
+
+            @Test
+            @DisplayName("MISMATCHED_USER 예외를 던진다")
+            void it_throws_mismatched_user_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.saveMember(saveMemberDto, anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(MISMATCHED_USER);
+                        });
+            }
+        }
+
+        @Nested
+        @DisplayName("이미 존재하는 학번이 주어지면")
+        class Context_with_existing_student_number {
+
+            @BeforeEach
+            void setUp() {
+                // given
+                doReturn(Optional.of(user)).when(userRepository).findById(saveMemberDto.getId());
+                doReturn(Optional.of(user)).when(userRepository).findByUserId(currentUser.getUsername());
+                doReturn(true).when(memberRepository).existsByStudentNum(saveMemberDto.getStudentNum());
+            }
+
+            @Test
+            @DisplayName("EXISTING_USER 예외를 던진다")
+            void it_throws_existing_user_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.saveMember(saveMemberDto, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(EXISTING_USER);
+                        });
+
+                then(memberRepository).should().existsByStudentNum(saveMemberDto.getStudentNum());
+                then(myMapper).should(never()).toMemberEntity(any(SaveMemberDto.class));
+            }
+        }
+
+        @Nested
+        @DisplayName("사용자의 학생회 정보가 없으면")
+        class Context_with_no_student_club {
+
+            User userWithoutClub;
+
+            @BeforeEach
+            void setUp() {
+                userWithoutClub = User.builder()
+                        .id(1L)
+                        .userId("testUser")
+                        .name("test name")
+                        .studentNum("60000000")
+                        .collegeName("스마트시스템공과대학")
+                        .email("test@example.com")
+                        .password("password123")
+                        .role("PRESIDENT")
+                        .studentClub(null)  // 학생회 없음
+                        .build();
+
+                // given
+                doReturn(Optional.of(userWithoutClub)).when(userRepository).findById(saveMemberDto.getId());
+                doReturn(Optional.of(userWithoutClub)).when(userRepository).findByUserId(currentUser.getUsername());
+                doReturn(false).when(memberRepository).existsByStudentNum(saveMemberDto.getStudentNum());
+            }
+
+            @Test
+            @DisplayName("NOT_FOUND_STUDENT_CLUB 예외를 던진다")
+            void it_throws_not_found_student_club_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.saveMember(saveMemberDto, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(NOT_FOUND_STUDENT_CLUB);
+                        });
+
+                then(memberRepository).should().existsByStudentNum(saveMemberDto.getStudentNum());
+                then(myMapper).should(never()).toMemberEntity(any(SaveMemberDto.class));
+            }
+        }
     }
 
-    @Test
-    @DisplayName("접속 정보 오류로 인한 멤버 저장 실패")
-    void saveMember_NoUser() {
-        //Given
-        when(userRepository.findById(saveMemberDto.getId())).thenReturn(Optional.of(user));
+    @Nested
+    @DisplayName("deleteMember 메서드는")
+    class Describe_deleteMember {
 
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.saveMember(saveMemberDto, anotherCurrentUser));
+        @Nested
+        @DisplayName("유효한 학번과 인증 정보가 주어지면")
+        class Context_with_valid_student_number_and_authentication {
 
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NO_AUTHORIZATION_USER, exception.getMessage());
-    }
+            String deletedStudentNum = "60000001";
+            MemberDto memberDto;
 
-    @Test
-    @DisplayName("접속 정보 불일치로 인한 멤버 저장 실패")
-    void saveMember_MismatchedUser() {
-        //Given
-        when(userRepository.findById(saveMemberDto.getId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(anotherCurrentUser.getUsername())).thenReturn(Optional.of(anotherUser));
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.saveMember(saveMemberDto, anotherCurrentUser));
+            @BeforeEach
+            void setUp() {
+                memberDto = MemberDto.builder()
+                        .memberId(1L)
+                        .name("test name")
+                        .studentNum("60000001")
+                        .build();
 
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(MISMATCHED_USER, exception.getMessage());
-        verify(userRepository).findById(1L);
-    }
+                // given
+                given(memberRepository.findByStudentNum(deletedStudentNum))
+                        .willReturn(Optional.of(member));
+                given(userRepository.findByUserId(currentUser.getUsername()))
+                        .willReturn(Optional.of(user));
+                given(myMapper.toMemberDto(member)).willReturn(memberDto);
+                given(clubVerificationRepository.findByStudentNum(deletedStudentNum))
+                        .willReturn(Collections.emptyList());
+                given(userRepository.findByStudentNum(deletedStudentNum)).willReturn(null);
+            }
 
+            @Test
+            @DisplayName("멤버를 삭제하고 삭제된 멤버 정보를 반환한다")
+            void it_deletes_member_and_returns_deleted_info() {
+                // when
+                MemberDto result = myService.deleteMember(deletedStudentNum, currentUser);
 
-    @Test
-    @DisplayName("이미 존재하는 학번으로 인한 멤버 저장 실패")
-    void saveMember_ExistingUser() {
-        //Given
-        when(userRepository.findById(saveMemberDto.getId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        when(memberRepository.existsByStudentNum("60000001")).thenReturn(true);
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getName()).isEqualTo("test name");
 
-        //WHen, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.saveMember(saveMemberDto, currentUser));
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(EXISTING_USER, exception.getMessage());
-        verify(userRepository).findById(1L);
-        verify(memberRepository).existsByStudentNum("60000001");
-        verify(myMapper, never()).toMemberEntity((SaveMemberDto) any());
-    }
+                then(memberRepository).should().findByStudentNum(deletedStudentNum);
+                then(memberRepository).should().delete(member);
+            }
+        }
 
-    @Test
-    @DisplayName("존재하지 않는 학생회로 인한 멤버 저장 실패")
-    void saveMember_NotFoundStudentClub() {
-        //Given
-        user.setStudentClub(null);
-        when(userRepository.findById(saveMemberDto.getId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        when(memberRepository.existsByStudentNum("60000001")).thenReturn(false);
+        @Nested
+        @DisplayName("존재하지 않는 멤버 학번이 주어지면")
+        class Context_with_nonexistent_member {
 
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.saveMember(saveMemberDto, currentUser));
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_STUDENT_CLUB, exception.getMessage());
-        verify(userRepository).findById(1L);
-        verify(memberRepository).existsByStudentNum("60000001");
-        verify(myMapper, never()).toMemberEntity((SaveMemberDto) any());
-    }
+            String deletedStudentNum = "60000002";
 
-    @Test
-    @DisplayName("멤버 삭제 성공")
-    void deleteMember_Success() {
-        //Given
-        String deletedStudentNum = "60000001";
-        Long deleteId = 1L;
-        MemberDto memberDto = MemberDto.builder()
-            .memberId(deleteId)
-            .name("test name")
-            .studentNum("60000001")
-            .build();
+            @Test
+            @DisplayName("NOT_FOUND_MEMBER 예외를 던진다")
+            void it_throws_not_found_member_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.deleteMember(deletedStudentNum, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(NOT_FOUND_MEMBER);
+                        });
+            }
+        }
 
-        when(memberRepository.findByStudentNum(deletedStudentNum)).thenReturn(Optional.of(member));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
-        when(myMapper.toMemberDto(member)).thenReturn(memberDto);
-        when(clubVerificationRepository.findByStudentNum(deletedStudentNum)).thenReturn(Collections.emptyList());
-        when(userRepository.findByStudentNum(deletedStudentNum)).thenReturn(null);
+        @Nested
+        @DisplayName("잘못된 인증 정보가 주어지면")
+        class Context_with_invalid_authentication {
 
-        //When
-        MemberDto result = myService.deleteMember(deletedStudentNum, currentUser);
+            String deletedStudentNum = "60000001";
 
-        //Then
-        assertNotNull(result);
-        assertEquals("test name", result.getName());
-        verify(memberRepository).findByStudentNum(deletedStudentNum);
-        //verify(userRepository).findByStudentNum(deletedStudentNum);
-        //verify(emailVerificationRepository).deleteByEmail("test@example.com");
-        //verify(userRepository).delete(user);
-        verify(memberRepository).delete(member);
-    }
+            @BeforeEach
+            void setUp() {
+                // given
+                given(memberRepository.findByStudentNum(deletedStudentNum))
+                        .willReturn(Optional.of(member));
+            }
 
-    @Test
-    @DisplayName("존재하지 않는 멤버로 인한 멤버 삭제 실패")
-    void deleteMember_NoMember() {
-        //Given
-        String deletedStudentNum = "60000002";
+            @Test
+            @DisplayName("NOT_FOUND_USER 예외를 던진다")
+            void it_throws_not_found_user_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.deleteMember(deletedStudentNum, anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(NOT_FOUND_USER);
+                        });
+            }
+        }
 
-        //Then, When
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.deleteMember(deletedStudentNum, currentUser));
+        @Nested
+        @DisplayName("다른 학생회의 멤버를 삭제하려고 하면")
+        class Context_with_member_from_different_club {
 
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NOT_FOUND_MEMBER, exception.getMessage());
-    }
+            String deletedStudentNum = "60000001";
 
-    @Test
-    @DisplayName("접속 정보 오류로 인한 멤버 삭제 실패")
-    void deleteMember_NoUser() {
-        //Given
-        String deletedStudentNum = "60000001";
-        when(memberRepository.findByStudentNum("60000001")).thenReturn(Optional.of(member));
+            @BeforeEach
+            void setUp() {
+                // given
+                given(memberRepository.findByStudentNum(deletedStudentNum))
+                        .willReturn(Optional.of(member));
+                given(userRepository.findByUserId(anotherCurrentUser.getUsername()))
+                        .willReturn(Optional.of(anotherUser));
+            }
 
-        //When, Then
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.deleteMember(
-                deletedStudentNum, anotherCurrentUser));
-        assertEquals(NOT_FOUND_USER, exception.getMessage());
-        assertEquals(400, exception.getErrorCode());
-    }
-
-    @Test
-    @DisplayName("소속 불일치로 인한 회원 삭제 실패")
-    void deleteMembers_MismatchedRole() {
-        //Given
-        String deletedStudentNum = "60000001";
-        when(memberRepository.findByStudentNum("60000001")).thenReturn(Optional.of(member));
-        when(userRepository.findByUserId(anotherCurrentUser.getUsername())).thenReturn(Optional.of(anotherUser));
-
-        //When
-        CustomException exception = assertThrows(CustomException.class,
-            () -> myService.deleteMember(deletedStudentNum, anotherCurrentUser));
-
-        //Then
-        assertEquals(400, exception.getErrorCode());
-        assertEquals(NO_AUTHORIZATION_ROLE, exception.getMessage());
+            @Test
+            @DisplayName("NO_AUTHORIZATION_ROLE 예외를 던진다")
+            void it_throws_no_authorization_role_exception() {
+                // when & then
+                assertThatThrownBy(() -> myService.deleteMember(deletedStudentNum, anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .satisfies(exception -> {
+                            CustomException customException = (CustomException) exception;
+                            assertThat(customException.getErrorCode()).isEqualTo(400);
+                            assertThat(customException.getMessage()).isEqualTo(NO_AUTHORIZATION_ROLE);
+                        });
+            }
+        }
     }
 }

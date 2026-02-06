@@ -1,12 +1,15 @@
 package com.example.tomyongji.receipt;
 
 import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_USER;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 
 import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
@@ -24,6 +27,7 @@ import java.util.Date;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -35,7 +39,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 @ExtendWith(MockitoExtension.class)
-public class OCRServiceTest {
+class OCRServiceTest {
 
     @Mock
     private ReceiptService receiptService;
@@ -58,33 +62,72 @@ public class OCRServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        studentClub = StudentClub.builder()
-                .id(30L)
-                .studentClubName("스마트시스템공과대학 학생회")
-                .build();
+        studentClub = createStudentClub(30L, "스마트시스템공과대학 학생회");
 
-        testUser = User.builder()
-                .id(1L)
-                .userId("testUser")
-                .name("정우주")
-                .studentNum("60221317")
-                .studentClub(studentClub)
-                .collegeName("스마트시스템공과대학")
-                .email("testuser@gmail.com")
-                .password("1234")
-                .role("PRESIDENT")
-                .build();
+        testUser = createUser(
+                1L,
+                "testUser",
+                "정우주",
+                "60221317",
+                studentClub,
+                "스마트시스템공과대학",
+                "testuser@gmail.com",
+                "1234",
+                "PRESIDENT"
+        );
 
-        currentUser = org.springframework.security.core.userdetails.User.builder()
-                .username("testUser")
-                .password("1234")
-                .authorities("ROLE_PRESIDENT")
-                .build();
+        currentUser = createUserDetails("testUser", "1234");
 
         ReflectionTestUtils.setField(ocrService, "apiURL", "https://test.api.url");
         ReflectionTestUtils.setField(ocrService, "secretKey", "testSecretKey");
 
         injectRestTemplateMock();
+    }
+
+    private StudentClub createStudentClub(Long id, String name) {
+        return StudentClub.builder()
+                .id(id)
+                .studentClubName(name)
+                .build();
+    }
+
+    private User createUser(Long id, String userId, String name, String studentNum,
+                            StudentClub studentClub, String collegeName, String email,
+                            String password, String role) {
+        return User.builder()
+                .id(id)
+                .userId(userId)
+                .name(name)
+                .studentNum(studentNum)
+                .studentClub(studentClub)
+                .collegeName(collegeName)
+                .email(email)
+                .password(password)
+                .role(role)
+                .build();
+    }
+
+    private UserDetails createUserDetails(String username, String password) {
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(username)
+                .password(password)
+                .authorities("ROLE_PRESIDENT")
+                .build();
+    }
+
+    private MockMultipartFile createImageFile(String filename, String contentType, byte[] content) {
+        return new MockMultipartFile("file", filename, contentType, content);
+    }
+
+    private OCRResultDto createOCRResultDto(Date date, String content, int withdrawal) {
+        return new OCRResultDto(date, content, withdrawal);
+    }
+
+    private OCRService createSpyOCRService() {
+        OCRService spyService = spy(new OCRService(receiptService, receiptMapper, userRepository));
+        ReflectionTestUtils.setField(spyService, "apiURL", "https://test.api.url");
+        ReflectionTestUtils.setField(spyService, "secretKey", "testSecretKey");
+        return spyService;
     }
 
     private void injectRestTemplateMock() throws Exception {
@@ -98,162 +141,145 @@ public class OCRServiceTest {
         }
     }
 
-    @Test
-    @DisplayName("OCR 처리 성공 테스트")
-    void processImage_Success() {
-        // Given
-        MockMultipartFile imageFile = new MockMultipartFile(
-                "file", "test.jpg", "image/jpeg", "test".getBytes()
-        );
+    @Nested
+    @DisplayName("processImage 메서드는")
+    class Describe_processImage {
 
-        String mockOCRResponse = """
-                {
-                    "images": [{
-                        "receipt": {
-                            "result": {
-                                "paymentInfo": {
-                                    "date": {
-                                        "formatted": {
-                                            "year": "2020",
-                                            "month": "06",
-                                            "day": "16"
-                                        }
-                                    }
-                                },
-                                "storeInfo": {
-                                    "name": {
-                                        "text": "다이소"
-                                    }
-                                },
-                                "totalPrice": {
-                                    "price": {
-                                        "formatted": {
-                                            "value": "3,500"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }]
-                }
-                """;
+        @Nested
+        @DisplayName("유효한 이미지 파일이 주어지면")
+        class Context_with_valid_image {
 
-        ocrService = spy(new OCRService(receiptService, receiptMapper, userRepository));
-        ReflectionTestUtils.setField(ocrService, "apiURL", "https://test.api.url");
-        ReflectionTestUtils.setField(ocrService, "secretKey", "testSecretKey");
+            @Test
+            @DisplayName("OCR 처리를 성공적으로 수행한다")
+            void it_processes_successfully() {
+                // given
+                MockMultipartFile imageFile = createImageFile("test.jpg", "image/jpeg", "test".getBytes());
+                OCRService spyService = createSpyOCRService();
 
-        OCRResultDto expectedResult = new OCRResultDto(new Date(), "다이소", 3500);
-        doReturn(expectedResult).when(ocrService).processImage(any(MockMultipartFile.class));
+                OCRResultDto expectedResult = createOCRResultDto(new Date(), "다이소", 3500);
+                doReturn(expectedResult).when(spyService).processImage(any(MockMultipartFile.class));
 
-        // When
-        OCRResultDto result = ocrService.processImage(imageFile);
+                // when
+                OCRResultDto result = spyService.processImage(imageFile);
 
-        // Then
-        assertNotNull(result);
-        assertThat(result.getContent()).isEqualTo("다이소");
-        assertThat(result.getWithdrawal()).isEqualTo(3500);
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getContent()).isEqualTo("다이소");
+                assertThat(result.getWithdrawal()).isEqualTo(3500);
+            }
+        }
+
+        @Nested
+        @DisplayName("JPEG 형식의 파일이 주어지면")
+        class Context_with_jpeg_format {
+
+            @Test
+            @DisplayName("확장자를 올바르게 처리한다")
+            void it_handles_jpeg_extension() {
+                // given
+                MockMultipartFile jpegFile = createImageFile("test.jpeg", "image/jpeg", "test".getBytes());
+                OCRService spyService = createSpyOCRService();
+
+                OCRResultDto expectedResult = createOCRResultDto(new Date(), "테스트", 1000);
+                doReturn(expectedResult).when(spyService).processImage(any(MockMultipartFile.class));
+
+                // when
+                OCRResultDto result = spyService.processImage(jpegFile);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getWithdrawal()).isEqualTo(1000);
+            }
+        }
+
+        @Nested
+        @DisplayName("PDF 형식의 파일이 주어지면")
+        class Context_with_pdf_format {
+
+            @Test
+            @DisplayName("PDF 형식을 지원한다")
+            void it_supports_pdf_format() {
+                // given
+                MockMultipartFile pdfFile = createImageFile("test.pdf", "application/pdf", "pdf".getBytes());
+                OCRService spyService = createSpyOCRService();
+
+                OCRResultDto expectedResult = createOCRResultDto(new Date(), "PDF 상점", 15000);
+                doReturn(expectedResult).when(spyService).processImage(any(MockMultipartFile.class));
+
+                // when
+                OCRResultDto result = spyService.processImage(pdfFile);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getContent()).isEqualTo("PDF 상점");
+                assertThat(result.getWithdrawal()).isEqualTo(15000);
+            }
+        }
     }
 
-    @Test
-    @DisplayName("OCR 영수증 업로드 성공 테스트")
-    void uploadOcrReceipt_Success() {
-        // Given
-        String userId = testUser.getUserId();
-        OCRResultDto ocrResultDto = new OCRResultDto(
-                new Date(), "테스트 상점", 5000
-        );
+    @Nested
+    @DisplayName("uploadOcrReceipt 메서드는")
+    class Describe_uploadOcrReceipt {
 
-        ReceiptDto receiptDto = ReceiptDto.builder()
-                .content("테스트 상점")
-                .withdrawal(5000)
-                .build();
+        @Nested
+        @DisplayName("유효한 OCR 결과와 유저 정보가 주어지면")
+        class Context_with_valid_ocr_result {
 
-        ReceiptCreateDto receiptCreateDto = ReceiptCreateDto.builder()
-                .userId(userId)
-                .content("테스트 상점")
-                .withdrawal(5000)
-                .build();
+            @Test
+            @DisplayName("영수증을 성공적으로 업로드한다")
+            void it_uploads_successfully() {
+                // given
+                String userId = testUser.getUserId();
+                OCRResultDto ocrResultDto = createOCRResultDto(new Date(), "테스트 상점", 5000);
 
-        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(testUser));
-        when(receiptMapper.toReceiptDto(ocrResultDto)).thenReturn(receiptDto);
-        when(receiptMapper.toReceiptCreateDto(receiptDto)).thenReturn(receiptCreateDto);
+                ReceiptDto receiptDto = ReceiptDto.builder()
+                        .content("테스트 상점")
+                        .withdrawal(5000)
+                        .build();
 
-        // When
-        ocrService.uploadOcrReceipt(ocrResultDto, userId, currentUser);
+                ReceiptCreateDto receiptCreateDto = ReceiptCreateDto.builder()
+                        .userId(userId)
+                        .content("테스트 상점")
+                        .withdrawal(5000)
+                        .build();
 
-        // Then
-        verify(userRepository).findByUserId(userId);
-        verify(receiptMapper).toReceiptDto(ocrResultDto);
-        verify(receiptMapper).toReceiptCreateDto(receiptDto);
-        verify(receiptService).createReceipt(any(ReceiptCreateDto.class), eq(currentUser));
-    }
+                given(userRepository.findByUserId(userId)).willReturn(Optional.of(testUser));
+                given(receiptMapper.toReceiptDto(ocrResultDto)).willReturn(receiptDto);
+                given(receiptMapper.toReceiptCreateDto(receiptDto)).willReturn(receiptCreateDto);
 
-    @Test
-    @DisplayName("존재하지 않는 유저로 OCR 영수증 업로드 실패")
-    void uploadOcrReceipt_NotFoundUser() {
-        // Given
-        String invalidUserId = "nonExistentUser";
-        OCRResultDto ocrResultDto = new OCRResultDto(
-                new Date(), "테스트 상점", 5000
-        );
+                // when
+                ocrService.uploadOcrReceipt(ocrResultDto, userId, currentUser);
 
-        when(userRepository.findByUserId(invalidUserId)).thenReturn(Optional.empty());
+                // then
+                then(userRepository).should().findByUserId(userId);
+                then(receiptMapper).should().toReceiptDto(ocrResultDto);
+                then(receiptMapper).should().toReceiptCreateDto(receiptDto);
+                then(receiptService).should().createReceipt(any(ReceiptCreateDto.class), eq(currentUser));
+            }
+        }
 
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class,
-                () -> ocrService.uploadOcrReceipt(ocrResultDto, invalidUserId, currentUser));
+        @Nested
+        @DisplayName("존재하지 않는 유저 ID가 주어지면")
+        class Context_with_user_not_found {
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
-        assertThat(exception.getMessage()).isEqualTo(NOT_FOUND_USER);
-        verify(userRepository).findByUserId(invalidUserId);
-        verify(receiptService, never()).createReceipt(any(), any());
-    }
+            @Test
+            @DisplayName("NOT_FOUND_USER 예외를 던진다")
+            void it_throws_not_found_user_exception() {
+                // given
+                String invalidUserId = "nonExistentUser";
+                OCRResultDto ocrResultDto = createOCRResultDto(new Date(), "테스트 상점", 5000);
 
-    @Test
-    @DisplayName("JPEG 파일 확장자 변환 테스트")
-    void processImage_JpegFormat() {
-        // Given
-        MockMultipartFile jpegFile = new MockMultipartFile(
-                "file", "test.jpeg", "image/jpeg", "test".getBytes()
-        );
+                given(userRepository.findByUserId(invalidUserId)).willReturn(Optional.empty());
 
-        // OCRService Mock 설정
-        ocrService = spy(new OCRService(receiptService, receiptMapper, userRepository));
-        ReflectionTestUtils.setField(ocrService, "apiURL", "https://test.api.url");
-        ReflectionTestUtils.setField(ocrService, "secretKey", "testSecretKey");
+                // when & then
+                assertThatThrownBy(() -> ocrService.uploadOcrReceipt(ocrResultDto, invalidUserId, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NOT_FOUND_USER);
 
-        OCRResultDto expectedResult = new OCRResultDto(new Date(), "테스트", 1000);
-        doReturn(expectedResult).when(ocrService).processImage(any(MockMultipartFile.class));
-
-        // When
-        OCRResultDto result = ocrService.processImage(jpegFile);
-
-        // Then
-        assertNotNull(result);
-        assertThat(result.getWithdrawal()).isEqualTo(1000);
-    }
-
-    @Test
-    @DisplayName("PDF 파일 형식 지원 테스트")
-    void processImage_PdfFormat() {
-        // Given
-        MockMultipartFile pdfFile = new MockMultipartFile(
-                "file", "test.pdf", "application/pdf", "pdf".getBytes()
-        );
-
-        ocrService = spy(new OCRService(receiptService, receiptMapper, userRepository));
-        ReflectionTestUtils.setField(ocrService, "apiURL", "https://test.api.url");
-        ReflectionTestUtils.setField(ocrService, "secretKey", "testSecretKey");
-
-        OCRResultDto expectedResult = new OCRResultDto(new Date(), "PDF 상점", 15000);
-        doReturn(expectedResult).when(ocrService).processImage(any(MockMultipartFile.class));
-
-        // When
-        OCRResultDto result = ocrService.processImage(pdfFile);
-
-        // Then
-        assertNotNull(result);
-        assertThat(result.getContent()).isEqualTo("PDF 상점");
-        assertThat(result.getWithdrawal()).isEqualTo(15000);
+                then(userRepository).should().findByUserId(invalidUserId);
+                then(receiptService).should(never()).createReceipt(any(), any());
+            }
+        }
     }
 }

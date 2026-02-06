@@ -6,12 +6,13 @@ import static com.example.tomyongji.global.error.ErrorMsg.EMPTY_FILE;
 import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
 import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_USER;
 import static com.example.tomyongji.global.error.ErrorMsg.NO_AUTHORIZATION_BELONGING;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
@@ -32,6 +33,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -44,7 +46,7 @@ import org.springframework.util.StreamUtils;
 import org.springframework.web.client.RestClient;
 
 @ExtendWith(MockitoExtension.class)
-public class BreakDownServiceTest {
+class BreakDownServiceTest {
 
     @Mock
     private UserRepository userRepository;
@@ -87,53 +89,72 @@ public class BreakDownServiceTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        studentClub = StudentClub.builder()
-                .id(30L)
-                .studentClubName("스마트시스템공과대학 학생회")
-                .build();
+        studentClub = createStudentClub(30L, "스마트시스템공과대학 학생회");
+        anotherStudentClub = createStudentClub(35L, "아너칼리지(자연)");
 
-        anotherStudentClub = StudentClub.builder()
-                .id(35L)
-                .studentClubName("아너칼리지(자연)")
-                .build();
+        user = createUser(
+                1L,
+                "testUser",
+                "테스트유저",
+                "60221317",
+                studentClub,
+                "스마트시스템공과대학",
+                "test@example.com",
+                "password123!",
+                "PRESIDENT"
+        );
 
-        user = User.builder()
-                .id(1L)
-                .userId("testUser")
-                .name("테스트유저")
-                .studentNum("60221317")
+        anotherUser = createUser(
+                2L,
+                "anotherUser",
+                "다른유저",
+                "60000001",
+                anotherStudentClub,
+                "아너칼리지",
+                "another@example.com",
+                "password123!",
+                "PRESIDENT"
+        );
+
+        currentUser = createUserDetails("testUser", "password123!");
+        anotherCurrentUser = createUserDetails("anotherUser", "password123!");
+
+        pdfFile = loadPdfFile();
+        emptyPdfFile = null; // 빈 파일은 null로 처리
+    }
+
+    private StudentClub createStudentClub(Long id, String name) {
+        return StudentClub.builder()
+                .id(id)
+                .studentClubName(name)
+                .build();
+    }
+
+    private User createUser(Long id, String userId, String name, String studentNum,
+                            StudentClub studentClub, String collegeName, String email,
+                            String password, String role) {
+        return User.builder()
+                .id(id)
+                .userId(userId)
+                .name(name)
+                .studentNum(studentNum)
                 .studentClub(studentClub)
-                .collegeName("스마트시스템공과대학")
-                .email("test@example.com")
-                .password("password123!")
-                .role("PRESIDENT")
+                .collegeName(collegeName)
+                .email(email)
+                .password(password)
+                .role(role)
                 .build();
+    }
 
-        anotherUser = User.builder()
-                .id(2L)
-                .userId("anotherUser")
-                .name("다른유저")
-                .studentNum("60000001")
-                .studentClub(anotherStudentClub)
-                .collegeName("아너칼리지")
-                .email("another@example.com")
-                .password("password123!")
-                .role("PRESIDENT")
-                .build();
-
-        currentUser = org.springframework.security.core.userdetails.User.builder()
-                .username("testUser")
-                .password("password123!")
+    private UserDetails createUserDetails(String username, String password) {
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(username)
+                .password(password)
                 .authorities("ROLE_PRESIDENT")
                 .build();
+    }
 
-        anotherCurrentUser = org.springframework.security.core.userdetails.User.builder()
-                .username("anotherUser")
-                .password("password123!")
-                .authorities("ROLE_PRESIDENT")
-                .build();
-
-
+    private MockMultipartFile loadPdfFile() throws IOException {
         String[] possibleFileNames = {
                 "breakdown_test.pdf",
                 "test.pdf",
@@ -151,304 +172,332 @@ public class BreakDownServiceTest {
             }
         }
 
-        try {
-            byte[] pdfBytes = StreamUtils.copyToByteArray(resource.getInputStream());
-            System.out.println("PDF 파일 로드 성공: " + foundFileName + ", 크기: " + pdfBytes.length + " bytes");
+        byte[] pdfBytes = StreamUtils.copyToByteArray(resource.getInputStream());
+        return new MockMultipartFile(
+                "file",
+                foundFileName,
+                "application/pdf",
+                pdfBytes
+        );
+    }
 
-            pdfFile = new MockMultipartFile(
-                    "file",
-                    foundFileName,
-                    "application/pdf",
-                    pdfBytes
-            );
-        } catch (IOException e) {
-            throw new RuntimeException("PDF 파일 로드 실패: " + e.getMessage(), e);
+    private void mockRestClientCall(String mockHtmlResponse) {
+        given(restClient.get()).willReturn(requestHeadersUriSpec);
+        given(requestHeadersUriSpec.uri(anyString(), any(), any())).willReturn(requestHeadersSpec);
+        given(requestHeadersSpec.retrieve()).willReturn(responseSpec);
+        given(responseSpec.body(String.class)).willReturn(mockHtmlResponse);
+    }
+
+    private ReceiptRepository.ReceiptCount createReceiptCount(Long total, Long verified) {
+        return new ReceiptRepository.ReceiptCount() {
+            @Override
+            public Long getTotal() { return total; }
+            @Override
+            public Long getVerified() { return verified; }
+        };
+    }
+
+    @Nested
+    @DisplayName("parsePdf 메서드는")
+    class Describe_parsePdf {
+
+        @Nested
+        @DisplayName("유효한 PDF 파일과 유저 정보가 주어지면")
+        class Context_with_valid_pdf {
+
+            @Test
+            @DisplayName("PDF를 성공적으로 파싱한다")
+            void it_parses_successfully() throws Exception {
+                // given
+                String userId = user.getUserId();
+                String keyword = "학생회비";
+
+                given(userRepository.findByUserId(userId)).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+
+                // when
+                BreakDownDto result = breakDownService.parsePdf(pdfFile, userId, keyword, currentUser);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getIssueDate()).isNotNull();
+                assertThat(result.getIssueNumber()).isNotNull();
+                assertThat(result.getStudentClubId()).isEqualTo(studentClub.getId());
+
+                then(userRepository).should(times(2)).findByUserId(userId);
+            }
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 유저 ID가 주어지면")
+        class Context_with_user_not_found {
+
+            @Test
+            @DisplayName("NOT_FOUND_USER 예외를 던진다")
+            void it_throws_not_found_user_exception() {
+                // given
+                String invalidUserId = "nonExistentUser";
+                String keyword = "학생회비";
+                given(userRepository.findByUserId(invalidUserId)).willReturn(Optional.empty());
+
+                // when & then
+                assertThatThrownBy(() -> breakDownService.parsePdf(pdfFile, invalidUserId, keyword, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NOT_FOUND_USER);
+
+                then(userRepository).should().findByUserId(invalidUserId);
+            }
+        }
+
+        @Nested
+        @DisplayName("학생회가 없는 유저가 주어지면")
+        class Context_with_student_club_not_found {
+
+            @Test
+            @DisplayName("NOT_FOUND_STUDENT_CLUB 예외를 던진다")
+            void it_throws_not_found_student_club_exception() {
+                // given
+                String keyword = "학생회비";
+                User userWithoutClub = User.builder()
+                        .id(1L)
+                        .userId("testUser")
+                        .studentClub(null)
+                        .build();
+
+                given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(userWithoutClub));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(userWithoutClub));
+
+                // when & then
+                assertThatThrownBy(() -> breakDownService.parsePdf(pdfFile, user.getUserId(), keyword, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", NOT_FOUND_STUDENT_CLUB);
+            }
+        }
+
+        @Nested
+        @DisplayName("빈 PDF 파일이 주어지면")
+        class Context_with_empty_file {
+
+            @Test
+            @DisplayName("EMPTY_FILE 예외를 던진다")
+            void it_throws_empty_file_exception() {
+                // given
+                String keyword = "학생회비";
+                given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(currentUser.getUsername())).willReturn(Optional.of(user));
+
+                // when & then
+                assertThatThrownBy(() -> breakDownService.parsePdf(emptyPdfFile, user.getUserId(), keyword, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasFieldOrPropertyWithValue("message", EMPTY_FILE);
+            }
+        }
+
+        @Nested
+        @DisplayName("다른 소속의 유저가 접근하면")
+        class Context_with_unauthorized_user {
+
+            @Test
+            @DisplayName("NO_AUTHORIZATION_BELONGING 예외를 던진다")
+            void it_throws_no_authorization_exception() {
+                // given
+                String keyword = "테스트키워드";
+                given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
+                given(userRepository.findByUserId(anotherCurrentUser.getUsername())).willReturn(Optional.of(anotherUser));
+
+                // when & then
+                assertThatThrownBy(() -> breakDownService.parsePdf(pdfFile, user.getUserId(), keyword, anotherCurrentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 403)
+                        .hasFieldOrPropertyWithValue("message", NO_AUTHORIZATION_BELONGING);
+            }
         }
     }
 
-    @Test
-    @DisplayName("PDF 파싱 성공 테스트")
-    void parsePdf_Success() throws Exception {
-        // Given
-        String userId = user.getUserId();
-        String keyword = "학생회비";
+    @Nested
+    @DisplayName("fetchAndProcessDocument 메서드는")
+    class Describe_fetchAndProcessDocument {
 
-        when(userRepository.findByUserId(userId)).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
+        @Nested
+        @DisplayName("외부 API가 정상 응답하면")
+        class Context_with_valid_response {
 
-        // When
-        BreakDownDto result = breakDownService.parsePdf(pdfFile, userId, keyword, currentUser);
+            @Test
+            @DisplayName("영수증을 성공적으로 저장하고 반환한다")
+            void it_saves_receipts_successfully() throws ParseException {
+                // given
+                BreakDownDto dto = BreakDownDto.builder()
+                        .issueDate("2024-01-15")
+                        .issueNumber("ABC123")
+                        .studentClubId(studentClub.getId())
+                        .keyword(null)
+                        .build();
 
-        // Then
-        assertNotNull(result);
-        assertThat(result.getIssueDate()).isNotNull();
-        assertThat(result.getIssueNumber()).isNotNull();
-        assertThat(result.getStudentClubId()).isEqualTo(studentClub.getId());
+                String mockHtmlResponse = """
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td>2024-01-15 10:30:00</td>
+                                    <td></td>
+                                    <td>-5000</td>
+                                    <td></td>
+                                    <td>카페 결제</td>
+                                </tr>
+                                <tr>
+                                    <td>2024-01-15 14:20:00</td>
+                                    <td></td>
+                                    <td>10000</td>
+                                    <td></td>
+                                    <td>입금</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        """;
 
-        verify(userRepository, times(2)).findByUserId(userId);
+                mockRestClientCall(mockHtmlResponse);
+                given(studentClubRepository.findById(studentClub.getId())).willReturn(Optional.of(studentClub));
+                given(receiptRepository.countTotalAndVerified(studentClub)).willReturn(createReceiptCount(0L, 0L));
+
+                ReceiptDto receiptDto1 = ReceiptDto.builder()
+                        .content("카페 결제")
+                        .withdrawal(5000)
+                        .build();
+                ReceiptDto receiptDto2 = ReceiptDto.builder()
+                        .content("입금")
+                        .deposit(10000)
+                        .build();
+
+                given(mapper.toReceiptDto(any(Receipt.class)))
+                        .willReturn(receiptDto1)
+                        .willReturn(receiptDto2);
+
+                // when
+                List<ReceiptDto> result = breakDownService.fetchAndProcessDocument(dto);
+
+                // then
+                assertThat(result).isNotNull()
+                        .hasSize(2);
+
+                then(restClient).should().get();
+                then(requestHeadersUriSpec).should().uri(anyString(), any(), any());
+                then(requestHeadersSpec).should().retrieve();
+                then(responseSpec).should().body(String.class);
+                then(receiptRepository).should().saveAll(any());
+                then(studentClubRepository).should().save(studentClub);
+                then(mapper).should(times(2)).toReceiptDto(any(Receipt.class));
+                then(receiptService).should().clearReceiptCache(studentClub.getId());
+                then(receiptService).should().checkAndUpdateVerificationStatus(studentClub.getId(), 2L, 2L);
+            }
+        }
+
+        @Nested
+        @DisplayName("키워드가 포함된 요청이면")
+        class Context_with_keyword {
+
+            @Test
+            @DisplayName("영수증 내용에 키워드를 접두사로 추가한다")
+            void it_adds_keyword_prefix_to_content() throws ParseException {
+                // given
+                String keyword = "학생회비";
+                BreakDownDto dto = BreakDownDto.builder()
+                        .issueDate("2024-01-15")
+                        .issueNumber("ABC123")
+                        .studentClubId(studentClub.getId())
+                        .keyword(keyword)
+                        .build();
+
+                String mockHtmlResponse = """
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td>2024-01-15 10:30:00</td>
+                                    <td></td>
+                                    <td>-5000</td>
+                                    <td></td>
+                                    <td>카페 결제</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        """;
+
+                mockRestClientCall(mockHtmlResponse);
+                given(studentClubRepository.findById(studentClub.getId())).willReturn(Optional.of(studentClub));
+                given(receiptRepository.countTotalAndVerified(studentClub)).willReturn(createReceiptCount(0L, 0L));
+
+                ReceiptDto receiptDto = ReceiptDto.builder()
+                        .content("[학생회비] 카페 결제")
+                        .withdrawal(5000)
+                        .build();
+
+                given(mapper.toReceiptDto(any(Receipt.class))).willReturn(receiptDto);
+
+                // when
+                List<ReceiptDto> result = breakDownService.fetchAndProcessDocument(dto);
+
+                // then
+                assertThat(result).isNotNull()
+                        .hasSize(1);
+                assertThat(result.get(0).getContent()).contains("[" + keyword + "]");
+
+                then(restClient).should().get();
+                then(receiptRepository).should().saveAll(any());
+                then(studentClubRepository).should().save(studentClub);
+                then(receiptService).should().clearReceiptCache(studentClub.getId());
+                then(receiptService).should().checkAndUpdateVerificationStatus(studentClub.getId(), 1L, 1L);
+            }
+        }
     }
 
-    @Test
-    @DisplayName("존재하지 않는 유저로 PDF 파싱 실패")
-    void parsePdf_NotFoundUser() {
-        // Given
-        String invalidUserId = "nonExistentUser";
-        String keyword = "학생회비";
-        when(userRepository.findByUserId(invalidUserId)).thenReturn(Optional.empty());
+    @Nested
+    @DisplayName("validatePdfFile 메서드는")
+    class Describe_validatePdfFile {
 
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class,
-                () -> breakDownService.parsePdf(pdfFile, invalidUserId, keyword, currentUser));
+        @Nested
+        @DisplayName("유효한 PDF 파일이 주어지면")
+        class Context_with_valid_file {
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
-        assertThat(exception.getMessage()).isEqualTo(NOT_FOUND_USER);
-        verify(userRepository).findByUserId(invalidUserId);
-    }
+            @Test
+            @DisplayName("true를 반환한다")
+            void it_returns_true() {
+                // when
+                boolean result = breakDownService.validatePdfFile(pdfFile);
 
-    @Test
-    @DisplayName("학생회가 없는 유저로 PDF 파싱 실패")
-    void parsePdf_NotFoundStudentClub() {
-        // Given
-        String keyword = "학생회비";
-        User userWithoutClub = User.builder()
-                .id(1L)
-                .userId("testUser")
-                .studentClub(null)
-                .build();
+                // then
+                assertThat(result).isTrue();
+            }
+        }
 
-        when(userRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(userWithoutClub));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(userWithoutClub));
+        @Nested
+        @DisplayName("빈 PDF 파일이 주어지면")
+        class Context_with_empty_file {
 
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class,
-                () -> breakDownService.parsePdf(pdfFile, user.getUserId(), keyword, currentUser));
+            @Test
+            @DisplayName("false를 반환한다")
+            void it_returns_false() {
+                // when
+                boolean result = breakDownService.validatePdfFile(emptyPdfFile);
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
-        assertThat(exception.getMessage()).isEqualTo(NOT_FOUND_STUDENT_CLUB);
-    }
+                // then
+                assertThat(result).isFalse();
+            }
+        }
 
-    @Test
-    @DisplayName("빈 PDF 파일로 파싱 실패")
-    void parsePdf_EmptyFile() {
-        // Given
-        String keyword = "학생회비";
-        when(userRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(currentUser.getUsername())).thenReturn(Optional.of(user));
+        @Nested
+        @DisplayName("null 파일이 주어지면")
+        class Context_with_null_file {
 
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class,
-                () -> breakDownService.parsePdf(emptyPdfFile, user.getUserId(), keyword, currentUser));
+            @Test
+            @DisplayName("false를 반환한다")
+            void it_returns_false() {
+                // when
+                boolean result = breakDownService.validatePdfFile(null);
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
-        assertThat(exception.getMessage()).isEqualTo(EMPTY_FILE);
-    }
-
-    @Test
-    @DisplayName("다른 소속 유저의 권한 없음으로 PDF 파싱 실패")
-    void parsePdf_NoAuthorizationBelonging() {
-        // Given
-        String keyword = "테스트키워드";
-        when(userRepository.findByUserId(user.getUserId())).thenReturn(Optional.of(user));
-        when(userRepository.findByUserId(anotherCurrentUser.getUsername())).thenReturn(Optional.of(anotherUser));
-
-        // When & Then
-        CustomException exception = assertThrows(CustomException.class,
-                () -> breakDownService.parsePdf(pdfFile, user.getUserId(), keyword, anotherCurrentUser));
-
-        assertThat(exception.getErrorCode()).isEqualTo(403);
-        assertThat(exception.getMessage()).isEqualTo(NO_AUTHORIZATION_BELONGING);
-    }
-
-    @Test
-    @DisplayName("외부 API 정상 응답 처리 성공")
-    void fetchAndProcessDocument_Success() throws ParseException {
-        // Given
-        BreakDownDto dto = BreakDownDto.builder()
-                .issueDate("2024-01-15")
-                .issueNumber("ABC123")
-                .studentClubId(studentClub.getId())
-                .keyword(null)
-                .build();
-
-        String mockHtmlResponse = """
-                <table class="table">
-                    <tbody>
-                        <tr>
-                            <td>2024-01-15 10:30:00</td>
-                            <td></td>
-                            <td>-5000</td>
-                            <td></td>
-                            <td>카페 결제</td>
-                        </tr>
-                        <tr>
-                            <td>2024-01-15 14:20:00</td>
-                            <td></td>
-                            <td>10000</td>
-                            <td></td>
-                            <td>입금</td>
-                        </tr>
-                    </tbody>
-                </table>
-                """;
-
-        // RestClient fluent API mocking
-        when(restClient.get()).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.uri(anyString(), any(), any())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.body(String.class)).thenReturn(mockHtmlResponse);
-
-        when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
-
-        // countTotalAndVerified 쿼리 추가
-        ReceiptRepository.ReceiptCount receiptCount = new ReceiptRepository.ReceiptCount() {
-            @Override
-            public Long getTotal() { return 0L; }
-            @Override
-            public Long getVerified() { return 0L; }
-        };
-        when(receiptRepository.countTotalAndVerified(studentClub)).thenReturn(receiptCount);
-
-        Receipt receipt1 = Receipt.builder()
-                .content("카페 결제")
-                .withdrawal(5000)
-                .studentClub(studentClub)
-                .verification(true)
-                .build();
-        Receipt receipt2 = Receipt.builder()
-                .content("입금")
-                .deposit(10000)
-                .studentClub(studentClub)
-                .verification(true)
-                .build();
-
-        ReceiptDto receiptDto1 = ReceiptDto.builder()
-                .content("카페 결제")
-                .withdrawal(5000)
-                .build();
-        ReceiptDto receiptDto2 = ReceiptDto.builder()
-                .content("입금")
-                .deposit(10000)
-                .build();
-
-        when(mapper.toReceiptDto(any(Receipt.class)))
-                .thenReturn(receiptDto1)
-                .thenReturn(receiptDto2);
-
-        // When
-        List<ReceiptDto> result = breakDownService.fetchAndProcessDocument(dto);
-
-        // Then
-        assertNotNull(result);
-        assertThat(result.size()).isEqualTo(2);
-
-        verify(restClient).get();
-        verify(requestHeadersUriSpec).uri(anyString(), any(), any());
-        verify(requestHeadersSpec).retrieve();
-        verify(responseSpec).body(String.class);
-        verify(receiptRepository).saveAll(any());
-        verify(studentClubRepository).save(studentClub);
-        verify(mapper, times(2)).toReceiptDto(any(Receipt.class));
-
-        verify(receiptService).clearReceiptCache(studentClub.getId());
-
-        // 성능 개선된 checkAndUpdateVerificationStatus 호출 검증
-        verify(receiptService).checkAndUpdateVerificationStatus(studentClub.getId(), 2L, 2L);
-    }
-
-    @Test
-    @DisplayName("외부 API 정상 응답 처리 성공 - 키워드 포함")
-    void fetchAndProcessDocument_SuccessWithKeyword() throws ParseException {
-        // Given
-        String keyword = "학생회비";
-        BreakDownDto dto = BreakDownDto.builder()
-                .issueDate("2024-01-15")
-                .issueNumber("ABC123")
-                .studentClubId(studentClub.getId())
-                .keyword(keyword)
-                .build();
-
-        String mockHtmlResponse = """
-                <table class="table">
-                    <tbody>
-                        <tr>
-                            <td>2024-01-15 10:30:00</td>
-                            <td></td>
-                            <td>-5000</td>
-                            <td></td>
-                            <td>카페 결제</td>
-                        </tr>
-                    </tbody>
-                </table>
-                """;
-
-        // RestClient fluent API mocking
-        when(restClient.get()).thenReturn(requestHeadersUriSpec);
-        when(requestHeadersUriSpec.uri(anyString(), any(), any())).thenReturn(requestHeadersSpec);
-        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.body(String.class)).thenReturn(mockHtmlResponse);
-
-        when(studentClubRepository.findById(studentClub.getId())).thenReturn(Optional.of(studentClub));
-
-        // countTotalAndVerified 쿼리 mock 추가
-        ReceiptRepository.ReceiptCount receiptCount = new ReceiptRepository.ReceiptCount() {
-            @Override
-            public Long getTotal() { return 0L; }
-            @Override
-            public Long getVerified() { return 0L; }
-        };
-        when(receiptRepository.countTotalAndVerified(studentClub)).thenReturn(receiptCount);
-
-        ReceiptDto receiptDto = ReceiptDto.builder()
-                .content("[학생회비] 카페 결제")
-                .withdrawal(5000)
-                .build();
-
-        when(mapper.toReceiptDto(any(Receipt.class))).thenReturn(receiptDto);
-
-        // When
-        List<ReceiptDto> result = breakDownService.fetchAndProcessDocument(dto);
-
-        // Then
-        assertNotNull(result);
-        assertThat(result.size()).isEqualTo(1);
-        assertThat(result.get(0).getContent()).contains("[" + keyword + "]");
-
-        verify(restClient).get();
-        verify(receiptRepository).saveAll(any());
-        verify(studentClubRepository).save(studentClub);
-
-        verify(receiptService).clearReceiptCache(studentClub.getId());
-
-        verify(receiptService).checkAndUpdateVerificationStatus(studentClub.getId(), 1L, 1L);
-    }
-
-    @Test
-    @DisplayName("PDF 파일 유효성 검사 - 정상 파일")
-    void validatePdfFile_ValidFile() {
-        // When
-        boolean result = breakDownService.validatePdfFile(pdfFile);
-
-        // Then
-        assertThat(result).isTrue();
-    }
-
-    @Test
-    @DisplayName("PDF 파일 유효성 검사 - 빈 파일")
-    void validatePdfFile_EmptyFile() {
-        // When
-        boolean result = breakDownService.validatePdfFile(emptyPdfFile);
-
-        // Then
-        assertThat(result).isFalse();
-    }
-
-    @Test
-    @DisplayName("PDF 파일 유효성 검사 - null 파일")
-    void validatePdfFile_NullFile() {
-        // When
-        boolean result = breakDownService.validatePdfFile(null);
-
-        // Then
-        assertThat(result).isFalse();
+                // then
+                assertThat(result).isFalse();
+            }
+        }
     }
 }

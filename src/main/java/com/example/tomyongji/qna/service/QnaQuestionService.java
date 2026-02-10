@@ -3,30 +3,31 @@ package com.example.tomyongji.qna.service;
 import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
 import com.example.tomyongji.global.error.CustomException;
-import com.example.tomyongji.qna.dto.request.AnswerSaveDto;
 import com.example.tomyongji.qna.dto.request.QuestionSaveDto;
+import com.example.tomyongji.qna.dto.response.PageResponseDto;
 import com.example.tomyongji.qna.dto.response.QuestionDto;
-import com.example.tomyongji.qna.entity.QnaAnswer;
 import com.example.tomyongji.qna.entity.QnaQuestion;
 import com.example.tomyongji.qna.mapper.QnaMapper;
-import com.example.tomyongji.qna.repository.QnaAnswerRepository;
 import com.example.tomyongji.qna.repository.QnaQuestionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import static com.example.tomyongji.global.error.ErrorMsg.*;
+import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_QNAQUESTION;
+import static com.example.tomyongji.global.error.ErrorMsg.NO_AUTHORIZATION_USER;
 
 
 @Service
 @RequiredArgsConstructor
-public class QnaService {
+public class QnaQuestionService {
 
     private final QnaQuestionRepository qnaQuestionRepository;
-    private final QnaAnswerRepository qnaAnswerRepository;
     private final UserRepository userRepository;
     private final QnaMapper qnaMapper;
-
-    private static final String ADMIN_CLUB_NAME = "어드민";
 
     // 질문 등록
     public QnaQuestion createQuestion(QuestionSaveDto questionDto, String loginUserId) {
@@ -38,23 +39,48 @@ public class QnaService {
         return qnaQuestionRepository.save(question);
     }
 
-    // 답변 등록
-    public QnaAnswer createAnswer(Long questionId, AnswerSaveDto answerDto, String loginUserId) {
-        // 유저 존재 여부 확인
-        User user = validateUser(loginUserId);
-        // 질문글 존재 여부 확인
-        QnaQuestion question = qnaQuestionRepository.findById(questionId)
-                .orElseThrow(() -> new CustomException(NOT_FOUND_QNAQUESTION, 404));
-        // 관리자인지 체크
-        if (user.getStudentClub() == null || !ADMIN_CLUB_NAME.equals(user.getStudentClub().getStudentClubName())) {
-            throw new CustomException(NO_AUTHORIZATION_BELONGING, 403);
-        }
+    // 질문글 페이지별 조회
+    @Transactional(readOnly = true)
+    public PageResponseDto<QuestionDto> findAllQuestionsPaging(int page, int size) {
+        // 최신순(id 내림차순) 정렬 조건을 포함한 Pageable 생성
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
 
-        QnaAnswer answer = qnaMapper.toAnswerEntity(answerDto);
-        answer.setWriter(user);
-        question.addAnswer(answer);
+        Page<QnaQuestion> questionPage = qnaQuestionRepository.findAll(pageable);
 
-        return qnaAnswerRepository.save(answer);
+        // Entity Page를 DTO Page로 변환
+        Page<QuestionDto> questionDtoPage = questionPage.map(qnaMapper::toQuestionDto);
+        return PageResponseDto.from(questionDtoPage);
+    }
+
+    // 질문글 1개 조회
+    public QuestionDto findQuestionById(long id) {
+        QnaQuestion findQuestion = checkValidateQuestion(id);
+        return qnaMapper.toQuestionDto(findQuestion);
+    }
+
+    // 질문글 수정
+    @Transactional
+    public QuestionDto updateQuestion(long questionId, QuestionSaveDto questionDto, String loginUserId) {
+        // 질문글 있는지 확인
+        QnaQuestion question = checkValidateQuestion(questionId);
+
+        // 로그인한 유저와 작성자가 같은지 확인
+        checkWriter(question, loginUserId);
+
+        qnaMapper.updateQuestionEntityFromDto(questionDto, question);
+        return qnaMapper.toQuestionDto(question);
+    }
+
+    // 질문글 삭제
+    @Transactional
+    public QuestionDto deleteQuestion(long questionId, String loginUserId) {
+        QnaQuestion question = checkValidateQuestion(questionId);
+
+        checkWriter(question, loginUserId);
+
+        QuestionDto deletedQuestionDto = qnaMapper.toQuestionDto(question);
+        qnaQuestionRepository.delete(question);
+        return deletedQuestionDto;
     }
 
     private User validateUser(String loginUsername) {
@@ -62,9 +88,13 @@ public class QnaService {
                 .orElseThrow(() -> new CustomException(NO_AUTHORIZATION_USER, 400));
     }
 
-    // 질문글 전체 조회(페이지네이션)
-    public List<QuestionDto>
-    // 질문글 1개 조회
-    // 질문글 해당 답변글 전체 조회(페이지네이션)
-    // 질문/답변글 수정/삭제
+    private QnaQuestion checkValidateQuestion(long id) {
+        return qnaQuestionRepository.findById(id)
+                .orElseThrow(() -> new CustomException(NOT_FOUND_QNAQUESTION, 404));
+    }
+    private void checkWriter(QnaQuestion question, String loginUserId) {
+        if(!question.getWriter().getUserId().equals(loginUserId)) {
+            throw new CustomException(NO_AUTHORIZATION_USER, 403);
+        }
+    }
 }

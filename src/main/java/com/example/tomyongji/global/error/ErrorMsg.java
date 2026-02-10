@@ -34,6 +34,7 @@ public class ErrorMsg {
     public static final String NOT_FOUND_RECEIPT = "영수증을 찾을 수 없습니다.";
     public static final String NOT_FOUND_BREAKDOWN = "거래내역서를 찾을 수 없습니다.";
     public static final String NOT_FOUND_QNAQUESTION = "질문글을 찾을 수 없습니다.";
+    public static final String NOT_FOUND_QNAANSWER = "답변글을 찾을 수 없습니다.";
 
     // **409 Conflict**
     public static final String EXISTING_USER = "이미 등록된 유저 정보입니다.";

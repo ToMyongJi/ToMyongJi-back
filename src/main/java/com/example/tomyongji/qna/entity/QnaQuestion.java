@@ -3,6 +3,8 @@ package com.example.tomyongji.qna.entity;
 import com.example.tomyongji.domain.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -22,8 +24,15 @@ public class QnaQuestion {
     private String title;
     private String content;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private User writer;
+
     @Column(updatable = false)
     private LocalDateTime createdTime;
+
+    private LocalDateTime updatedTime;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QnaAnswer> answers = new ArrayList<>();
@@ -41,5 +50,11 @@ public class QnaQuestion {
     @PrePersist
     public void prePersist() {
         this.createdTime = LocalDateTime.now();
+        this.updatedTime = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedTime = LocalDateTime.now();
     }
 }

@@ -61,7 +61,7 @@ prometheus.scrape "spring_boot" {
         "job"         = "tomyongji-app",
     }]
     metrics_path = "/actuator/prometheus"
-    scrape_interval = "15s"
+    scrape_interval = "30s"
     forward_to   = [prometheus.relabel.add_dynamic_labels.receiver]
 }
 
@@ -72,7 +72,7 @@ prometheus.exporter.mysql "tomyongji_db" {
 
 prometheus.scrape "mysql" {
     targets    = prometheus.exporter.mysql.tomyongji_db.targets
-    scrape_interval = "15s"
+    scrape_interval = "30s"
     forward_to = [prometheus.relabel.add_dynamic_labels.receiver]
 }
 
@@ -83,38 +83,58 @@ prometheus.exporter.redis "tomyongji_redis" {
 
 prometheus.scrape "redis" {
     targets    = prometheus.exporter.redis.tomyongji_redis.targets
-    scrape_interval = "15s"
+    scrape_interval = "30s"
     forward_to = [prometheus.relabel.add_dynamic_labels.receiver]
 }
 
 // D. 컨테이너 자원 수집 (cAdvisor)
 prometheus.scrape "cadvisor" {
-    targets = [{
-        "__address__" = "cadvisor:8080", // docker-compose에 등록할 서비스 이름
-        "job"         = "cadvisor",
-    }]
-    scrape_interval = "15s"
+    targets = [{"__address__" = "cadvisor:8080", "job" = "cadvisor"}]
+    scrape_interval = "30s"
+    forward_to = [prometheus.relabel.cadvisor_filter.receiver]
+}
+
+prometheus.relabel "cadvisor_filter" {
+    rule {
+        source_labels = ["container_label_com_docker_compose_service"]
+        target_label  = "container"
+    }
+    rule {
+        action = "labeldrop"
+        regex  = "(id|image|name|endpoint|instance|container_label_.*)"
+    }
     forward_to = [prometheus.relabel.add_dynamic_labels.receiver]
 }
 
-// 4-B. Prometheus 매트릭 전송
-prometheus.remote_write "grafanacloud" {
-  endpoint {
-    url = "https://prometheus-prod-49-prod-ap-northeast-0.grafana.net/api/prom/push"
-
-    basic_auth {
-      username = "2286757"
-      password = sys.env("PROMTAIL_API_KEY")
-    }
-  }
-}
-
 prometheus.relabel "add_dynamic_labels" {
-    // 모든 지표에 env 라벨을 현재 환경 변수값으로 강제 주입
+    rule {
+        source_labels = ["__name__"]
+        // 가용성(up), 메모리(jvm, container, redis), DB연결량, 요청수만 허용
+        regex = "(jvm_memory_(used|max)_bytes|container_memory_working_set_bytes|container_cpu_usage_seconds_total|mysql_up|mysql_global_status_threads_connected|redis_up|redis_memory_used_bytes|up|http_server_requests_seconds_count)"
+        action = "keep"
+    }
+
+    // 중복 및 불필요 라벨 최종 제거
+    rule {
+        action = "labeldrop"
+        regex  = "(instance|endpoint|pod|service|namespace|id|name)"
+    }
+
     rule {
         replacement  = sys.env("SPRING_PROFILE")
         target_label = "env"
     }
 
     forward_to = [prometheus.remote_write.grafanacloud.receiver]
+}
+
+// Prometheus 전송 설정 (동일)
+prometheus.remote_write "grafanacloud" {
+  endpoint {
+    url = "https://prometheus-prod-49-prod-ap-northeast-0.grafana.net/api/prom/push"
+    basic_auth {
+      username = "2286757"
+      password = sys.env("PROMTAIL_API_KEY")
+    }
+  }
 }

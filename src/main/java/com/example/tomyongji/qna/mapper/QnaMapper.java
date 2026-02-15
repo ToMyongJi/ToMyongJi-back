@@ -21,11 +21,11 @@ public interface QnaMapper {
     QnaAnswer toAnswerEntity(AnswerSaveDto answerSaveDto);
 
     @Mapping(source = "id", target = "questionId")
-    @Mapping(source = "writer.name", target = "writer")
+    @Mapping(source = "writer.studentClubName", target = "writer")
     QuestionDto toQuestionDto(QnaQuestion question);
 
     @Mapping(source = "id", target = "answerId")
-    @Mapping(source = "writer.name", target = "writer")
+    @Mapping(source = "writer.studentClubName", target = "writer")
     @Mapping(source = "question.id", target = "questionId")
     AnswerDto toAnswerDto(QnaAnswer answer);
 

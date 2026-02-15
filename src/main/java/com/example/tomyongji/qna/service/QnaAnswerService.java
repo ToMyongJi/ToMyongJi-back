@@ -2,6 +2,7 @@ package com.example.tomyongji.qna.service;
 
 import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
 import com.example.tomyongji.global.error.CustomException;
 import com.example.tomyongji.qna.dto.request.AnswerSaveDto;
 import com.example.tomyongji.qna.dto.response.AnswerDto;
@@ -48,7 +49,7 @@ public class QnaAnswerService {
         checkAdminClub(user);
 
         QnaAnswer answer = qnaMapper.toAnswerEntity(answerDto);
-        answer.setWriter(user);
+        answer.setWriter(user.getStudentClub());
         question.addAnswer(answer);
 
         return qnaAnswerRepository.save(answer);
@@ -94,16 +95,14 @@ public class QnaAnswerService {
 
 
     private QnaAnswer checkValidateAnswer(Long answerId) {
-        QnaAnswer answer = qnaAnswerRepository.findById(answerId)
+        return qnaAnswerRepository.findById(answerId)
                 .orElseThrow(() -> new CustomException(NOT_FOUND_QNAANSWER, 404));
-        return answer;
     }
 
 
     private QnaQuestion checkValidateQuestion(Long questionId) {
-        QnaQuestion question = qnaQuestionRepository.findById(questionId)
+        return qnaQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new CustomException(NOT_FOUND_QNAQUESTION, 404));
-        return question;
     }
 
 
@@ -114,8 +113,17 @@ public class QnaAnswerService {
 
 
     private void checkWriter(QnaAnswer answer, String loginUserId) {
-        if(!answer.getWriter().getUserId().equals(loginUserId)) {
-            throw new CustomException(NO_AUTHORIZATION_USER, 403);
+        User loginUser = checkValidateUser(loginUserId);
+        StudentClub answerClub = answer.getWriter();
+        StudentClub loginUserClub = loginUser.getStudentClub();
+
+        // 방어 코드: 둘 중 하나라도 null이면 권한이 없는 것으로 간주
+        if(answerClub==null || loginUserClub==null){
+            throw new CustomException(NO_AUTHORIZATION_BELONGING, 403);
+        }
+
+        if(!answerClub.equals(loginUserClub)) {
+            throw new CustomException(NO_AUTHORIZATION_BELONGING, 403);
         }
     }
 }

@@ -2,6 +2,7 @@ package com.example.tomyongji.qna.service;
 
 import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
 import com.example.tomyongji.global.error.CustomException;
 import com.example.tomyongji.qna.dto.request.QuestionSaveDto;
 import com.example.tomyongji.qna.dto.response.PageResponseDto;
@@ -17,8 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_QNAQUESTION;
-import static com.example.tomyongji.global.error.ErrorMsg.NO_AUTHORIZATION_USER;
+import static com.example.tomyongji.global.error.ErrorMsg.*;
 
 
 @Service
@@ -35,7 +35,7 @@ public class QnaQuestionService {
         User user = validateUser(loginUserId);
 
         QnaQuestion question = qnaMapper.toQuestionEntity(questionDto);
-        question.setWriter(user);
+        question.setWriter(user.getStudentClub());
         return qnaQuestionRepository.save(question);
     }
 
@@ -64,7 +64,7 @@ public class QnaQuestionService {
         // 질문글 있는지 확인
         QnaQuestion question = checkValidateQuestion(questionId);
 
-        // 로그인한 유저와 작성자가 같은지 확인
+        // 로그인한 유저가 작성글의 학생회와 일치하는지 확인
         checkWriter(question, loginUserId);
 
         qnaMapper.updateQuestionEntityFromDto(questionDto, question);
@@ -93,8 +93,17 @@ public class QnaQuestionService {
                 .orElseThrow(() -> new CustomException(NOT_FOUND_QNAQUESTION, 404));
     }
     private void checkWriter(QnaQuestion question, String loginUserId) {
-        if(!question.getWriter().getUserId().equals(loginUserId)) {
-            throw new CustomException(NO_AUTHORIZATION_USER, 403);
+        User loginUser = validateUser(loginUserId);
+        StudentClub questionClub = question.getWriter();
+        StudentClub loginUserClub = loginUser.getStudentClub();
+
+        // 방어 코드: 둘 중 하나라도 null이면 권한이 없는 것으로 간주
+        if (questionClub == null || loginUserClub == null) {
+            throw new CustomException(NO_AUTHORIZATION_BELONGING, 403);
+        }
+
+        if (!questionClub.equals(loginUserClub)) {
+            throw new CustomException(NO_AUTHORIZATION_BELONGING, 403);
         }
     }
 }

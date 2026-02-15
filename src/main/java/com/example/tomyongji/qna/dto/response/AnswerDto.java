@@ -4,8 +4,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter @Setter
-@NoArgsConstructor
+@Getter
 @AllArgsConstructor
 @Builder
 public class AnswerDto {

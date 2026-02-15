@@ -1,8 +1,11 @@
 package com.example.tomyongji.qna.entity;
 
 import com.example.tomyongji.domain.auth.entity.User;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -17,17 +20,27 @@ public class QnaAnswer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_club_id")
+    private StudentClub writer;
     private String content;
 
     @Column(updatable = false)
     private LocalDateTime createdTime;
 
-    @ManyToOne
+    private LocalDateTime updatedTime;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     private QnaQuestion question;
 
     @PrePersist
     public void prePersist() {
         this.createdTime = LocalDateTime.now();
+        this.updatedTime = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedTime = LocalDateTime.now();
     }
 }

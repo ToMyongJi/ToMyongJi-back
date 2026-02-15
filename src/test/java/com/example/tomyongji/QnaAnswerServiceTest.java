@@ -7,13 +7,13 @@ import com.example.tomyongji.global.error.CustomException;
 import com.example.tomyongji.qna.dto.request.AnswerSaveDto;
 import com.example.tomyongji.qna.dto.response.AnswerDto;
 import com.example.tomyongji.qna.dto.response.PageResponseDto;
-import com.example.tomyongji.qna.dto.response.QuestionDto;
 import com.example.tomyongji.qna.entity.QnaAnswer;
 import com.example.tomyongji.qna.entity.QnaQuestion;
 import com.example.tomyongji.qna.mapper.QnaMapper;
 import com.example.tomyongji.qna.repository.QnaAnswerRepository;
 import com.example.tomyongji.qna.repository.QnaQuestionRepository;
 import com.example.tomyongji.qna.service.QnaAnswerService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +21,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.*;
 
 import java.util.ArrayList;
@@ -45,49 +44,73 @@ public class QnaAnswerServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private QnaMapper qnaMapper;
 
-    private final String loginUserId = "testUser";
+    private final String loginUserId = "adminUser";
+    private User adminUser;
+    private StudentClub adminClub;
+    private QnaQuestion commonQuestion;
+    private QnaAnswer commonAnswer;
+    private AnswerSaveDto commonSaveDto;
+    private AnswerDto commonResponseDto;
 
-    @Test
-    @DisplayName("답변 등록 성공 - 질문글 존재 및 어드민 소속 유저")
-    void createAnswer_Success() {
-        // Given
-        StudentClub adminClub = StudentClub.builder().studentClubName("어드민").build();
-        User adminUser = User.builder().userId(loginUserId).studentClub(adminClub).build();
-        QnaQuestion question = QnaQuestion.builder()
+    @BeforeEach
+    void setUp() {
+        adminClub = StudentClub.builder()
+                .id(1L)
+                .studentClubName("어드민")
+                .build();
+
+        adminUser = User.builder()
+                .id(1L)
+                .userId(loginUserId)
+                .studentClub(adminClub)
+                .build();
+
+        commonQuestion = QnaQuestion.builder()
                 .id(1L)
                 .title("질문 제목")
                 .content("질문 내용")
                 .answers(new ArrayList<>())
                 .build();
 
-        AnswerSaveDto dto = AnswerSaveDto.builder()
-                .content("답변입니다")
-                .build();
-
-        QnaAnswer answer = QnaAnswer.builder()
+        commonAnswer = QnaAnswer.builder()
                 .id(10L)
-                .content("답변입니다")
-                .question(question)
+                .content("답변 내용")
+                .writer(adminClub)
+                .question(commonQuestion)
                 .build();
 
+        commonSaveDto = AnswerSaveDto.builder()
+                .content("답변 내용")
+                .build();
+
+        commonResponseDto = AnswerDto.builder()
+                .answerId(100L)
+                .content("답변 내용입니다.")
+                .build();
+    }
+
+    @Test
+    @DisplayName("답변 등록 성공 - 질문글 존재 및 어드민 소속 유저")
+    void createAnswer_Success() {
+        // Given
         when(userRepository.findByUserId(loginUserId)).thenReturn(Optional.of(adminUser));
-        when(questionRepository.findById(1L)).thenReturn(Optional.of(question));
-        when(qnaMapper.toAnswerEntity(dto)).thenReturn(answer);
-        when(answerRepository.save(answer)).thenReturn(answer);
+        when(questionRepository.findById(1L)).thenReturn(Optional.of(commonQuestion));
+        when(qnaMapper.toAnswerEntity(commonSaveDto)).thenReturn(commonAnswer);
+        when(answerRepository.save(commonAnswer)).thenReturn(commonAnswer);
 
         // When
-        QnaAnswer result = answerService.createAnswer(1L, dto, loginUserId);
+        QnaAnswer result = answerService.createAnswer(1L, commonSaveDto, loginUserId);
 
         // Then
         // 양방향 연관관계가 잘 적용되었는지
-        assertThat(question.getAnswers().size()).isEqualTo(1);
+        assertThat(commonQuestion.getAnswers().size()).isEqualTo(1);
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(10L);
-        assertThat(result.getContent()).isEqualTo("답변입니다");
+        assertThat(result.getId()).isEqualTo(commonAnswer.getId());
+        assertThat(result.getContent()).isEqualTo(commonAnswer.getContent());
         verify(userRepository).findByUserId(loginUserId);
         verify(questionRepository).findById(1L);
-        verify(qnaMapper).toAnswerEntity(dto);
-        verify(answerRepository).save(answer);
+        verify(qnaMapper).toAnswerEntity(commonSaveDto);
+        verify(answerRepository).save(commonAnswer);
     }
 
     @Test
@@ -97,7 +120,7 @@ public class QnaAnswerServiceTest {
         when(userRepository.findByUserId(loginUserId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> answerService.createAnswer(1L, new AnswerSaveDto(), loginUserId))
+        assertThatThrownBy(() -> answerService.createAnswer(1L, commonSaveDto, loginUserId))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NO_AUTHORIZATION_USER);
         verify(userRepository).findByUserId(loginUserId);
@@ -108,12 +131,11 @@ public class QnaAnswerServiceTest {
     @DisplayName("답변 등록 실패 - 질문글이 존재하지 않음")
     void createAnswer_Fail_QuestionNotFound() {
         // Given
-        User user = User.builder().userId(loginUserId).build();
-        when(userRepository.findByUserId(loginUserId)).thenReturn(Optional.of(user));
+        when(userRepository.findByUserId(loginUserId)).thenReturn(Optional.of(adminUser));
         when(questionRepository.findById(1L)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> answerService.createAnswer(1L, new AnswerSaveDto(), loginUserId))
+        assertThatThrownBy(() -> answerService.createAnswer(1L, commonSaveDto, loginUserId))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NOT_FOUND_QNAQUESTION);
         verify(userRepository).findByUserId(loginUserId);
@@ -126,14 +148,14 @@ public class QnaAnswerServiceTest {
     void createAnswer_Fail_NotAdminClub() {
         // Given
         StudentClub normalClub = StudentClub.builder().studentClubName("일반학생회").build();
-        User user = User.builder().userId(loginUserId).studentClub(normalClub).build();
-        QnaQuestion question = QnaQuestion.builder().id(1L).build();
+        User normalUser = User.builder().userId(loginUserId).studentClub(normalClub).build();
+//        QnaQuestion question = QnaQuestion.builder().id(1L).build();
 
-        when(userRepository.findByUserId(loginUserId)).thenReturn(Optional.of(user));
-        when(questionRepository.findById(1L)).thenReturn(Optional.of(question));
+        when(userRepository.findByUserId(loginUserId)).thenReturn(Optional.of(normalUser));
+        when(questionRepository.findById(1L)).thenReturn(Optional.of(commonQuestion));
 
         // When & Then
-        assertThatThrownBy(() -> answerService.createAnswer(1L, new AnswerSaveDto(), loginUserId))
+        assertThatThrownBy(() -> answerService.createAnswer(1L, commonSaveDto, loginUserId))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NO_AUTHORIZATION_BELONGING);
         verify(userRepository).findByUserId(loginUserId);
@@ -147,25 +169,16 @@ public class QnaAnswerServiceTest {
     @DisplayName("특정 질문의 답변 목록 페이징 조회 성공")
     void findAnswersByQuestionIdPaging_Success() {
         // Given
-        Long questionId = 1L;
+        Long questionId = commonQuestion.getId();
         int page = 0;
         int size = 5;
 
-        QnaQuestion question = QnaQuestion.builder()
-                .id(questionId)
-                .build();
-        QnaAnswer answer = QnaAnswer.builder()
-                .id(100L)
-                .content("답변 내용입니다.")
-                .build();
+        Page<QnaAnswer> answerPage = new PageImpl<>(List.of(commonAnswer), PageRequest.of(page, size), 1);
 
-        Page<QnaAnswer> answerPage = new PageImpl<>(List.of(answer), PageRequest.of(page, size), 1);
-        AnswerDto answerDto =  AnswerDto.builder().answerId(100L).content("답변 내용입니다.").build();
-
-        when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
+        when(questionRepository.findById(questionId)).thenReturn(Optional.of(commonQuestion));
         when(answerRepository.findByQuestionId(eq(questionId), any(Pageable.class)))
                 .thenReturn(answerPage);
-        when(qnaMapper.toAnswerDto(any(QnaAnswer.class))).thenReturn(answerDto);
+        when(qnaMapper.toAnswerDto(any(QnaAnswer.class))).thenReturn(commonResponseDto);
 
         // When
         PageResponseDto<AnswerDto> result = answerService.findAnswersByQuestionIdPaging(questionId, page, size);
@@ -178,7 +191,7 @@ public class QnaAnswerServiceTest {
         assertThat(result.content())
                 .hasSize(1)
                 .extracting(AnswerDto::getAnswerId)
-                .containsExactly(100L);
+                .containsExactly(commonResponseDto.getAnswerId());
 
         verify(questionRepository).findById(questionId);
 
@@ -192,6 +205,7 @@ public class QnaAnswerServiceTest {
 
         verify(qnaMapper).toAnswerDto(any(QnaAnswer.class));
     }
+
     @Test
     @DisplayName("특정 질문글 답변 페이징 조회 실패 - 존재하지 않는 질문 ID")
     void findByQuestionId_Fail_QuestionNotFound() {
@@ -213,75 +227,98 @@ public class QnaAnswerServiceTest {
         verify(answerRepository, never()).findByQuestionId(anyLong(), any(Pageable.class));
     }
 
-    // 수정, 삭제 테스트용 헬퍼 메서드
-    private User createTestUser(String userId) {
-        return User.builder().userId(userId).name("사용자").build();
-    }
-
-    private QnaAnswer createTestAnswer(Long id, User writer) {
-        return QnaAnswer.builder()
-                .id(id)
-                .content("기존 내용")
-                .writer(writer)
-                .build();
-    }
-
     // 답변 수정 메서드 테스트
 
     @Test
     @DisplayName("답변 수정 성공 - 답변 존재 및 어드민 권한 일치")
     void updateAnswer_Success() {
         // Given
-        String userId = "admin123";
         Long answerId = 10L;
-        User adminUser = createTestUser(userId);
-        QnaAnswer answer = createTestAnswer(answerId, adminUser);
-        AnswerSaveDto updateDto = new AnswerSaveDto("수정된 답변 내용");
-
-        when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
-        when(qnaMapper.toAnswerDto(answer)).thenReturn(new AnswerDto());
+        when(answerRepository.findById(answerId)).thenReturn(Optional.of(commonAnswer));
+        when(userRepository.findByUserId(loginUserId)).thenReturn(Optional.of(adminUser));
+        when(qnaMapper.toAnswerDto(commonAnswer)).thenReturn(commonResponseDto);
 
         // When
-        answerService.updateAnswer(answerId, updateDto, userId);
+        answerService.updateAnswer(answerId, commonSaveDto, loginUserId);
 
         // Then
         verify(answerRepository).findById(answerId);
-        verify(qnaMapper).updateAnswerEntityFromDto(eq(updateDto), eq(answer));
-        verify(qnaMapper).toAnswerDto(answer);
+        verify(userRepository).findByUserId(loginUserId);
+        verify(qnaMapper).updateAnswerEntityFromDto(eq(commonSaveDto), eq(commonAnswer));
+        verify(qnaMapper).toAnswerDto(commonAnswer);
     }
 
     @Test
     @DisplayName("답변 수정 실패 - 답변글 미존재")
     void updateAnswer_Fail_NotFound() {
+        long invalidId = 999L;
         // Given
-        String userId = "admin123";
-        when(answerRepository.findById(999L)).thenReturn(Optional.empty());
+        when(answerRepository.findById(invalidId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> answerService.updateAnswer(999L, new AnswerSaveDto(), userId))
+        assertThatThrownBy(() -> answerService.updateAnswer(invalidId, commonSaveDto, loginUserId))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NOT_FOUND_QNAANSWER);
 
-        verify(answerRepository).findById(999L);
-        verify(qnaMapper, never()).updateAnswerEntityFromDto(any(), any());
+        verify(answerRepository).findById(invalidId);
+        verify(userRepository, never()).findByUserId(any());
     }
 
     @Test
-    @DisplayName("답변 수정 실패 - 작성자 미동일")
+    @DisplayName("답변 수정 실패 - 유저 정보 미존재")
     void updateAnswer_Fail_NotAdmin() {
         // Given
         String normalUserId = "normalUser";
-        QnaAnswer answer = createTestAnswer(10L, createTestUser("admin"));
 
-        when(answerRepository.findById(10L)).thenReturn(Optional.of(answer));
+        when(answerRepository.findById(10L)).thenReturn(Optional.of(commonAnswer));
+        when(userRepository.findByUserId(normalUserId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> answerService.updateAnswer(10L, new AnswerSaveDto(), normalUserId))
+        assertThatThrownBy(() -> answerService.updateAnswer(10L, commonSaveDto, normalUserId))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NO_AUTHORIZATION_USER);
 
         verify(answerRepository).findById(10L);
+        verify(userRepository).findByUserId(normalUserId);
         verify(qnaMapper, never()).updateAnswerEntityFromDto(any(), any());
+    }
+
+    private User createOtherClubUser() {
+        // 1. StudentClub 초기화
+        StudentClub otherClub = StudentClub.builder()
+                .id(2L)
+                .studentClubName("다른동아리")
+                .Balance(10000)
+                .verification(true)
+                .build();
+
+        // 2. User 초기화 (StudentClub 연관관계 포함)
+        User otherClubUser = User.builder()
+                .id(2L)
+                .userId(loginUserId)
+                .name("사용자")
+                .studentClub(otherClub)
+                .build();
+        return otherClubUser;
+    }
+
+    @Test
+    @DisplayName("답변 수정 실패 - 작성자 학생회 불일치")
+    void updateAnswer_Fail_NotSameClub() {
+        // Given
+        User otherClubUser = createOtherClubUser();
+
+        when(answerRepository.findById(1L)).thenReturn(Optional.of(commonAnswer));
+        when(userRepository.findByUserId(loginUserId)).thenReturn(Optional.of(otherClubUser));
+
+        // When & Then
+        assertThatThrownBy(() -> answerService.updateAnswer(1L, commonSaveDto, loginUserId))
+                .isInstanceOf(CustomException.class)
+                .hasMessage(NO_AUTHORIZATION_BELONGING);
+        verify(answerRepository).findById(1L);
+        verify(userRepository).findByUserId(loginUserId);
+        verify(qnaMapper, never()).updateQuestionEntityFromDto(any(), any());
+
     }
 
     // 삭제 메서드 테스트
@@ -290,21 +327,18 @@ public class QnaAnswerServiceTest {
     @DisplayName("답변 삭제 성공 - 답변 존재 및 작성자 일치")
     void deleteAnswer_Success() {
         // Given
-        String adminUserId = "adminUser";
-        User user = createTestUser(adminUserId);
-        QnaAnswer answer = createTestAnswer(1L, user);
-        AnswerDto returnDto = new AnswerDto();
-
-        when(answerRepository.findById(1L)).thenReturn(Optional.of(answer));
-        when(qnaMapper.toAnswerDto(answer)).thenReturn(returnDto);
+        when(answerRepository.findById(1L)).thenReturn(Optional.of(commonAnswer));
+        when(userRepository.findByUserId(loginUserId)).thenReturn(Optional.of(adminUser));
+        when(qnaMapper.toAnswerDto(commonAnswer)).thenReturn(commonResponseDto);
         // When
-        AnswerDto resultDto = answerService.deleteAnswer(1L, adminUserId);
+        AnswerDto resultDto = answerService.deleteAnswer(1L, loginUserId);
 
         // Then
-        assertThat(resultDto).isEqualTo(returnDto);
+        assertThat(resultDto).isEqualTo(commonResponseDto);
         verify(answerRepository).findById(1L);
-        verify(qnaMapper).toAnswerDto(answer);
-        verify(answerRepository).delete(answer);
+        verify(userRepository).findByUserId(loginUserId);
+        verify(qnaMapper).toAnswerDto(commonAnswer);
+        verify(answerRepository).delete(commonAnswer);
     }
 
     @Test
@@ -315,7 +349,7 @@ public class QnaAnswerServiceTest {
         when(answerRepository.findById(invalidAnswerId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> answerService.deleteAnswer(invalidAnswerId, "admin"))
+        assertThatThrownBy(() -> answerService.deleteAnswer(invalidAnswerId, loginUserId))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NOT_FOUND_QNAANSWER);
 
@@ -324,21 +358,39 @@ public class QnaAnswerServiceTest {
     }
 
     @Test
-    @DisplayName("답변 삭제 실패 - 작성자 미동일")
+    @DisplayName("답변 삭제 실패 - 유저 정보 미존재")
     void deleteAnswer_Fail_NotWriter() {
         // Given
-        String invalidUserId = "normalUser";
-        String ownerUserId = "owner";
-        QnaAnswer answer = createTestAnswer(1L, createTestUser(ownerUserId));
-
-        when(answerRepository.findById(1L)).thenReturn(Optional.of(answer));
+        String hackerId = "hacker";
+        when(answerRepository.findById(1L)).thenReturn(Optional.of(commonAnswer));
+        when(userRepository.findByUserId(hackerId)).thenReturn(Optional.empty());
 
         // When & Then
-        assertThatThrownBy(() -> answerService.deleteAnswer(1L, invalidUserId))
+        assertThatThrownBy(() -> answerService.deleteAnswer(1L, hackerId))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NO_AUTHORIZATION_USER);
 
         verify(answerRepository).findById(1L);
-        verify(qnaMapper, never()).toQuestionDto(any());
+        verify(userRepository).findByUserId(hackerId);
+        verify(qnaMapper, never()).toAnswerDto(any());
+    }
+
+    @Test
+    @DisplayName("질문 삭제 실패 - 작성자 학생회 불일치")
+    void deleteQuestion_Fail_NotSameClub() {
+        // Given
+        User otherClubUser = createOtherClubUser();
+
+        when(answerRepository.findById(1L)).thenReturn(Optional.of(commonAnswer));
+        when(userRepository.findByUserId(loginUserId)).thenReturn(Optional.of(otherClubUser));
+
+        // When & Then
+        assertThatThrownBy(() -> answerService.deleteAnswer(1L, loginUserId))
+                .isInstanceOf(CustomException.class)
+                .hasMessage(NO_AUTHORIZATION_BELONGING);
+        verify(answerRepository).findById(1L);
+        verify(userRepository).findByUserId(loginUserId);
+        verify(qnaMapper, never()).toAnswerDto(any());
+
     }
 }

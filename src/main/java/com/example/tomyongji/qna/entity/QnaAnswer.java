@@ -1,6 +1,7 @@
 package com.example.tomyongji.qna.entity;
 
 import com.example.tomyongji.domain.auth.entity.User;
+import com.example.tomyongji.domain.receipt.entity.StudentClub;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
@@ -19,10 +20,9 @@ public class QnaAnswer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    @OnDelete(action = OnDeleteAction.SET_NULL)
-    private User writer;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_club_id")
+    private StudentClub writer;
     private String content;
 
     @Column(updatable = false)
@@ -30,7 +30,7 @@ public class QnaAnswer {
 
     private LocalDateTime updatedTime;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private QnaQuestion question;
 
     @PrePersist

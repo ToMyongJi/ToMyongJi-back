@@ -56,6 +56,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/csv/upload/{userIndexId}","/api/ocr/upload/{userId}","/api/my/{id}").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers("/api/my/members","/api/my/members/{id}","/api/my/members/{deletedStudentNum}").hasAnyRole("PRESIDENT","ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/qna/**").permitAll()
+                        .requestMatchers("/api/qna/question/**").hasAnyRole("STU", "PRESIDENT", "ADMIN")
+                        .requestMatchers("/api/qna/answer/**").hasRole("ADMIN")
                         .anyRequest().denyAll())
 //                        .anyRequest().permitAll())
                 // JWT 인증을 위하여 직접 구현한 필터를 UsernamePasswordAuthenticationFilter 전에 실행

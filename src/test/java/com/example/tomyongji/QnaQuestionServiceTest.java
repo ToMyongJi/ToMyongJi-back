@@ -94,16 +94,17 @@ public class  QnaQuestionServiceTest {
         when(userRepository.findByUserId(loginUserId)).thenReturn(Optional.of(testUser));
         when(qnaMapper.toQuestionEntity(commonSaveDto)).thenReturn(commonQuestion);
         when(questionRepository.save(commonQuestion)).thenReturn(commonQuestion);
+        when(qnaMapper.toQuestionDto(commonQuestion)).thenReturn(commonResponseDto);
 
         // When
-        QnaQuestion result = questionService.createQuestion(commonSaveDto, loginUserId);
+        QuestionDto result = questionService.createQuestion(commonSaveDto, loginUserId);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(commonQuestion.getId());
-        assertThat(result.getTitle()).isEqualTo(commonQuestion.getTitle());
-        assertThat(result.getContent()).isEqualTo(commonQuestion.getContent());
-        assertThat(result.getWriter()).isEqualTo(testClub);
+        assertThat(result.getQuestionId()).isEqualTo(commonResponseDto.getQuestionId());
+        assertThat(result.getTitle()).isEqualTo(commonResponseDto.getTitle());
+        assertThat(result.getContent()).isEqualTo(commonResponseDto.getContent());
+        assertThat(result.getWriter()).isEqualTo(commonResponseDto.getWriter());
         verify(qnaMapper).toQuestionEntity(commonSaveDto);
         verify(questionRepository).save(commonQuestion);
     }

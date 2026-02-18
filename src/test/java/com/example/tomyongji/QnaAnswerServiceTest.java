@@ -97,16 +97,16 @@ public class QnaAnswerServiceTest {
         when(questionRepository.findById(1L)).thenReturn(Optional.of(commonQuestion));
         when(qnaMapper.toAnswerEntity(commonSaveDto)).thenReturn(commonAnswer);
         when(answerRepository.save(commonAnswer)).thenReturn(commonAnswer);
+        when(qnaMapper.toAnswerDto(commonAnswer)).thenReturn(commonResponseDto);
 
         // When
-        QnaAnswer result = answerService.createAnswer(1L, commonSaveDto, loginUserId);
+        AnswerDto result = answerService.createAnswer(1L, commonSaveDto, loginUserId);
 
         // Then
         // 양방향 연관관계가 잘 적용되었는지
         assertThat(commonQuestion.getAnswers().size()).isEqualTo(1);
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(commonAnswer.getId());
-        assertThat(result.getContent()).isEqualTo(commonAnswer.getContent());
+        assertThat(result).isEqualTo(commonResponseDto);
         verify(userRepository).findByUserId(loginUserId);
         verify(questionRepository).findById(1L);
         verify(qnaMapper).toAnswerEntity(commonSaveDto);

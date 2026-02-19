@@ -1,10 +1,10 @@
-package com.example.tomyongji.qna.controller;
+package com.example.tomyongji.domain.qna.controller;
 
 import com.example.tomyongji.global.common.response.ApiResponse;
-import com.example.tomyongji.qna.dto.request.QuestionSaveDto;
-import com.example.tomyongji.qna.dto.response.PageResponseDto;
-import com.example.tomyongji.qna.dto.response.QuestionDto;
-import com.example.tomyongji.qna.service.QnaQuestionService;
+import com.example.tomyongji.domain.qna.dto.request.QuestionSaveDto;
+import com.example.tomyongji.domain.qna.dto.response.PageResponseDto;
+import com.example.tomyongji.domain.qna.dto.response.QuestionDto;
+import com.example.tomyongji.domain.qna.service.QnaQuestionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

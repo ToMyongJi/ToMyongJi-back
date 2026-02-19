@@ -1,4 +1,4 @@
-package com.example.tomyongji.qna.dto.response;
+package com.example.tomyongji.domain.qna.dto.response;
 
 import lombok.*;
 
@@ -7,11 +7,11 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor
 @Builder
-public class QuestionDto {
-    private long questionId;
-    private String title;
-    private String content;
+public class AnswerDto {
+    private long answerId;
     private String writer;
+    private String content;
     private LocalDateTime createdTime;
     private LocalDateTime updatedTime;
+    private long questionId;
 }

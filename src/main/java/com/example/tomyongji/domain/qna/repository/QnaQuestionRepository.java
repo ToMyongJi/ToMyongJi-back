@@ -1,6 +1,6 @@
-package com.example.tomyongji.qna.repository;
+package com.example.tomyongji.domain.qna.repository;
 
-import com.example.tomyongji.qna.entity.QnaQuestion;
+import com.example.tomyongji.domain.qna.entity.QnaQuestion;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

@@ -1,15 +1,15 @@
-package com.example.tomyongji.qna.service;
+package com.example.tomyongji.domain.qna.service;
 
 import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
 import com.example.tomyongji.domain.receipt.entity.StudentClub;
 import com.example.tomyongji.global.error.CustomException;
-import com.example.tomyongji.qna.dto.request.QuestionSaveDto;
-import com.example.tomyongji.qna.dto.response.PageResponseDto;
-import com.example.tomyongji.qna.dto.response.QuestionDto;
-import com.example.tomyongji.qna.entity.QnaQuestion;
-import com.example.tomyongji.qna.mapper.QnaMapper;
-import com.example.tomyongji.qna.repository.QnaQuestionRepository;
+import com.example.tomyongji.domain.qna.dto.request.QuestionSaveDto;
+import com.example.tomyongji.domain.qna.dto.response.PageResponseDto;
+import com.example.tomyongji.domain.qna.dto.response.QuestionDto;
+import com.example.tomyongji.domain.qna.entity.QnaQuestion;
+import com.example.tomyongji.domain.qna.mapper.QnaMapper;
+import com.example.tomyongji.domain.qna.repository.QnaQuestionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

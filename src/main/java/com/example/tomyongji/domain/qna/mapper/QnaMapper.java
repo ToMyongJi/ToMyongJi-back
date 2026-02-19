@@ -1,11 +1,11 @@
-package com.example.tomyongji.qna.mapper;
+package com.example.tomyongji.domain.qna.mapper;
 
-import com.example.tomyongji.qna.dto.request.AnswerSaveDto;
-import com.example.tomyongji.qna.dto.request.QuestionSaveDto;
-import com.example.tomyongji.qna.dto.response.AnswerDto;
-import com.example.tomyongji.qna.dto.response.QuestionDto;
-import com.example.tomyongji.qna.entity.QnaAnswer;
-import com.example.tomyongji.qna.entity.QnaQuestion;
+import com.example.tomyongji.domain.qna.dto.request.AnswerSaveDto;
+import com.example.tomyongji.domain.qna.dto.request.QuestionSaveDto;
+import com.example.tomyongji.domain.qna.dto.response.AnswerDto;
+import com.example.tomyongji.domain.qna.dto.response.QuestionDto;
+import com.example.tomyongji.domain.qna.entity.QnaAnswer;
+import com.example.tomyongji.domain.qna.entity.QnaQuestion;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

@@ -4,11 +4,15 @@ import com.example.tomyongji.global.common.response.ApiResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -24,6 +28,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({IllegalArgumentException.class, MultipartException.class, RuntimeException.class})
     public ResponseEntity<ApiResponse<Void>> handleBadRequestExceptions(Exception ex) {
         return createErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    // 사용자 입력 예외
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage())
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.onFailure(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "입력값이 유효하지 않습니다.",
+                        errors
+                ));
     }
 
     // 비즈니스 커스텀 예외

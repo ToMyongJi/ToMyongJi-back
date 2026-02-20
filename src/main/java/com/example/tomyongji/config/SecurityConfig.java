@@ -56,7 +56,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/csv/upload/{userIndexId}","/api/ocr/upload/{userId}","/api/my/{id}").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers("/api/my/members","/api/my/members/{id}","/api/my/members/{deletedStudentNum}").hasAnyRole("PRESIDENT","ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/qna/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/qna/**").hasAnyRole("STU", "PRESIDENT", "ADMIN")
                         .requestMatchers("/api/qna/question/**").hasAnyRole("STU", "PRESIDENT", "ADMIN")
                         .requestMatchers("/api/qna/answer/**").hasRole("ADMIN")
                         .anyRequest().denyAll())

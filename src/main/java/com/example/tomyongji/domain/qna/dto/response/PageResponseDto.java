@@ -1,4 +1,4 @@
-package com.example.tomyongji.qna.dto.response;
+package com.example.tomyongji.domain.qna.dto.response;
 
 import org.springframework.data.domain.Page;
 

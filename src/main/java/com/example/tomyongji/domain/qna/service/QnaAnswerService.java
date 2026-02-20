@@ -1,17 +1,16 @@
-package com.example.tomyongji.qna.service;
+package com.example.tomyongji.domain.qna.service;
 
 import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
-import com.example.tomyongji.domain.receipt.entity.StudentClub;
 import com.example.tomyongji.global.error.CustomException;
-import com.example.tomyongji.qna.dto.request.AnswerSaveDto;
-import com.example.tomyongji.qna.dto.response.AnswerDto;
-import com.example.tomyongji.qna.dto.response.PageResponseDto;
-import com.example.tomyongji.qna.entity.QnaAnswer;
-import com.example.tomyongji.qna.entity.QnaQuestion;
-import com.example.tomyongji.qna.mapper.QnaMapper;
-import com.example.tomyongji.qna.repository.QnaAnswerRepository;
-import com.example.tomyongji.qna.repository.QnaQuestionRepository;
+import com.example.tomyongji.domain.qna.dto.request.AnswerSaveDto;
+import com.example.tomyongji.domain.qna.dto.response.AnswerDto;
+import com.example.tomyongji.domain.qna.dto.response.PageResponseDto;
+import com.example.tomyongji.domain.qna.entity.QnaAnswer;
+import com.example.tomyongji.domain.qna.entity.QnaQuestion;
+import com.example.tomyongji.domain.qna.mapper.QnaMapper;
+import com.example.tomyongji.domain.qna.repository.QnaAnswerRepository;
+import com.example.tomyongji.domain.qna.repository.QnaQuestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,28 +30,20 @@ public class QnaAnswerService {
     private final UserRepository userRepository;
     private final QnaMapper qnaMapper;
 
-    private static final String ADMIN_CLUB_NAME = "어드민";
-
-    private static void checkAdminClub(User user) {
-        if (user.getStudentClub() == null || !ADMIN_CLUB_NAME.equals(user.getStudentClub().getStudentClubName())) {
-            throw new CustomException(NO_AUTHORIZATION_BELONGING, 403);
-        }
-    }
-
     // 답변 등록
-    public QnaAnswer createAnswer(Long questionId, AnswerSaveDto answerDto, String loginUserId) {
+    public AnswerDto createAnswer(Long questionId, AnswerSaveDto answerDto, String loginUserId) {
         // 유저 존재 여부 확인
         User user = checkValidateUser(loginUserId);
         // 질문글 존재 여부 확인
         QnaQuestion question = checkValidateQuestion(questionId);
-        // 관리자인지 체크 -> 추후에 필터로 제한할 시 코드 삭제
-        checkAdminClub(user);
 
         QnaAnswer answer = qnaMapper.toAnswerEntity(answerDto);
         answer.setWriter(user.getStudentClub());
         question.addAnswer(answer);
 
-        return qnaAnswerRepository.save(answer);
+        QnaAnswer savedAnswer = qnaAnswerRepository.save(answer);
+        return qnaMapper.toAnswerDto(savedAnswer);
+
     }
 
     // 질문글 해당 답변글 페이지별 조회
@@ -75,9 +66,8 @@ public class QnaAnswerService {
     public AnswerDto updateAnswer(Long answerId, AnswerSaveDto answerDto, String loginUserId) {
         QnaAnswer answer = checkValidateAnswer(answerId);
 
-        checkWriter(answer, loginUserId);
-
         qnaMapper.updateAnswerEntityFromDto(answerDto, answer);
+        qnaAnswerRepository.saveAndFlush(answer);
         return qnaMapper.toAnswerDto(answer);
     }
 
@@ -85,8 +75,6 @@ public class QnaAnswerService {
     @Transactional
     public AnswerDto deleteAnswer(Long answerId, String loginUserId) {
         QnaAnswer answer = checkValidateAnswer(answerId);
-
-        checkWriter(answer, loginUserId);
 
         AnswerDto deletedAnswerDto = qnaMapper.toAnswerDto(answer);
         qnaAnswerRepository.delete(answer);
@@ -109,21 +97,5 @@ public class QnaAnswerService {
     private User checkValidateUser(String loginUsername) {
         return userRepository.findByUserId(loginUsername)
                 .orElseThrow(() -> new CustomException(NO_AUTHORIZATION_USER, 400));
-    }
-
-
-    private void checkWriter(QnaAnswer answer, String loginUserId) {
-        User loginUser = checkValidateUser(loginUserId);
-        StudentClub answerClub = answer.getWriter();
-        StudentClub loginUserClub = loginUser.getStudentClub();
-
-        // 방어 코드: 둘 중 하나라도 null이면 권한이 없는 것으로 간주
-        if(answerClub==null || loginUserClub==null){
-            throw new CustomException(NO_AUTHORIZATION_BELONGING, 403);
-        }
-
-        if(!answerClub.equals(loginUserClub)) {
-            throw new CustomException(NO_AUTHORIZATION_BELONGING, 403);
-        }
     }
 }

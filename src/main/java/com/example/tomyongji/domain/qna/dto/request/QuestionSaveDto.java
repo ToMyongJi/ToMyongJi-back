@@ -1,4 +1,4 @@
-package com.example.tomyongji.qna.dto.request;
+package com.example.tomyongji.domain.qna.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;

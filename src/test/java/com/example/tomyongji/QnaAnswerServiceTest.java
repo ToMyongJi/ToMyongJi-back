@@ -4,15 +4,15 @@ import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
 import com.example.tomyongji.domain.receipt.entity.StudentClub;
 import com.example.tomyongji.global.error.CustomException;
-import com.example.tomyongji.qna.dto.request.AnswerSaveDto;
-import com.example.tomyongji.qna.dto.response.AnswerDto;
-import com.example.tomyongji.qna.dto.response.PageResponseDto;
-import com.example.tomyongji.qna.entity.QnaAnswer;
-import com.example.tomyongji.qna.entity.QnaQuestion;
-import com.example.tomyongji.qna.mapper.QnaMapper;
-import com.example.tomyongji.qna.repository.QnaAnswerRepository;
-import com.example.tomyongji.qna.repository.QnaQuestionRepository;
-import com.example.tomyongji.qna.service.QnaAnswerService;
+import com.example.tomyongji.domain.qna.dto.request.AnswerSaveDto;
+import com.example.tomyongji.domain.qna.dto.response.AnswerDto;
+import com.example.tomyongji.domain.qna.dto.response.PageResponseDto;
+import com.example.tomyongji.domain.qna.entity.QnaAnswer;
+import com.example.tomyongji.domain.qna.entity.QnaQuestion;
+import com.example.tomyongji.domain.qna.mapper.QnaMapper;
+import com.example.tomyongji.domain.qna.repository.QnaAnswerRepository;
+import com.example.tomyongji.domain.qna.repository.QnaQuestionRepository;
+import com.example.tomyongji.domain.qna.service.QnaAnswerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -97,16 +97,16 @@ public class QnaAnswerServiceTest {
         when(questionRepository.findById(1L)).thenReturn(Optional.of(commonQuestion));
         when(qnaMapper.toAnswerEntity(commonSaveDto)).thenReturn(commonAnswer);
         when(answerRepository.save(commonAnswer)).thenReturn(commonAnswer);
+        when(qnaMapper.toAnswerDto(commonAnswer)).thenReturn(commonResponseDto);
 
         // When
-        QnaAnswer result = answerService.createAnswer(1L, commonSaveDto, loginUserId);
+        AnswerDto result = answerService.createAnswer(1L, commonSaveDto, loginUserId);
 
         // Then
         // 양방향 연관관계가 잘 적용되었는지
         assertThat(commonQuestion.getAnswers().size()).isEqualTo(1);
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(commonAnswer.getId());
-        assertThat(result.getContent()).isEqualTo(commonAnswer.getContent());
+        assertThat(result).isEqualTo(commonResponseDto);
         verify(userRepository).findByUserId(loginUserId);
         verify(questionRepository).findById(1L);
         verify(qnaMapper).toAnswerEntity(commonSaveDto);

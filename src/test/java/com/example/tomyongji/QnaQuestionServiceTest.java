@@ -4,13 +4,13 @@ import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
 import com.example.tomyongji.domain.receipt.entity.StudentClub;
 import com.example.tomyongji.global.error.CustomException;
-import com.example.tomyongji.qna.dto.request.QuestionSaveDto;
-import com.example.tomyongji.qna.dto.response.PageResponseDto;
-import com.example.tomyongji.qna.dto.response.QuestionDto;
-import com.example.tomyongji.qna.entity.QnaQuestion;
-import com.example.tomyongji.qna.mapper.QnaMapper;
-import com.example.tomyongji.qna.repository.QnaQuestionRepository;
-import com.example.tomyongji.qna.service.QnaQuestionService;
+import com.example.tomyongji.domain.qna.dto.request.QuestionSaveDto;
+import com.example.tomyongji.domain.qna.dto.response.PageResponseDto;
+import com.example.tomyongji.domain.qna.dto.response.QuestionDto;
+import com.example.tomyongji.domain.qna.entity.QnaQuestion;
+import com.example.tomyongji.domain.qna.mapper.QnaMapper;
+import com.example.tomyongji.domain.qna.repository.QnaQuestionRepository;
+import com.example.tomyongji.domain.qna.service.QnaQuestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -94,16 +94,17 @@ public class  QnaQuestionServiceTest {
         when(userRepository.findByUserId(loginUserId)).thenReturn(Optional.of(testUser));
         when(qnaMapper.toQuestionEntity(commonSaveDto)).thenReturn(commonQuestion);
         when(questionRepository.save(commonQuestion)).thenReturn(commonQuestion);
+        when(qnaMapper.toQuestionDto(commonQuestion)).thenReturn(commonResponseDto);
 
         // When
-        QnaQuestion result = questionService.createQuestion(commonSaveDto, loginUserId);
+        QuestionDto result = questionService.createQuestion(commonSaveDto, loginUserId);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(commonQuestion.getId());
-        assertThat(result.getTitle()).isEqualTo(commonQuestion.getTitle());
-        assertThat(result.getContent()).isEqualTo(commonQuestion.getContent());
-        assertThat(result.getWriter()).isEqualTo(testClub);
+        assertThat(result.getQuestionId()).isEqualTo(commonResponseDto.getQuestionId());
+        assertThat(result.getTitle()).isEqualTo(commonResponseDto.getTitle());
+        assertThat(result.getContent()).isEqualTo(commonResponseDto.getContent());
+        assertThat(result.getWriter()).isEqualTo(commonResponseDto.getWriter());
         verify(qnaMapper).toQuestionEntity(commonSaveDto);
         verify(questionRepository).save(commonQuestion);
     }

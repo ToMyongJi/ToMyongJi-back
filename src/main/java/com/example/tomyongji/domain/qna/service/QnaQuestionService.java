@@ -1,16 +1,17 @@
-package com.example.tomyongji.qna.service;
+package com.example.tomyongji.domain.qna.service;
 
 import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
 import com.example.tomyongji.domain.receipt.entity.StudentClub;
 import com.example.tomyongji.global.error.CustomException;
-import com.example.tomyongji.qna.dto.request.QuestionSaveDto;
-import com.example.tomyongji.qna.dto.response.PageResponseDto;
-import com.example.tomyongji.qna.dto.response.QuestionDto;
-import com.example.tomyongji.qna.entity.QnaQuestion;
-import com.example.tomyongji.qna.mapper.QnaMapper;
-import com.example.tomyongji.qna.repository.QnaQuestionRepository;
+import com.example.tomyongji.domain.qna.dto.request.QuestionSaveDto;
+import com.example.tomyongji.domain.qna.dto.response.PageResponseDto;
+import com.example.tomyongji.domain.qna.dto.response.QuestionDto;
+import com.example.tomyongji.domain.qna.entity.QnaQuestion;
+import com.example.tomyongji.domain.qna.mapper.QnaMapper;
+import com.example.tomyongji.domain.qna.repository.QnaQuestionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static com.example.tomyongji.global.error.ErrorMsg.*;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class QnaQuestionService {
@@ -30,13 +32,15 @@ public class QnaQuestionService {
     private final QnaMapper qnaMapper;
 
     // 질문 등록
-    public QnaQuestion createQuestion(QuestionSaveDto questionDto, String loginUserId) {
+    public QuestionDto createQuestion(QuestionSaveDto questionDto, String loginUserId) {
         // 유저 존재 여부 확인
         User user = validateUser(loginUserId);
 
         QnaQuestion question = qnaMapper.toQuestionEntity(questionDto);
         question.setWriter(user.getStudentClub());
-        return qnaQuestionRepository.save(question);
+        QnaQuestion savedQuestion = qnaQuestionRepository.save(question);
+        return qnaMapper.toQuestionDto(savedQuestion);
+
     }
 
     // 질문글 페이지별 조회
@@ -68,6 +72,7 @@ public class QnaQuestionService {
         checkWriter(question, loginUserId);
 
         qnaMapper.updateQuestionEntityFromDto(questionDto, question);
+        qnaQuestionRepository.saveAndFlush(question);
         return qnaMapper.toQuestionDto(question);
     }
 
@@ -102,7 +107,7 @@ public class QnaQuestionService {
             throw new CustomException(NO_AUTHORIZATION_BELONGING, 403);
         }
 
-        if (!questionClub.equals(loginUserClub)) {
+        if (!questionClub.getId().equals(loginUserClub.getId())) {
             throw new CustomException(NO_AUTHORIZATION_BELONGING, 403);
         }
     }

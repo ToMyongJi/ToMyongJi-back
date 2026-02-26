@@ -1,17 +1,3 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-  required_version = ">= 1.3.0"
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-
 # ---------------------------------------------------------------------------
 # AMI: Ubuntu 22.04 LTS (Jammy) - 서울 리전 최신 버전 자동 선택
 # ---------------------------------------------------------------------------
@@ -35,7 +21,7 @@ data "aws_ami" "ubuntu" {
 # 외부 노출 포트: 22(SSH), 80(HTTP), 443(HTTPS), 8080(Spring Boot), 12345(Alloy)
 # 내부 전용:     3306(MySQL), 6379(Redis) → Docker 내부 네트워크만 사용
 # ---------------------------------------------------------------------------
-resource "aws_security_group" "dev_sg" {
+resource "aws_security_group" "this" {
   name        = "${var.app_name}-${var.environment}-sg"
   description = "Security group for ${var.app_name} ${var.environment}"
 
@@ -97,11 +83,11 @@ resource "aws_security_group" "dev_sg" {
 # ---------------------------------------------------------------------------
 # EC2 Instance
 # ---------------------------------------------------------------------------
-resource "aws_instance" "dev_server" {
+resource "aws_instance" "this" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
   key_name               = var.key_name
-  vpc_security_group_ids = [aws_security_group.dev_sg.id]
+  vpc_security_group_ids = [aws_security_group.this.id]
 
   root_block_device {
     volume_size = var.root_volume_size
@@ -157,8 +143,8 @@ resource "aws_instance" "dev_server" {
 # ---------------------------------------------------------------------------
 # Elastic IP
 # ---------------------------------------------------------------------------
-resource "aws_eip" "dev_eip" {
-  instance = aws_instance.dev_server.id
+resource "aws_eip" "this" {
+  instance = aws_instance.this.id
   domain   = "vpc"
 
   tags = {

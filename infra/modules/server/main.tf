@@ -16,14 +16,21 @@ data "aws_ami" "ubuntu" {
   }
 }
 
+locals {
+  sg_name        = var.sg_name != "" ? var.sg_name : "${var.app_name}-${var.environment}-sg"
+  sg_description = var.sg_description != "" ? var.sg_description : "Security group for ${var.app_name} ${var.environment}"
+  ami_id         = var.ami_id != "" ? var.ami_id : data.aws_ami.ubuntu.id
+}
+
 # ---------------------------------------------------------------------------
 # Security Group
-# 외부 노출 포트: 22(SSH), 80(HTTP), 443(HTTPS), 8080(Spring Boot), 12345(Alloy)
-# 내부 전용:     3306(MySQL), 6379(Redis) → Docker 내부 네트워크만 사용
+# 기본 포트: 22(SSH), 80(HTTP), 443(HTTPS)
+# 선택 포트: 8080(Spring Boot), 12345(Alloy) → enable_app_ports = true 시 오픈
+# 추가 포트: extra_ingress_rules 로 환경별 커스텀 룰 추가 가능
 # ---------------------------------------------------------------------------
 resource "aws_security_group" "this" {
-  name        = "${var.app_name}-${var.environment}-sg"
-  description = "Security group for ${var.app_name} ${var.environment}"
+  name        = local.sg_name
+  description = local.sg_description
 
   ingress {
     description = "SSH"
@@ -49,20 +56,38 @@ resource "aws_security_group" "this" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    description = "Spring Boot App"
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  dynamic "ingress" {
+    for_each = var.enable_app_ports ? [1] : []
+    content {
+      description = "Spring Boot App"
+      from_port   = 8080
+      to_port     = 8080
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
   }
 
-  ingress {
-    description = "Grafana Alloy UI"
-    from_port   = 12345
-    to_port     = 12345
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  dynamic "ingress" {
+    for_each = var.enable_app_ports ? [1] : []
+    content {
+      description = "Grafana Alloy UI"
+      from_port   = 12345
+      to_port     = 12345
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+
+  dynamic "ingress" {
+    for_each = var.extra_ingress_rules
+    content {
+      description = ingress.value.description
+      from_port   = ingress.value.from_port
+      to_port     = ingress.value.to_port
+      protocol    = ingress.value.protocol
+      cidr_blocks = ingress.value.cidr_blocks
+      self        = ingress.value.self
+    }
   }
 
   egress {
@@ -74,7 +99,7 @@ resource "aws_security_group" "this" {
   }
 
   tags = {
-    Name        = "${var.app_name}-${var.environment}-sg"
+    Name        = local.sg_name
     Environment = var.environment
     Project     = var.app_name
   }
@@ -84,7 +109,7 @@ resource "aws_security_group" "this" {
 # EC2 Instance
 # ---------------------------------------------------------------------------
 resource "aws_instance" "this" {
-  ami                    = data.aws_ami.ubuntu.id
+  ami                    = local.ami_id
   instance_type          = var.instance_type
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.this.id]
@@ -92,7 +117,7 @@ resource "aws_instance" "this" {
   root_block_device {
     volume_size = var.root_volume_size
     volume_type = "gp3"
-    encrypted   = true
+    encrypted   = var.volume_encrypted
   }
 
   # 서버 초기 세팅: Docker 설치 + 스왑 메모리 3GB 구성

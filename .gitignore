@@ -35,6 +35,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Claude Code ###
+.claude/
 var/log/tomyongji/*.log
 LOG_PATH_IS_UNDEFINED/*.log
 

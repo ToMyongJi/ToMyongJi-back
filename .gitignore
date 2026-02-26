@@ -75,3 +75,9 @@ application-test.yml
 *.log.*
 *.log.json
 var/
+
+# Terraform
+infra/.terraform/
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+infra/*.tfvars

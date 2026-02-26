@@ -77,7 +77,7 @@ application-test.yml
 var/
 
 # Terraform
-infra/.terraform/
-infra/terraform.tfstate
-infra/terraform.tfstate.backup
-infra/*.tfvars
+infra/**/.terraform/
+infra/**/terraform.tfstate
+infra/**/terraform.tfstate*
+infra/**/*.tfvars

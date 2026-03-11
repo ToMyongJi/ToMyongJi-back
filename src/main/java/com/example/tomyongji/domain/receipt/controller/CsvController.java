@@ -4,6 +4,7 @@ import com.example.tomyongji.global.common.response.ApiResponse;
 import com.example.tomyongji.domain.receipt.dto.CsvExportDto;
 import com.example.tomyongji.domain.receipt.entity.Receipt;
 import com.example.tomyongji.domain.receipt.service.CSVService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -27,6 +28,7 @@ public class CsvController {
 
     private final CSVService csvService;
 
+    @Operation(summary = "CSV 업로드 api", description = "엑셀 CSV 파일을 업로드하여 영수증 데이터를 불러옵니다.")
     @PostMapping("/upload/{userIndexId}")
     public ResponseEntity<ApiResponse<List<Receipt>>> readCsv(@RequestPart("file") MultipartFile file, @PathVariable long userIndexId, @AuthenticationPrincipal
         UserDetails currentUser) {
@@ -36,6 +38,7 @@ public class CsvController {
         );
     }
 
+    @Operation(summary = "CSV 내보내기 api", description = "영수증 데이터를 CSV 파일로 내보냅니다.")
     @PostMapping("/export")
     public ResponseEntity<ApiResponse<Void>> exportCsv(@RequestBody CsvExportDto csvExportDto, HttpServletResponse response, @AuthenticationPrincipal UserDetails currentUser) {
         csvService.writeCsv(response,csvExportDto, currentUser);

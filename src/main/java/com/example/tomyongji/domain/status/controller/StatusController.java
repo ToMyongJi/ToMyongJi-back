@@ -5,6 +5,7 @@ import com.example.tomyongji.domain.status.service.StatusService;
 import com.example.tomyongji.domain.status.dto.MaintenanceUpdateRequestDto;
 import com.example.tomyongji.domain.status.dto.StatusResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "서버 상태 api", description = "서버 점검 상태 확인 및 변경과 관련된 API들입니다.")
 @RestController
 @RequiredArgsConstructor
 public class StatusController {

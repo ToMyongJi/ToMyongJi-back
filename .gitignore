@@ -35,6 +35,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Claude Code ###
+.claude/
 var/log/tomyongji/*.log
 LOG_PATH_IS_UNDEFINED/*.log
 
@@ -75,3 +78,9 @@ application-test.yml
 *.log.*
 *.log.json
 var/
+
+# Terraform
+infra/**/.terraform/
+infra/**/terraform.tfstate
+infra/**/terraform.tfstate*
+infra/**/*.tfvars

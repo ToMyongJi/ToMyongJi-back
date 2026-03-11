@@ -6,6 +6,7 @@ import com.example.tomyongji.domain.my.dto.MyDto;
 import com.example.tomyongji.domain.my.dto.SaveMemberDto;
 import com.example.tomyongji.domain.my.service.MyService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "마이페이지 api", description = "내 정보 조회 및 소속 부원 관리와 관련된 API들입니다.")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/my")

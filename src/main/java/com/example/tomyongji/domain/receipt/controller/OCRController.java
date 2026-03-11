@@ -4,6 +4,7 @@ import com.example.tomyongji.global.common.response.ApiResponse;
 import com.example.tomyongji.domain.receipt.dto.OCRResultDto;
 import com.example.tomyongji.domain.receipt.service.OCRService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+@Tag(name = "OCR api", description = "영수증 이미지를 OCR로 스캔하여 업로드하는 API들입니다.")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/ocr")

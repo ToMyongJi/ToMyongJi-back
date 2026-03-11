@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name="이메일 인증 api", description = "모든 음식 리스트 조회 기능, 음식 기록 기능")
+@Tag(name="이메일 인증 api", description = "이메일 인증번호 발송 및 인증코드 확인과 관련된 API들입니다.")
 @RestController
 @RequiredArgsConstructor
 

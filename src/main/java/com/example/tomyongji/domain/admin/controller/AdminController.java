@@ -6,6 +6,7 @@ import com.example.tomyongji.domain.admin.dto.PresidentDto;
 import com.example.tomyongji.domain.admin.service.AdminService;
 import com.example.tomyongji.domain.my.dto.AdminSaveMemberDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "어드민 api", description = "어드민이 학생회장 및 소속 부원 정보를 관리하는 API들입니다.")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin")

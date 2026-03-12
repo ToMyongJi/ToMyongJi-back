@@ -1,5 +1,6 @@
 package com.example.tomyongji.domain.receipt.controller;
 
+import com.example.tomyongji.domain.receipt.dto.ClubTransferRequestDto;
 import com.example.tomyongji.global.common.response.ApiResponse;
 import com.example.tomyongji.domain.admin.dto.PresidentDto;
 import com.example.tomyongji.domain.receipt.dto.ClubDto;
@@ -14,6 +15,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Tag(name = "학생회 및 대학 조회 api", description = "회원가입페이지 혹은 영수증 조회 페이지에서 학생회 및 대학을 조회할때 사용합니다.")
@@ -48,6 +51,23 @@ public class StudentClubController {
         TransferDto result = studentClubService.transferStudentClub(
             request,
             currentUser
+        );
+        return ResponseEntity.ok(ApiResponse.onSuccess(result));
+    }
+
+    @Operation(summary = "학생회 이월/이전 및 잔류인원 저장 api", description = "학생회 영수증 정보 및 학생회장 잔류인원 정보를 이월 합니다.")
+    @PostMapping("api/club/transfer-and-user")
+    public ResponseEntity<ApiResponse<TransferDto>> transferStudentClubUser(
+            @RequestBody(required = false) ClubTransferRequestDto request,
+            @AuthenticationPrincipal UserDetails currentUser
+    ) {
+        PresidentDto presidentDto = (request != null) ? request.getPresidentInfo() : null;
+        List<String> memberIds = (request != null) ? request.getRemainingMemberIds() : new ArrayList<>();
+
+        TransferDto result = studentClubService.transferStudentClubAndUser(
+                presidentDto,
+                currentUser,
+                memberIds
         );
         return ResponseEntity.ok(ApiResponse.onSuccess(result));
     }

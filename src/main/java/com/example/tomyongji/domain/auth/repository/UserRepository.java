@@ -20,4 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     User findByStudentNum(String studentNum);
 
     void deleteAllByStudentNum(String studentNum);
+
+    List<User> findByStudentClub(StudentClub studentClub);
 }

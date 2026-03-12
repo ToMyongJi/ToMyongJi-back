@@ -8,8 +8,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
 import com.example.tomyongji.domain.admin.dto.PresidentDto;
+import com.example.tomyongji.domain.admin.entity.Member;
+import com.example.tomyongji.domain.admin.entity.President;
+import com.example.tomyongji.domain.admin.repository.MemberRepository;
+import com.example.tomyongji.domain.admin.repository.PresidentRepository;
 import com.example.tomyongji.domain.admin.service.AdminService;
 import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
@@ -24,6 +29,8 @@ import com.example.tomyongji.domain.receipt.repository.ReceiptRepository;
 import com.example.tomyongji.domain.receipt.repository.StudentClubRepository;
 import com.example.tomyongji.domain.receipt.service.StudentClubService;
 import com.example.tomyongji.global.error.CustomException;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -49,6 +56,10 @@ class StudentClubServiceTest {
     private ReceiptRepository receiptRepository;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private PresidentRepository presidentRepository;
+    @Mock
+    private MemberRepository memberRepository;
     @Mock
     private UserService userService;
     @Mock
@@ -166,6 +177,20 @@ class StudentClubServiceTest {
                 .build();
     }
 
+    private Member createMember(User user) {
+        return Member.builder()
+                .studentNum(user.getStudentNum())
+                .name(user.getName())
+                .studentClub(user.getStudentClub())
+                .build();
+    }
+
+    private President createPresident(User user) {
+        return President.builder()
+                .studentNum(user.getStudentNum())
+                .name(user.getName())
+                .build();
+    }
     // ==================== getAllStudentClub 테스트 ====================
 
     @Nested
@@ -316,6 +341,218 @@ class StudentClubServiceTest {
                 then(studentClubRepository).should().save(convergenceSoftware);
                 then(userService).should().deleteUser("president123");
                 then(adminService).should().savePresident(any(PresidentDto.class));
+            }
+        }
+
+        @Nested
+        @DisplayName("영수증이 0개인 경우")
+        class Context_with_empty_receipts {
+
+            @Test
+            @DisplayName("이월할 영수증이 없다는 예외를 던진다")
+            void it_throws_empty_receipts_exception() {
+                // given
+                List<Receipt> receipts = Collections.emptyList();
+
+                given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
+                given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
+
+                // when & then
+                assertThatThrownBy(() -> studentClubService.transferStudentClub(null, currentUser))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasMessage("이월할 영수증이 없습니다.");
+
+                then(userRepository).should().findByUserId("president123");
+                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
+            }
+        }
+    }
+
+    // ==================== transferStudentClubAndUser 테스트 ====================
+
+    @Nested
+    @DisplayName("transferStudentClubAndUser 메서드는")
+    class Describe_transferStudentClubAndUser {
+
+        @Nested
+        @DisplayName("다음 회장이 확정되지 않은 경우")
+        class Context_without_next_president {
+
+            @Test
+            @DisplayName("잔류 인원을 남기고 학생회를 성공적으로 이전한다")
+            void it_transfers_successfully() {
+                // given
+                List<Receipt> receipts = List.of(receipt1, receipt2);
+                List<String> remainUserIds = List.of(student1.getStudentNum());
+
+                given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
+                given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
+                given(userRepository.findByStudentClub(convergenceSoftware)).willReturn(List.of(president, student1));
+                given(memberRepository.existsByStudentNum(president.getStudentNum())).willReturn(false);
+
+                // when
+                TransferDto result = studentClubService.transferStudentClubAndUser(null, currentUser, remainUserIds);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getStudentClubName()).isEqualTo("융합소프트웨어학부 학생회");
+                assertThat(result.getTotalDeposit()).isEqualTo(3000);
+                assertThat(result.getNetAmount()).isEqualTo(3000);
+
+                then(userRepository).should().findByUserId("president123");
+                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
+                then(receiptRepository).should().deleteAll(receipts);
+                then(receiptRepository).should().save(any(Receipt.class));
+                then(studentClubRepository).should().save(convergenceSoftware);
+                then(memberRepository).should().save(any(Member.class));
+                then(userService).should().deleteUser("president123");
+                then(userService).should(never()).deleteUser("student1");
+            }
+        }
+
+        @Nested
+        @DisplayName("다음 회장이 기존 회장인 경우")
+        class Context_with_already_president {
+
+            @Test
+            @DisplayName("다음 회장 및 잔류 인원을 등록하고 학생회를 이전한다")
+            void it_transfers_with_new_president() {
+                // given
+                Receipt depositReceipt = createReceipt(1L, 10000, 0, convergenceSoftware);
+                List<Receipt> receipts = List.of(depositReceipt);
+                List<String> remainUserIds = new ArrayList<>(List.of(student1.getStudentNum()));
+                PresidentDto nextPresidentDto = createPresidentDto(0L, "60221317", "정우주");
+
+                given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
+                given(memberRepository.findByStudentNum("60221317")).willReturn(Optional.empty());
+                given(presidentRepository.findByStudentNum("60221317")).willReturn(null);
+                given(presidentRepository.existsByStudentNum("60221317")).willReturn(true);
+                given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
+                given(userRepository.findByStudentClub(convergenceSoftware)).willReturn(List.of(president, student1));
+
+                // when
+                TransferDto result = studentClubService.transferStudentClubAndUser(nextPresidentDto, currentUser, remainUserIds);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getStudentClubName()).isEqualTo("융합소프트웨어학부 학생회");
+                assertThat(result.getTotalDeposit()).isEqualTo(10000);
+                assertThat(result.getNetAmount()).isEqualTo(10000);
+
+                then(userRepository).should().findByUserId("president123");
+                then(adminService).should().savePresident(nextPresidentDto);
+                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
+                then(receiptRepository).should().deleteAll(receipts);
+                then(receiptRepository).should().save(any(Receipt.class));
+                then(studentClubRepository).should().save(convergenceSoftware);
+                then(userService).should(never()).deleteUser("president123");
+                then(userService).should(never()).deleteUser("student1");
+
+            }
+        }
+
+        @Nested
+        @DisplayName("다음 회장이 기존 부원인 경우")
+        class Context_with_member_president {
+
+            @Test
+            @DisplayName("다음 회장 및 잔류 인원을 등록하고 학생회를 이전한다")
+            void it_transfers_with_new_president() {
+                // given
+                Receipt depositReceipt = createReceipt(1L, 10000, 0, convergenceSoftware);
+                List<Receipt> receipts = List.of(depositReceipt);
+                List<String> remainUserIds = new ArrayList<>();
+                PresidentDto nextPresidentDto = createPresidentDto(0L, "60221111", "홍길동");
+                Member nextPresidentMemberInfo = createMember(student1);
+
+                given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
+                given(memberRepository.findByStudentNum("60221111")).willReturn(Optional.of(nextPresidentMemberInfo));
+                given(presidentRepository.findByStudentNum("60221111")).willReturn(null);
+                // handleNextPresident 내부 로직
+                given(presidentRepository.existsByStudentNum("60221111")).willReturn(false);
+                given(userRepository.findByStudentNum("60221111")).willReturn(student1);
+                given(memberRepository.existsByStudentNum(president.getStudentNum())).willReturn(false);
+
+                given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
+                given(userRepository.findByStudentClub(convergenceSoftware)).willReturn(List.of(president, student1));
+
+                // when
+                TransferDto result = studentClubService.transferStudentClubAndUser(nextPresidentDto, currentUser, remainUserIds);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getStudentClubName()).isEqualTo("융합소프트웨어학부 학생회");
+                assertThat(result.getTotalDeposit()).isEqualTo(10000);
+                assertThat(result.getNetAmount()).isEqualTo(10000);
+
+                then(userRepository).should().findByUserId("president123");
+                // 차기 회장 처리
+                then(memberRepository).should().delete(nextPresidentMemberInfo); // 기존 부원 정보 삭제
+                assertThat(student1.getRole()).isEqualTo("PRESIDENT"); // 권한 승격 확인
+                then(adminService).should().savePresident(nextPresidentDto); // 새 회장 저장
+                // 전임 회장 강등 처리
+                assertThat(president.getRole()).isEqualTo("STU"); // 권한 강등 확인
+                then(presidentRepository).should().deleteByStudentNum(president.getStudentNum()); // 회장 테이블 삭제
+                then(memberRepository).should().save(any(Member.class)); // 부원 테이블
+
+                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
+                then(receiptRepository).should().deleteAll(receipts);
+                then(receiptRepository).should().save(any(Receipt.class));
+                then(studentClubRepository).should().save(convergenceSoftware);
+                then(userService).should().deleteUser("president123");
+                then(userService).should(never()).deleteUser("student1");
+            }
+        }
+
+        @Nested
+        @DisplayName("다음 회장이 신규 유저인 경우")
+        class Context_with_new_president {
+
+            @Test
+            @DisplayName("다음 회장 및 잔류 인원을 등록하고 학생회를 이전한다")
+            void it_transfers_with_new_president() {
+                // given
+                Receipt depositReceipt = createReceipt(1L, 10000, 0, convergenceSoftware);
+                List<Receipt> receipts = List.of(depositReceipt);
+                List<String> remainUserIds = new ArrayList<>(List.of(president.getStudentNum()));
+                PresidentDto nextPresidentDto = createPresidentDto(0L, "60221318", "박진형");
+                Member nextPresidentMemberInfo = createMember(nextPresident);
+
+                given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
+                given(memberRepository.findByStudentNum("60221318")).willReturn(Optional.empty());
+                given(presidentRepository.findByStudentNum("60221318")).willReturn(null);
+                // handleNextPresident 내부 로직
+                given(presidentRepository.existsByStudentNum("60221318")).willReturn(false);
+                given(memberRepository.existsByStudentNum(president.getStudentNum())).willReturn(false);
+
+                given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
+                given(userRepository.findByStudentClub(convergenceSoftware)).willReturn(List.of(president, student1));
+
+                // when
+                TransferDto result = studentClubService.transferStudentClubAndUser(nextPresidentDto, currentUser, remainUserIds);
+
+                // then
+                assertThat(result).isNotNull();
+                assertThat(result.getStudentClubName()).isEqualTo("융합소프트웨어학부 학생회");
+                assertThat(result.getTotalDeposit()).isEqualTo(10000);
+                assertThat(result.getNetAmount()).isEqualTo(10000);
+
+                then(userRepository).should().findByUserId("president123");
+                // 차기 회장 처리
+                then(adminService).should().savePresident(nextPresidentDto); // 새 회장 저장
+                // 전임 회장 강등 처리
+                assertThat(president.getRole()).isEqualTo("STU"); // 권한 강등 확인
+                then(presidentRepository).should().deleteByStudentNum(president.getStudentNum()); // 회장 테이블 삭제
+                then(memberRepository).should().save(any(Member.class)); // 부원 테이블
+
+                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
+                then(receiptRepository).should().deleteAll(receipts);
+                then(receiptRepository).should().save(any(Receipt.class));
+                then(studentClubRepository).should().save(convergenceSoftware);
+                then(userService).should(never()).deleteUser("president123");
+                then(userService).should(never()).deleteUser("nextPresident");
+                then(userService).should().deleteUser("student1");
             }
         }
 

@@ -43,6 +43,8 @@ out/
 var/log/tomyongji/*.log
 LOG_PATH_IS_UNDEFINED/*.log
 .env
+implementation_plan.md
+walkthrough.md
 
 var/log/tomyongji/*.json
 

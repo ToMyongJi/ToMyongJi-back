@@ -16,7 +16,12 @@ usage: /stress
    - PowerShell에서 `k6 run --summary-export=.claude/evidence/k6-summary.json .claude/evidence/load-test.js`를 실행합니다.
 
 3. **지표 수집**:
-   - 부하 실행 중 혹은 직후에 `docker stats --no-stream > .claude/evidence/docker-stats.log`를 실행하여 서버 자원 상태를 획득합니다.
+   - 부하 실행 중 혹은 직후에 아래 명령을 Bash 툴로 실행하여 EC2 서버 자원 상태를 획득합니다.
+   ```bash
+   ssh -i "C:/Users/jinhy/.ssh/id_rsa" -o StrictHostKeyChecking=no ubuntu@3.38.75.240 \
+     "docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}'" \
+     > .claude/evidence/docker-stats.log
+   ```
 
 4. **결과 분석 및 보고**:
    - `scripts/analyze-metrics.ps1`을 참고하여 수집된 데이터를 분석합니다.

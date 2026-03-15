@@ -41,6 +41,7 @@ out/
 .claude/evidence/
 .claude/local-secrets.json
 .claude/settings.json
+.claude/settings.local.json
 var/log/tomyongji/*.log
 LOG_PATH_IS_UNDEFINED/*.log
 .env

@@ -182,6 +182,22 @@ public class ReceiptService {
         return PagingReceiptDto.from(dtoPage);
     }
 
+    // 성능 테스트 전용: 캐싱 없는 순수 페이징 API
+    @Transactional(readOnly = true)
+    public PagingReceiptDto getReceiptsByClubPagingNoCache(Long clubId, int page, int size) {
+        StudentClub studentClub = studentClubRepository.findById(clubId)
+            .orElseThrow(() -> new CustomException(NOT_FOUND_STUDENT_CLUB, 400));
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(
+            Sort.Order.desc("date"),
+            Sort.Order.desc("id")
+        ));
+
+        Page<Receipt> receiptPage = receiptRepository.findByStudentClub(studentClub, pageable);
+        Page<ReceiptDto> dtoPage = receiptPage.map(receiptMapper::toReceiptDto);
+        return PagingReceiptDto.from(dtoPage);
+    }
+
     private Page<Receipt> searchByDateRange(StudentClub club, LocalDateTime start, LocalDateTime end, Pageable pageable) {
         Date startDate = Date.from(start.atZone(ZoneId.systemDefault()).toInstant());
         Date endDate = Date.from(end.atZone(ZoneId.systemDefault()).toInstant());

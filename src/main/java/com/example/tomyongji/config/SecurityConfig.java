@@ -51,6 +51,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/api/receipt/{receiptId}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/receipt/club/{clubId}/student").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/receipt/club/{clubId}/paging").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/receipt/club/{clubId}/paging/test").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/receipt/club/{userId}").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers(HttpMethod.DELETE,"/api/receipt/{receiptId}").hasAnyRole("STU","PRESIDENT","ADMIN")
                         .requestMatchers("/api/csv/upload/{userIndexId}","/api/ocr/upload/{userId}","/api/my/{id}").hasAnyRole("STU","PRESIDENT","ADMIN")

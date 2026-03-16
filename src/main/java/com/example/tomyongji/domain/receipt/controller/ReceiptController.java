@@ -83,6 +83,18 @@ public class ReceiptController {
     }
 
 
+    @Operation(summary = "[성능 테스트 전용] 캐싱 없는 페이징 조회 api", description = "성능 비교 테스트 전용. 캐싱 없이 순수 페이징만 적용된 영수증 조회.")
+    @GetMapping("/club/{clubId}/paging/test")
+    public ResponseEntity<ApiResponse<PagingReceiptDto>> getReceiptsByClubPagingNoCache(
+        @PathVariable("clubId") Long clubId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        PagingReceiptDto receiptPage = receiptService.getReceiptsByClubPagingNoCache(clubId, page, size);
+        return ResponseEntity.ok(
+            ApiResponse.onSuccess(receiptPage));
+    }
+
     @Operation(summary = "특정 영수증 조회 api", description = "영수증 아이디를 통해 특정 영수증을 조회합니다.")
     @GetMapping("/{receiptId}") //특정 영수증 조회
     public ResponseEntity<ApiResponse<ReceiptDto>> getReceiptById(@PathVariable("receiptId") Long receiptId) {

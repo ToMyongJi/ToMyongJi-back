@@ -17,7 +17,7 @@ def load_env() -> dict:
     if not env_path.exists():
         print("[ERROR] .env 파일을 찾을 수 없습니다.", file=sys.stderr)
         sys.exit(1)
-    for line in env_path.read_text(encoding="utf-8").splitlines():
+    for line in env_path.read_text(encoding="utf-8-sig").splitlines():
         line = line.strip()
         if line and not line.startswith("#"):
             key, _, value = line.partition("=")
@@ -80,7 +80,7 @@ def main():
     for i in range(10):
         time.sleep(1)
         if is_tunnel_active():
-            print("[Status] SSH 터널 연결 성공 ✓ (localhost:3307 → ***@***:3306)")
+            print("[Status] SSH 터널 연결 성공 [OK] (localhost:3307 → ***@***:3306)")
             return
 
     print("[ERROR] SSH 터널 연결 실패 — 키 경로 및 서버 IP를 확인하세요.", file=sys.stderr)

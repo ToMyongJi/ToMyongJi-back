@@ -1,5 +1,6 @@
 package com.example.tomyongji.domain.receipt.controller;
 
+import com.example.tomyongji.domain.receipt.dto.ClubMemberResponseDto;
 import com.example.tomyongji.domain.receipt.dto.ClubTransferRequestDto;
 import com.example.tomyongji.global.common.response.ApiResponse;
 import com.example.tomyongji.domain.admin.dto.PresidentDto;
@@ -40,6 +41,13 @@ public class StudentClubController {
         @PathVariable("collegeId") Long collegeId) {
         List<ClubDto> clubs = studentClubService.getStudentClubById(collegeId);
         return ResponseEntity.ok(ApiResponse.onSuccess(clubs));
+    }
+
+    @Operation(summary = "학생회 소속 인원 전체 조회 api", description = "특정 학생회에 속한 모든 인원의 학번 및 이름을 가나다순 조회합니다.")
+    @GetMapping("api/club/members")
+    public ResponseEntity<List<ClubMemberResponseDto>> getClubMembers(@AuthenticationPrincipal UserDetails currentUser) {
+        List<ClubMemberResponseDto> members = studentClubService.getClubMemberList(currentUser);
+        return ResponseEntity.ok(members);
     }
 
     @Operation(summary = "학생회 이월/이전 api", description = "학생회 정보를 이월 합니다.")

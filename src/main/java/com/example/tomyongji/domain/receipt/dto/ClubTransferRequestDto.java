@@ -7,6 +7,6 @@ import java.util.List;
 
 @Getter
 public class ClubTransferRequestDto {
-    private PresidentDto presidentInfo; // 기존 회장 정보
+    private PresidentDto presidentInfo; // 차기 회장 정보
     private List<String> remainingMemberIds;
 }

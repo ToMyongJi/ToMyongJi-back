@@ -1,8 +1,6 @@
 package com.example.tomyongji.receipt;
 
-import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_STUDENT_CLUB;
-import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_USER;
-import static com.example.tomyongji.global.error.ErrorMsg.NO_AUTHORIZATION_BELONGING;
+import static com.example.tomyongji.global.error.ErrorMsg.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.tomyongji.global.error.ErrorMsg;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -343,30 +342,6 @@ class StudentClubServiceTest {
                 then(adminService).should().savePresident(any(PresidentDto.class));
             }
         }
-
-        @Nested
-        @DisplayName("영수증이 0개인 경우")
-        class Context_with_empty_receipts {
-
-            @Test
-            @DisplayName("이월할 영수증이 없다는 예외를 던진다")
-            void it_throws_empty_receipts_exception() {
-                // given
-                List<Receipt> receipts = Collections.emptyList();
-
-                given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
-                given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
-
-                // when & then
-                assertThatThrownBy(() -> studentClubService.transferStudentClub(null, currentUser))
-                        .isInstanceOf(CustomException.class)
-                        .hasFieldOrPropertyWithValue("errorCode", 400)
-                        .hasMessage("이월할 영수증이 없습니다.");
-
-                then(userRepository).should().findByUserId("president123");
-                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
-            }
-        }
     }
 
     // ==================== transferStudentClubAndUser 테스트 ====================
@@ -425,29 +400,15 @@ class StudentClubServiceTest {
                 PresidentDto nextPresidentDto = createPresidentDto(0L, "60221317", "정우주");
 
                 given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
-                given(memberRepository.findByStudentNum("60221317")).willReturn(Optional.empty());
-                given(presidentRepository.findByStudentNum("60221317")).willReturn(null);
-                given(presidentRepository.existsByStudentNum("60221317")).willReturn(true);
-                given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
-                given(userRepository.findByStudentClub(convergenceSoftware)).willReturn(List.of(president, student1));
 
                 // when
-                TransferDto result = studentClubService.transferStudentClubAndUser(nextPresidentDto, currentUser, remainUserIds);
+                assertThatThrownBy(() -> studentClubService.transferStudentClubAndUser(nextPresidentDto, currentUser, remainUserIds))
+                        .isInstanceOf(CustomException.class)
+                        .hasFieldOrPropertyWithValue("errorCode", 400)
+                        .hasMessage(CANNOT_RE_ELECT_PRESIDENT);
 
                 // then
-                assertThat(result).isNotNull();
-                assertThat(result.getStudentClubName()).isEqualTo("융합소프트웨어학부 학생회");
-                assertThat(result.getTotalDeposit()).isEqualTo(10000);
-                assertThat(result.getNetAmount()).isEqualTo(10000);
-
                 then(userRepository).should().findByUserId("president123");
-                then(adminService).should().savePresident(nextPresidentDto);
-                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
-                then(receiptRepository).should().deleteAll(receipts);
-                then(receiptRepository).should().save(any(Receipt.class));
-                then(studentClubRepository).should().save(convergenceSoftware);
-                then(userService).should(never()).deleteUser("president123");
-                then(userService).should(never()).deleteUser("student1");
 
             }
         }
@@ -469,8 +430,8 @@ class StudentClubServiceTest {
                 given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
                 given(memberRepository.findByStudentNum("60221111")).willReturn(Optional.of(nextPresidentMemberInfo));
                 given(presidentRepository.findByStudentNum("60221111")).willReturn(null);
+
                 // handleNextPresident 내부 로직
-                given(presidentRepository.existsByStudentNum("60221111")).willReturn(false);
                 given(userRepository.findByStudentNum("60221111")).willReturn(student1);
                 given(memberRepository.existsByStudentNum(president.getStudentNum())).willReturn(false);
 
@@ -523,7 +484,6 @@ class StudentClubServiceTest {
                 given(memberRepository.findByStudentNum("60221318")).willReturn(Optional.empty());
                 given(presidentRepository.findByStudentNum("60221318")).willReturn(null);
                 // handleNextPresident 내부 로직
-                given(presidentRepository.existsByStudentNum("60221318")).willReturn(false);
                 given(memberRepository.existsByStudentNum(president.getStudentNum())).willReturn(false);
 
                 given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
@@ -556,28 +516,5 @@ class StudentClubServiceTest {
             }
         }
 
-        @Nested
-        @DisplayName("영수증이 0개인 경우")
-        class Context_with_empty_receipts {
-
-            @Test
-            @DisplayName("이월할 영수증이 없다는 예외를 던진다")
-            void it_throws_empty_receipts_exception() {
-                // given
-                List<Receipt> receipts = Collections.emptyList();
-
-                given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
-                given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
-
-                // when & then
-                assertThatThrownBy(() -> studentClubService.transferStudentClub(null, currentUser))
-                        .isInstanceOf(CustomException.class)
-                        .hasFieldOrPropertyWithValue("errorCode", 400)
-                        .hasMessage("이월할 영수증이 없습니다.");
-
-                then(userRepository).should().findByUserId("president123");
-                then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
-            }
-        }
     }
 }

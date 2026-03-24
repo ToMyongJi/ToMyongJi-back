@@ -16,5 +16,5 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     void deleteAllByStudentNum(String studentNum);
 
-
+    List<Member> findByStudentClubOrderByNameAsc(StudentClub studentClub);
 }

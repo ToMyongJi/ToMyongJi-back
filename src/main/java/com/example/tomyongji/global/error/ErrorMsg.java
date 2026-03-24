@@ -13,6 +13,8 @@ public class ErrorMsg {
     public static final String INVALID_KEYWORD = "검색어는 두 글자 이상으로 작성해주세요.";
     public static final String NO_RECEIPTS_TO_TRANSFER = "이월할 영수증이 없습니다.";
     public static final String INVALID_DATE_SEARCH = "연도(Year) 정보 없이 월(Month)만 검색할 수 없습니다.";
+    public static final String ALREADY_BELONGING_USER = "이미 다른 학생회에 소속된 유저입니다.";
+    public static final String CANNOT_RE_ELECT_PRESIDENT = "학생회장은 연임할 수 없습니다.";
 
     // **401 Unauthorized**
     public static final String NOT_VERIFY_EMAIL = "이메일 인증이 되지 않은 유저입니다.";
@@ -23,6 +25,7 @@ public class ErrorMsg {
     public static final String NO_AUTHORIZATION_USER = "접근 권한이 없습니다"; // 가입된 유저가 아닌 경우
     public static final String NO_AUTHORIZATION_ROLE = "접근 권한이 없습니다"; // 접근 가능한 ROLE이 아닌 경우
     public static final String NO_AUTHORIZATION_BELONGING = "접근 권한이 없습니다"; // 접근 가능한 소속이 아닌 경우
+
 
     // **404 Not Found**
     public static final String NOT_FOUND_COLLEGE = "단과대를 찾을 수 없습니다.";
@@ -37,6 +40,7 @@ public class ErrorMsg {
     // **409 Conflict**
     public static final String EXISTING_USER = "이미 등록된 유저 정보입니다.";
     public static final String MISMATCHED_USER = "유저 정보가 일치하지 않습니다.";
+
 
     // **422 Unprocessable Entity**
     public static final String ERROR_SEND_EMAIL = "이메일 전송 중 오류가 발생했습니다.";

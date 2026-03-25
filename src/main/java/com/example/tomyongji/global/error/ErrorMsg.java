@@ -13,6 +13,7 @@ public class ErrorMsg {
     public static final String INVALID_KEYWORD = "검색어는 두 글자 이상으로 작성해주세요.";
     public static final String NO_RECEIPTS_TO_TRANSFER = "이월할 영수증이 없습니다.";
     public static final String INVALID_DATE_SEARCH = "연도(Year) 정보 없이 월(Month)만 검색할 수 없습니다.";
+    public static final String INVALID_TOKEN = "유효하지 않거나 만료된 토큰입니다.";
     public static final String ALREADY_BELONGING_USER = "이미 다른 학생회에 소속된 유저입니다.";
     public static final String CANNOT_RE_ELECT_PRESIDENT = "학생회장은 연임할 수 없습니다.";
 

@@ -1,6 +1,5 @@
 package com.example.tomyongji.domain.receipt.service;
 
-import com.example.tomyongji.domain.admin.dto.MemberDto;
 import com.example.tomyongji.domain.admin.dto.PresidentDto;
 import com.example.tomyongji.domain.admin.entity.Member;
 import com.example.tomyongji.domain.admin.entity.President;
@@ -173,12 +172,6 @@ public class StudentClubService {
 
         List<ClubMemberResponseDto> memberList = new ArrayList<>();
 
-        // 회장 정보 추가
-        memberList.add(ClubMemberResponseDto.builder()
-                .studentNum(user.getStudentNum())
-                .name(user.getName())
-                .build());
-
         // 해당 학생회 소속 부원들 추가 (가나다순)
         List<Member> members = memberRepository.findByStudentClubOrderByNameAsc(studentClub);
         for (Member member : members) {
@@ -225,8 +218,6 @@ public class StudentClubService {
     private void handleNextPresident(PresidentDto nextPresident, List<String> remainUserIds, StudentClub studentClub, User oldPresidentUser) {
         // [case 1] - 차기 회장 없음
         if (nextPresident == null)  {
-            demoteOldPresident(oldPresidentUser, studentClub);
-            studentClub.setPresident(null);
             return;
         }
 
@@ -246,44 +237,21 @@ public class StudentClubService {
                 userRepository.save(nextPresidentUser);
             }
 
-            // 회장 정보 저장 및 기존 회장 강등
+            // 회장 정보 저장
             nextPresident.setClubId(studentClub.getId());
             adminService.savePresident(nextPresident);
-            demoteOldPresident(oldPresidentUser, studentClub);
             return;
         }
 
-        // [case 3] - 차기 회장이 신규 유저 -> 차기 회장 정보 저장 및 기존 회장 강등
+        // [case 3] - 차기 회장이 신규 유저 -> 차기 회장 정보 저장
         nextPresident.setClubId(studentClub.getId());
         adminService.savePresident(nextPresident);
-        demoteOldPresident(oldPresidentUser, studentClub);
-
     }
 
     // ==========================================
     // 헬퍼 메서드
     // ==========================================
 
-
-    // 기존 회장을 강등하고 일반 부원으로 등록
-    private void demoteOldPresident(User oldUser, StudentClub studentClub) {
-        // User 권한 강등 (PRESIDENT -> STU)
-        oldUser.setRole("STU");
-        userRepository.save(oldUser);
-
-        // President 테이블에서 삭제
-        presidentRepository.deleteByStudentNum(oldUser.getStudentNum());
-
-        // Member 테이블에 부원으로 등록
-        if (!memberRepository.existsByStudentNum(oldUser.getStudentNum())) {
-            Member member = Member.builder()
-                    .studentNum(oldUser.getStudentNum())
-                    .name(oldUser.getName())
-                    .studentClub(studentClub)
-                    .build();
-            memberRepository.save(member);
-        }
-    }
 
     // 차기 회장 후보의 자격 검증
     private void validateMembership(String nextPresidentNum, StudentClub currentClub, String oldPresidentNum) {

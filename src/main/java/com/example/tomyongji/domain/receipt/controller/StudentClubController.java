@@ -45,9 +45,9 @@ public class StudentClubController {
 
     @Operation(summary = "학생회 소속 인원 전체 조회 api", description = "특정 학생회에 속한 모든 인원의 학번 및 이름을 가나다순 조회합니다.")
     @GetMapping("api/club/members")
-    public ResponseEntity<List<ClubMemberResponseDto>> getClubMembers(@AuthenticationPrincipal UserDetails currentUser) {
+    public ResponseEntity<ApiResponse<List<ClubMemberResponseDto>>> getClubMembers(@AuthenticationPrincipal UserDetails currentUser) {
         List<ClubMemberResponseDto> members = studentClubService.getClubMemberList(currentUser);
-        return ResponseEntity.ok(members);
+        return ResponseEntity.ok(ApiResponse.onSuccess(members));
     }
 
     @Operation(summary = "학생회 이월/이전 api", description = "학생회 정보를 이월 합니다.")

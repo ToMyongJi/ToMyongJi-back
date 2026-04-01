@@ -1,28 +1,65 @@
 ---
-description: implementation_plan.md의 미완료 작업을 스캔하여 순차적으로 구현을 시작합니다.
-usage: /start
+description: 수정/작성된 Service 클래스의 단위테스트를 실행하고, 로컬 서버를 띄워 HTTP API 테스트를 수행합니다. 결과를 evidence에 누적합니다.
+usage: /verify
 ---
 
-# 🛠️ Implementation Start
+# ✅ Implementation Verify
 
-당신은 이제부터 `implementation_plan.md`에 정의된 계획을 실행하는 **'Implementation Specialist'**입니다. 아래 절차를 엄격히 준수하여 작업을 수행하세요.
+구현이 완료된 항목에 대해 단위테스트와 HTTP API 테스트를 수행하고, 결과를 `.claude/evidence/{branch}.md`에 누적합니다.
 
-## 📋 작동 프로세스
+## 📋 절차
 
-1. **계획 스캔 (Scan)**:
-   - `implementation_plan.md` 파일을 읽고 미완료된 체크박스(`[ ]`) 항목을 모두 찾아냅니다.
+### 1. 단위테스트 실행
+수정/작성된 Service 클래스에 대응하는 테스트 클래스를 확인하고 실행합니다.
+```powershell
+.\gradlew.bat test --tests "com.example.tomyongji.<domain>.<ServiceClassName>Test"
+```
+실패 시 원인을 분석하고 수정한 후 재실행합니다. **단위테스트가 통과해야 다음 단계로 넘어갑니다.**
 
-2. **순차적 구현 (Execute)**:
-   - 목록 중 **가장 상단에 있는 첫 번째 미완료 작업**을 현재 목표로 설정합니다.
-   - 작업을 시작하기 전, 해당 작업과 관련된 기존 코드를 분석하고 필요한 경우 `java-conventions` 및 `local-dev` 스킬을 활성화하여 기술 표준을 확인합니다.
+### 2. 로컬 서버 기동
+`local-dev` 스킬의 `references/server-protocol.md`를 따라 서버를 기동합니다 (SSH 터널 → 빌드 → 실행).
+서버 준비 확인:
+```powershell
+Invoke-RestMethod -Uri "http://localhost:8080/actuator/health" -Method Get
+```
 
-3. **상태 업데이트 (Update)**:
-   - 해당 작업의 구현 및 로컬 검증이 완료되면, `implementation_plan.md` 파일로 돌아가 해당 항목을 `[ ]`에서 **`[x]`**로 업데이트합니다.
+### 3. 사전 데이터 준비 (필요 시)
+조회 API 테스트 전, 테스트에 필요한 데이터를 `db-access` 스킬로 확인하거나 API를 통해 삽입합니다.
 
-4. **연속 작업**:
-   - 하나의 작업이 완료되면 사용자에게 보고하고, 다음 미완료 작업으로 넘어갈지 확인받습니다.
+### 4. 인증 토큰 발급 (필요 시)
+인증이 필요한 API 테스트 전 로그인을 먼저 수행합니다.
+```powershell
+$body = @{ loginId = "testUser"; password = "password123!" } | ConvertTo-Json
+$bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($body)
+$res = Invoke-RestMethod -Uri "http://localhost:8080/api/auth/login" -Method Post -Body $bodyBytes -ContentType "application/json; charset=utf-8"
+$token = $res.data.accessToken
+```
 
-## 🚫 주의 사항
-- 반드시 한 번에 **하나의 체크박스 항목**에만 집중하세요.
-- 구현 도중 설계 변경이 필요한 경우 즉시 중단하고 사용자에게 보고하세요.
-- 모든 코드 수정은 프로젝트의 기존 스타일과 에이전트 스킬에 정의된 규약을 따릅니다.
+### 5. API 테스트
+`local-dev` 스킬의 `references/api-testing.md` 패턴으로 대상 엔드포인트를 호출합니다.
+```powershell
+$headers = @{ Authorization = "Bearer $token" }
+$response = Invoke-RestMethod -Uri "http://localhost:8080/api/<endpoint>" -Method Get -Headers $headers
+$response | ConvertTo-Json
+```
+응답 코드, 응답 바디, 비즈니스 로직 결과를 검증합니다.
+
+### 6. Evidence 누적
+테스트 결과를 `.claude/evidence/{branch}.md`에 아래 형식으로 **이어서 추가**합니다:
+
+```markdown
+**단위테스트**
+- `{ServiceClassName}Test` — PASSED ({n}개)
+
+**API 테스트**
+- `{METHOD} /api/{endpoint}` → {status} ✅
+  ```json
+  { 핵심 응답 필드만 발췌 }
+  ```
+```
+
+## 🚫 주의
+- 단위테스트 실패 시 API 테스트로 넘어가지 않습니다.
+- 서버 기동 전 SSH 터널이 열려있는지 반드시 확인합니다.
+- 테스트용 데이터는 테스트 완료 후 정리 여부를 사용자에게 확인합니다.
+- Evidence는 Antigravity가 `walkthrough.md`를 쓸 원본 자료이므로, 응답 전체가 아닌 **핵심 필드만** 발췌합니다.

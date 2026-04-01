@@ -364,7 +364,6 @@ class StudentClubServiceTest {
                 given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
                 given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
                 given(userRepository.findByStudentClub(convergenceSoftware)).willReturn(List.of(president, student1));
-                given(memberRepository.existsByStudentNum(president.getStudentNum())).willReturn(false);
 
                 // when
                 TransferDto result = studentClubService.transferStudentClubAndUser(null, currentUser, remainUserIds);
@@ -380,7 +379,6 @@ class StudentClubServiceTest {
                 then(receiptRepository).should().deleteAll(receipts);
                 then(receiptRepository).should().save(any(Receipt.class));
                 then(studentClubRepository).should().save(convergenceSoftware);
-                then(memberRepository).should().save(any(Member.class));
                 then(userService).should().deleteUser("president123");
                 then(userService).should(never()).deleteUser("student1");
             }
@@ -391,7 +389,7 @@ class StudentClubServiceTest {
         class Context_with_already_president {
 
             @Test
-            @DisplayName("다음 회장 및 잔류 인원을 등록하고 학생회를 이전한다")
+            @DisplayName("회장은 연임할 수 없다는 메시지와 함께 에러를 반환한다")
             void it_transfers_with_new_president() {
                 // given
                 Receipt depositReceipt = createReceipt(1L, 10000, 0, convergenceSoftware);
@@ -433,7 +431,6 @@ class StudentClubServiceTest {
 
                 // handleNextPresident 내부 로직
                 given(userRepository.findByStudentNum("60221111")).willReturn(student1);
-                given(memberRepository.existsByStudentNum(president.getStudentNum())).willReturn(false);
 
                 given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
                 given(userRepository.findByStudentClub(convergenceSoftware)).willReturn(List.of(president, student1));
@@ -452,10 +449,6 @@ class StudentClubServiceTest {
                 then(memberRepository).should().delete(nextPresidentMemberInfo); // 기존 부원 정보 삭제
                 assertThat(student1.getRole()).isEqualTo("PRESIDENT"); // 권한 승격 확인
                 then(adminService).should().savePresident(nextPresidentDto); // 새 회장 저장
-                // 전임 회장 강등 처리
-                assertThat(president.getRole()).isEqualTo("STU"); // 권한 강등 확인
-                then(presidentRepository).should().deleteByStudentNum(president.getStudentNum()); // 회장 테이블 삭제
-                then(memberRepository).should().save(any(Member.class)); // 부원 테이블
 
                 then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
                 then(receiptRepository).should().deleteAll(receipts);
@@ -478,13 +471,10 @@ class StudentClubServiceTest {
                 List<Receipt> receipts = List.of(depositReceipt);
                 List<String> remainUserIds = new ArrayList<>(List.of(president.getStudentNum()));
                 PresidentDto nextPresidentDto = createPresidentDto(0L, "60221318", "박진형");
-                Member nextPresidentMemberInfo = createMember(nextPresident);
 
                 given(userRepository.findByUserId("president123")).willReturn(Optional.of(president));
                 given(memberRepository.findByStudentNum("60221318")).willReturn(Optional.empty());
                 given(presidentRepository.findByStudentNum("60221318")).willReturn(null);
-                // handleNextPresident 내부 로직
-                given(memberRepository.existsByStudentNum(president.getStudentNum())).willReturn(false);
 
                 given(receiptRepository.findAllByStudentClubOrderByIdDesc(convergenceSoftware)).willReturn(receipts);
                 given(userRepository.findByStudentClub(convergenceSoftware)).willReturn(List.of(president, student1));
@@ -501,10 +491,6 @@ class StudentClubServiceTest {
                 then(userRepository).should().findByUserId("president123");
                 // 차기 회장 처리
                 then(adminService).should().savePresident(nextPresidentDto); // 새 회장 저장
-                // 전임 회장 강등 처리
-                assertThat(president.getRole()).isEqualTo("STU"); // 권한 강등 확인
-                then(presidentRepository).should().deleteByStudentNum(president.getStudentNum()); // 회장 테이블 삭제
-                then(memberRepository).should().save(any(Member.class)); // 부원 테이블
 
                 then(receiptRepository).should().findAllByStudentClubOrderByIdDesc(convergenceSoftware);
                 then(receiptRepository).should().deleteAll(receipts);

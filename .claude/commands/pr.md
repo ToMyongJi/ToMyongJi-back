@@ -23,5 +23,10 @@ usage: /pr
 
 5. **PR 생성**: 승인 후 GitHub MCP로 `dev` 브랜치 타겟 PR을 생성합니다.
 
+6. **일괄 CODE REVIEW 전환**: PR 생성 완료 후 evidence의 Jira 이슈 매핑 테이블에서 모든 하위 작업 키를 읽어 **CODE REVIEW**로 일괄 전환합니다.
+```bash
+# jira 스킬 - 상태 전환 (transition id: 2) — 작업 키 목록 순회
+```
+
 ## 📋 PR 제목 규칙
 형식: `type(이슈번호): 제목` — 예: `feat(107): 전자결재 생성 및 처리 로직 구현`

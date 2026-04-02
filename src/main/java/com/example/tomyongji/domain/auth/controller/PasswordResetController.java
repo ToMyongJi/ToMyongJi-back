@@ -29,6 +29,13 @@ public class PasswordResetController {
         return ResponseEntity.ok(ApiResponse.onSuccess(null));
     }
 
+    @Operation(summary = "[개발용]비밀번호 재설정 메일 발송 api", description = "입력한 이메일로 비밀번호 재설정 링크를 발송합니다. 이메일 존재 여부와 무관하게 항상 성공 응답을 반환합니다.")
+    @PostMapping("/reset-request-dev")
+    public ResponseEntity<ApiResponse<Void>> requestResetDev(@Valid @RequestBody PasswordResetRequestDto dto) {
+        passwordResetService.requestPasswordResetTest(dto.getEmail());
+        return ResponseEntity.ok(ApiResponse.onSuccess(null));
+    }
+
     @Operation(summary = "비밀번호 재설정 확인 api", description = "이메일로 받은 토큰과 새 비밀번호를 입력하여 비밀번호를 변경합니다.")
     @PostMapping("/reset-confirm")
     public ResponseEntity<ApiResponse<Void>> confirmReset(@Valid @RequestBody PasswordResetConfirmDto dto) {

@@ -26,6 +26,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import org.apache.commons.io.input.BOMInputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ public class CSVService {
 
         checkClub(studentClub, currentUser); // userIndexId의 유저 소속 학생회와 현재 접속한 유저의 소속 학생회를 비교
 
-        try (CSVReader csvReader = new CSVReader(new InputStreamReader(file.getInputStream()))) {
+        try (CSVReader csvReader = new CSVReader(new InputStreamReader(BOMInputStream.builder().setInputStream(file.getInputStream()).get(), StandardCharsets.UTF_8))) {
             csvReader.readNext(); // Skip header row
             String[] nextRecord;
 

@@ -49,24 +49,21 @@ git branch --show-current
 **2-3. 생성**: 승인 후 `jira` 스킬로 에픽 → 작업 순으로 생성합니다.
 생성된 키를 evidence 파일의 "Jira 이슈 매핑" 테이블에 기록합니다.
 
+**2-4. 일괄 DEV IN PROGRESS 전환**: 생성된 모든 하위 작업(에픽 제외)을 즉시 **DEV IN PROGRESS**로 전환합니다.
+```bash
+# jira 스킬 - 상태 전환 (transition id: 5) — 작업 키 목록 순회
+```
+
 ### 3. 구현 (태스크별 반복)
 가장 상단의 미완료 항목을 목표로 설정하고 관련 코드를 분석합니다.
 필요 시 `java-conventions`, `local-dev` 스킬을 활성화합니다.
-
-**작업 시작 시**: 해당 Jira 이슈 상태를 **DEV IN PROGRESS**로 변경합니다.
-```bash
-# jira 스킬 - 상태 전환 (transition id: 5)
-```
 
 ### 4. 검증 (verify)
 `verify` 커맨드를 실행합니다. 결과는 evidence에 자동 누적됩니다.
 
 ### 5. 체크박스 업데이트 + 커밋 안내
 검증 통과 시 해당 항목을 `[ ]` → `[x]`로 업데이트합니다.
-사용자에게 커밋을 요청하고, **커밋 완료 확인 후** 해당 Jira 이슈를 **CODE REVIEW**로 전환합니다.
-```bash
-# jira 스킬 - 상태 전환 (transition id: 2)
-```
+사용자에게 커밋을 요청합니다.
 
 ### 6. Evidence 누적
 ```markdown

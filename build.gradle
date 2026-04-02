@@ -101,6 +101,9 @@ dependencies {
 	//PDF 파싱
 	implementation 'org.apache.pdfbox:pdfbox:2.0.30'
 
+	// BOM 처리 (CSV 한글 인코딩)
+	implementation 'commons-io:commons-io:2.15.1'
+
 	//jsoup
 	implementation 'org.jsoup:jsoup:1.16.1'
 

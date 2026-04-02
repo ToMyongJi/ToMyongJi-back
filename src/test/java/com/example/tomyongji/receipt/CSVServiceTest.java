@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -148,7 +149,7 @@ class CSVServiceTest {
                 "file",
                 "receipts.csv",
                 "text/csv",
-                csvContent.getBytes()
+                csvContent.getBytes(StandardCharsets.UTF_8)
         );
     }
 
@@ -161,7 +162,7 @@ class CSVServiceTest {
                 "file",
                 "invalid.csv",
                 "text/csv",
-                invalidCsvContent.getBytes()
+                invalidCsvContent.getBytes(StandardCharsets.UTF_8)
         );
     }
 

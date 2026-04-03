@@ -92,4 +92,44 @@ public class PasswordResetService {
 
         return message;
     }
+
+
+    // 프론트 측 테스트를 위한 메서드 (개발용 URL 주소 으로 변경)
+
+    public void requestPasswordResetTest(String email) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            // 보안상 이메일 존재 여부를 노출하지 않음 — 항상 성공 응답
+            return;
+        }
+
+        String token = UUID.randomUUID().toString();
+        String redisKey = REDIS_KEY_PREFIX + token;
+        stringRedisTemplate.opsForValue().set(redisKey, email, TOKEN_TTL);
+
+        try {
+            MimeMessage message = createResetMailTest(email, token);
+            javaMailSender.send(message);
+        } catch (MailException | MessagingException e) {
+            log.error("비밀번호 재설정 메일 발송 실패: {}", e.getMessage());
+            stringRedisTemplate.delete(redisKey);
+            throw new CustomException(ERROR_SEND_EMAIL, 422);
+        }
+    }
+
+    private MimeMessage createResetMailTest(String to, String token) throws MessagingException {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        message.setFrom(senderEmail);
+        message.setRecipients(MimeMessage.RecipientType.TO, to);
+        message.setSubject("비밀번호 재설정 요청");
+
+        String resetLink = "https://new.tomyongji-dev.shop/password/reset?token=" + token;
+        String body = "<h3>비밀번호 재설정 요청</h3>"
+                + "<p>아래 링크를 클릭하여 비밀번호를 재설정하세요.</p>"
+                + "<a href=\"" + resetLink + "\">비밀번호 재설정</a>"
+                + "<p>이 링크는 15분 후 만료됩니다.</p>";
+        message.setText(body, "UTF-8", "html");
+
+        return message;
+    }
 }

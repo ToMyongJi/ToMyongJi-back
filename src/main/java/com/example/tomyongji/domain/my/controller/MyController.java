@@ -1,5 +1,6 @@
 package com.example.tomyongji.domain.my.controller;
 
+import com.example.tomyongji.domain.my.dto.CollegeAndClubResponseDto;
 import com.example.tomyongji.global.common.response.ApiResponse;
 import com.example.tomyongji.domain.admin.dto.MemberDto;
 import com.example.tomyongji.domain.my.dto.MyDto;
@@ -41,6 +42,14 @@ public class MyController {
         return ResponseEntity.ok(
             ApiResponse.onSuccess(myDto)
         );
+    }
+
+
+    @Operation(summary = "내 소속 대학 및 학생회 조회 api", description = "현재 로그인한 유저의 소속 대학과 학생회를 조회합니다.")
+    @GetMapping("college-and-club")
+    public ResponseEntity<ApiResponse<CollegeAndClubResponseDto>> getMyCollegeAndClub(@AuthenticationPrincipal UserDetails currentUser) {
+        CollegeAndClubResponseDto myCollegeAndClub = myService.getMyCollegeAndClub(currentUser);
+        return ResponseEntity.ok(ApiResponse.onSuccess(myCollegeAndClub));
     }
 
 //    @Operation(summary = "내 정보 수정 api", description = "유저 아이디와 학번으로 유저의 학번을 변경합니다.")

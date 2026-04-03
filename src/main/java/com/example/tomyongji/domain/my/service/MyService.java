@@ -11,6 +11,7 @@ import static com.example.tomyongji.global.error.ErrorMsg.NO_AUTHORIZATION_USER;
 import com.example.tomyongji.domain.admin.dto.MemberDto;
 import com.example.tomyongji.domain.admin.entity.Member;
 import com.example.tomyongji.domain.admin.repository.MemberRepository;
+import com.example.tomyongji.domain.my.dto.CollegeAndClubResponseDto;
 import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.ClubVerificationRepository;
 import com.example.tomyongji.domain.auth.repository.EmailVerificationRepository;
@@ -51,6 +52,16 @@ public class MyService {
     }
 
 
+    public CollegeAndClubResponseDto getMyCollegeAndClub(UserDetails currentUser) {
+        User user = userRepository.findByUserId(currentUser.getUsername())
+            .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
+        StudentClub studentClub = user.getStudentClub();
+        if (studentClub == null) {
+            throw new CustomException(NOT_FOUND_STUDENT_CLUB, 400);
+        }
+
+        return myMapper.toCollegeAndClubResponseDto(studentClub);
+    }
 
     public List<MemberDto> getMembers(Long id, UserDetails currentUser) {
         User user = userRepository.findById(id)

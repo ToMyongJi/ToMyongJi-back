@@ -77,6 +77,7 @@ public class MyService {
     }
 
     public void saveMember(SaveMemberDto memberDto, UserDetails currentUser) {
+        memberDto.setStudentNum(memberDto.getStudentNum().trim());
         User user = userRepository.findById(memberDto.getId())
             .orElseThrow(() -> new CustomException(NOT_FOUND_USER, 400));
         checkMismatchedUser(user, currentUser);

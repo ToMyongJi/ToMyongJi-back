@@ -471,6 +471,35 @@ class MyServiceTest {
         }
 
         @Nested
+        @DisplayName("공백이 포함된 학번이 주어지면")
+        class Context_with_whitespace_student_num {
+
+            @Test
+            @DisplayName("학번을 trim 처리하여 저장한다")
+            void it_trims_student_num_and_saves_member() {
+                // given
+                SaveMemberDto dtoWithWhitespace = SaveMemberDto.builder()
+                        .id(user.getId())
+                        .studentNum("  60000001  ")
+                        .name("test name")
+                        .build();
+
+                doReturn(Optional.of(user)).when(userRepository).findById(dtoWithWhitespace.getId());
+                doReturn(Optional.of(user)).when(userRepository).findByUserId(currentUser.getUsername());
+                doReturn(false).when(memberRepository).existsByStudentNum("60000001");
+                doReturn(member).when(myMapper).toMemberEntity(dtoWithWhitespace);
+
+                // when
+                myService.saveMember(dtoWithWhitespace, currentUser);
+
+                // then
+                assertThat(dtoWithWhitespace.getStudentNum()).isEqualTo("60000001");
+                then(memberRepository).should().existsByStudentNum("60000001");
+                then(memberRepository).should().save(member);
+            }
+        }
+
+        @Nested
         @DisplayName("존재하지 않는 사용자 ID가 주어지면")
         class Context_with_nonexistent_user_id {
 

@@ -45,11 +45,15 @@ PR 제목과 본문을 보여주고 승인을 요청한다. 수정 요청이 있
 ```bash
 git push origin {브랜치명}
 ```
-이후 GitHub MCP로 PR을 생성한다:
-- **owner**: `ToMyongJi`
-- **repo**: `ToMyongJi-back`
-- **base**: `dev`
-- **head**: 현재 브랜치명
+이후 `gh` CLI로 PR을 생성한다:
+```bash
+gh pr create \
+  --repo ToMyongJi/ToMyongJi-back \
+  --base dev \
+  --head {현재 브랜치명} \
+  --title "{PR 제목}" \
+  --body "{PR 본문}"
+```
 
 ### 6. Jira 상태 전환
 PR 생성 완료 후 evidence의 Jira 이슈 매핑 테이블에서 모든 하위 작업 키를 읽어 **CODE REVIEW**로 일괄 전환한다:
@@ -66,9 +70,10 @@ Stop-Process -Name java -Force -ErrorAction SilentlyContinue
 Start-Sleep -Seconds 2
 ```
 
-2. **Evidence 파일 전체 삭제**:
+2. **Evidence 파일 전체 삭제** (하위 폴더 포함):
 ```powershell
-Get-ChildItem .claude/evidence/ -File | Remove-Item -Force
+Get-ChildItem .claude/evidence/ -Recurse -File | Remove-Item -Force
+Get-ChildItem .claude/evidence/ -Recurse -Directory | Remove-Item -Force -ErrorAction SilentlyContinue
 ```
 
 3. **dev 브랜치로 이동**:

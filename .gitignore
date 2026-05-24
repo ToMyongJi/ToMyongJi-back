@@ -42,6 +42,7 @@ out/
 .claude/local-secrets.json
 .claude/settings.json
 .claude/settings.local.json
+.claude/docs/ADR.md
 var/log/tomyongji/*.log
 LOG_PATH_IS_UNDEFINED/*.log
 .env

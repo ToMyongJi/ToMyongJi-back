@@ -12,7 +12,10 @@ usage: /hotfix [issue_number]
 
 ### 1. 이슈 준비
 
-**인자로 `issue_number`가 전달된 경우** → GitHub MCP로 이슈를 조회하고 브랜치를 준비합니다.
+**인자로 `issue_number`가 전달된 경우** → `gh` CLI로 이슈를 조회하고 브랜치를 준비합니다:
+```bash
+gh issue view {issue_number} --repo ToMyongJi/ToMyongJi-back --json title,body
+```
 
 ```bash
 git switch dev
@@ -41,11 +44,13 @@ git switch -c fix/{issue_number}
   3. 작업 내용: 수정할 내용 체크리스트 (줄바꿈으로 구분, 없으면 설명에서 추론)
   ```
 
-수집한 정보로 GitHub MCP에 이슈를 생성합니다:
-- **owner**: `ToMyongJi`
-- **repo**: `ToMyongJi-back`
-- **title**: `[fix] {제목}`
-- **body**: `.github/ISSUE_TEMPLATE/🫧투명지-issue🫧.md` 형식에 맞춰 작성
+수집한 정보로 `gh` CLI로 이슈를 생성합니다:
+```bash
+gh issue create \
+  --repo ToMyongJi/ToMyongJi-back \
+  --title "[fix] {제목}" \
+  --body "{.github/ISSUE_TEMPLATE/🫧투명지-issue🫧.md 형식에 맞춰 작성한 내용}"
+```
 
 생성된 `issue_number`로 브랜치를 준비합니다:
 

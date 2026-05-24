@@ -1,6 +1,6 @@
 ---
 name: issue
-description: This skill should be used at the start of the /start workflow to create a GitHub issue and prepare the working branch. It collects issue info, creates the issue via GitHub MCP, switches to main, pulls latest, and checks out a new branch named after the issue number. If an issue number is passed as an argument (e.g. /start 340), it skips creation and uses the existing issue instead.
+description: This skill should be used at the start of the /start workflow to create a GitHub issue and prepare the working branch. It collects issue info, creates the issue via gh CLI, switches to dev, pulls latest, and checks out a new branch named after the issue number. If an issue number is passed as an argument (e.g. /start 340), it skips creation and uses the existing issue instead.
 ---
 
 # Issue Skill
@@ -21,11 +21,11 @@ description: This skill should be used at the start of the /start workflow to cr
 
 ### A-1. 이슈 조회
 
-GitHub MCP로 이슈 정보를 가져온다.
+`gh` CLI로 이슈 정보를 가져온다:
 
-- **owner**: `ToMyongJi`
-- **repo**: `ToMyongJi-back`
-- **issue_number**: 전달받은 번호
+```bash
+gh issue view {issue_number} --repo ToMyongJi/ToMyongJi-back --json title,body
+```
 
 제목 형식 `[{type}] {제목}`에서 type을 추출한다. (`feat` / `fix` / `refactor` / `docs`)
 
@@ -64,14 +64,16 @@ GitHub MCP로 이슈 정보를 가져온다.
 
 ### B-2. GitHub 이슈 생성
 
-`.github/ISSUE_TEMPLATE/🫧투명지-issue🫧.md`를 읽어 본문 형식을 확인한 뒤, 수집한 정보를 채워 GitHub MCP로 이슈를 생성한다.
+`.github/ISSUE_TEMPLATE/🫧투명지-issue🫧.md`를 읽어 본문 형식을 확인한 뒤, 수집한 정보를 채워 `gh` CLI로 이슈를 생성한다:
 
-- **owner**: `ToMyongJi`
-- **repo**: `ToMyongJi-back`
-- **title**: `[{type}] {제목}`
-- **body**: 템플릿 형식에 수집한 정보를 채운 내용
+```bash
+gh issue create \
+  --repo ToMyongJi/ToMyongJi-back \
+  --title "[{type}] {제목}" \
+  --body "{템플릿 형식에 수집한 정보를 채운 내용}"
+```
 
-생성 후 반환된 `issue_number`를 확인한다.
+생성 후 출력된 URL에서 `issue_number`를 확인한다.
 
 ### B-3. 브랜치 준비 → [공통 절차](#공통-브랜치-준비)
 

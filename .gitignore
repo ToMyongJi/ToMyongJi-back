@@ -80,6 +80,9 @@ application-dev.yml
 application-prod.yml
 application-test.yml
 
+# OMC logs
+.omc/
+
 # Log files
 *.log
 *.log.*

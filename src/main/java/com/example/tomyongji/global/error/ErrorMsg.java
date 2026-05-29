@@ -16,6 +16,10 @@ public class ErrorMsg {
     public static final String INVALID_TOKEN = "유효하지 않거나 만료된 토큰입니다.";
     public static final String ALREADY_BELONGING_USER = "이미 다른 학생회에 소속된 유저입니다.";
     public static final String CANNOT_RE_ELECT_PRESIDENT = "학생회장은 연임할 수 없습니다.";
+    public static final String INVALID_EXCEL_FILE = "Excel 파일이 만료되었거나 존재하지 않습니다.";
+    public static final String NOT_FOUND_EXCEL_HEADER = "분석 결과를 토대로 헤더행을 찾을 수 없습니다.";
+    public static final String INVALID_AI_ANALYSIS_RESULT = "AI 분석 결과가 올바르지 않거나 누락된 항목이 있습니다.";
+    public static final String EMPTY_EXCEL_DATA = "엑셀 파일에 읽을 수 있는 데이터가 존재하지 않습니다.";
 
     // **401 Unauthorized**
     public static final String NOT_VERIFY_EMAIL = "이메일 인증이 되지 않은 유저입니다.";
@@ -51,4 +55,5 @@ public class ErrorMsg {
 
     // **500 Internal Server Error**
     public static final String EXTERNAL_SERVER_ERROR = "외부 서버의 오류가 발생했습니다.";
+    public static final String EXCEL_AI_ANALYSIS_FAILED = "Excel 컬럼 AI 분석 중 오류가 발생했습니다.";
 }

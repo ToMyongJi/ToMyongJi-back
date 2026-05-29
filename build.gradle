@@ -113,6 +113,15 @@ dependencies {
 	// redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+	// Spring AI (Gemini)
+	implementation platform("org.springframework.ai:spring-ai-bom:1.1.5")
+	implementation "org.springframework.ai:spring-ai-starter-model-google-genai"
+
+	// EasyExcel
+	implementation 'com.alibaba:easyexcel:4.0.3'
+	// S3
+	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.744'
+
 }
 
 tasks.named('test') {

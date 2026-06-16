@@ -115,13 +115,13 @@ public class ExcelConfirmService {
             rule.setWithdrawalColumn(dto.getWithdrawalColumn());
             rule.setAmountColumn(dto.getAmountColumn());
             rule.setDataStartRow(dto.getDataStartRow());
+            rule.setDateFormat(dto.getDateFormat());
             rule.setUpdatedAt(LocalDateTime.now());
             excelMappingRuleRepository.save(rule);
         } catch (Exception ignored) {}
     }
 
     private void clearRedisKeys(String requestId) {
-        stringRedisTemplate.delete("excel:status:" + requestId);
         stringRedisTemplate.delete("excel:preview:" + requestId);
         stringRedisTemplate.delete("excel:mapping:" + requestId);
     }

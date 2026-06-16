@@ -1,6 +1,5 @@
 package com.example.tomyongji.domain.receipt.controller;
 
-import com.example.tomyongji.domain.receipt.dto.ExcelAnalyzeResponseDto;
 import com.example.tomyongji.domain.receipt.dto.ExcelConfirmRequestDto;
 import com.example.tomyongji.domain.receipt.dto.ExcelStatusResponseDto;
 import com.example.tomyongji.domain.receipt.service.ExcelAnalyzeService;
@@ -8,7 +7,6 @@ import com.example.tomyongji.domain.receipt.service.ExcelConfirmService;
 import com.example.tomyongji.domain.receipt.service.ExcelUploadService;
 import com.example.tomyongji.global.common.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,19 +23,11 @@ public class ExcelController {
     private final ExcelConfirmService excelConfirmService;
 
     @PostMapping("/analyze")
-    public ResponseEntity<ApiResponse<ExcelAnalyzeResponseDto>> analyze(
+    public ResponseEntity<ApiResponse<ExcelStatusResponseDto>> analyze(
         @RequestPart("file") MultipartFile file,
         @AuthenticationPrincipal UserDetails currentUser
     ) {
-        ExcelAnalyzeResponseDto result = excelAnalyzeService.analyze(file, currentUser);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.onCreated(result));
-    }
-
-    @GetMapping("/analyze/{requestId}")
-    public ResponseEntity<ApiResponse<ExcelStatusResponseDto>> getStatus(
-        @PathVariable String requestId
-    ) {
-        ExcelStatusResponseDto result = excelAnalyzeService.getStatus(requestId);
+        ExcelStatusResponseDto result = excelAnalyzeService.analyze(file, currentUser);
         return ResponseEntity.ok(ApiResponse.onSuccess(result));
     }
 

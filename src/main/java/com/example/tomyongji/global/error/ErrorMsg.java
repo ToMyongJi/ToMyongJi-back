@@ -54,6 +54,8 @@ public class ErrorMsg {
     public static final String EXCEL_PREVIEW_EXPIRED = "미리보기 데이터가 만료되었습니다. 다시 업로드해주세요.";
     public static final String EXCEL_PARSE_ERROR = "엑셀 파일 파싱 중 오류가 발생했습니다.";
     public static final String GEMINI_API_ERROR = "AI 분석 중 오류가 발생했습니다.";
+    public static final String MAPPING_RULE_MISMATCH = "업로드된 파일 구조가 저장된 매핑 규칙과 다릅니다. AI 재분석이 필요합니다.";
+    public static final String EXCEL_REDIS_ERROR = "미리보기 데이터 임시 저장 중 오류가 발생했습니다.";
 
     // **500 Internal Server Error**
     public static final String EXTERNAL_SERVER_ERROR = "외부 서버의 오류가 발생했습니다.";

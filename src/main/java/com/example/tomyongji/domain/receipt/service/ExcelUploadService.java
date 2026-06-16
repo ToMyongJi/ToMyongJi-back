@@ -57,22 +57,35 @@ public class ExcelUploadService {
             throw new CustomException(EXCEL_PARSE_ERROR, 400);
         }
 
-        List<ExcelPreviewItemDto> previewData = excelAnalyzeService.convertToPreview(allRows, toDto(rule));
+        List<ExcelPreviewItemDto> allPreviewData = excelAnalyzeService.convertToPreview(allRows, toDto(rule));
+
+        // 저장된 매핑 규칙과 파일 구조 불일치 감지
+        ExcelMappingRuleDto dto = toDto(rule);
+        int dataStartIdx = (dto.getDataStartRow() != null ? dto.getDataStartRow() : 2) - 1;
+        int totalDataRows = Math.max(0, allRows.size() - dataStartIdx);
+        if (totalDataRows >= 3) {
+            double validRatio = (double) allPreviewData.size() / totalDataRows;
+            if (allPreviewData.isEmpty() || validRatio < 0.1) {
+                throw new CustomException(MAPPING_RULE_MISMATCH, 422);
+            }
+        }
 
         String requestId = UUID.randomUUID().toString();
         try {
+            // confirm 시 전체 데이터 insert를 위해 Redis에는 전체 저장
             stringRedisTemplate.opsForValue().set(
                 "excel:preview:" + requestId,
-                objectMapper.writeValueAsString(previewData),
+                objectMapper.writeValueAsString(allPreviewData),
                 REDIS_TTL_MINUTES, TimeUnit.MINUTES);
         } catch (Exception e) {
-            throw new CustomException(EXCEL_PARSE_ERROR, 500);
+            throw new CustomException(EXCEL_REDIS_ERROR, 500);
         }
 
+        List<ExcelPreviewItemDto> previewSample = allPreviewData.subList(0, Math.min(5, allPreviewData.size()));
         return ExcelStatusResponseDto.builder()
             .requestId(requestId)
             .status("COMPLETED")
-            .previewData(previewData)
+            .previewData(previewSample)
             .build();
     }
 
@@ -84,7 +97,8 @@ public class ExcelUploadService {
             rule.getDepositColumn(),
             rule.getWithdrawalColumn(),
             rule.getAmountColumn(),
-            rule.getDataStartRow()
+            rule.getDataStartRow(),
+            rule.getDateFormat()
         );
     }
 }

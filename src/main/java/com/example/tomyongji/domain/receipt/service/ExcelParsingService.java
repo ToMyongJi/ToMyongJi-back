@@ -22,10 +22,14 @@ import static com.example.tomyongji.global.error.ErrorMsg.NOT_FOUND_EXCEL_HEADER
 @Service
 public class ExcelParsingService {
 
+    public enum DateOrder {
+        YMD, MDY, DMY
+    }
     // 메서드 간에 전달할 헤더 매핑 정보
     public record HeaderMapping(
             int headerRowIndex,
-            Map<String, Integer> columnIndexMap
+            Map<String, Integer> columnIndexMap,
+            DateOrder dateOrder
     ) {}
 
     // 전체 파일 읽기 (딱 한 번만 실행)
@@ -35,7 +39,6 @@ public class ExcelParsingService {
                 .headRowNumber(0)
                 .doReadSync();
     }
-
 
     // 헤더 찾기
     public HeaderMapping searchHeader(List<Map<Integer, String>> allRows, ExcelColumnMappingDto config) {
@@ -54,11 +57,15 @@ public class ExcelParsingService {
                 } else {
                     indexMap.put("amount", findIndex(row, config.getAmount()));
                 }
-                return new HeaderMapping(i, indexMap);
+
+                // orderDate 검증 및 설정
+                DateOrder finalOrder = validateDateOrder(allRows, config, indexMap, i);
+                return new HeaderMapping(i, indexMap, finalOrder);
             }
         }
         throw new CustomException(NOT_FOUND_EXCEL_HEADER, 400);
     }
+
 
 
     // 3. 단일 행 파싱 (핵심 비즈니스 로직)
@@ -70,7 +77,7 @@ public class ExcelParsingService {
 
         Map<String, Integer> idx = mapping.columnIndexMap();
         Receipt.ReceiptBuilder builder = Receipt.builder()
-                .date(parseDate(row.get(idx.get("date"))))
+                .date(parseDate(row.get(idx.get("date")),mapping.dateOrder()))
                 .content(row.get(idx.get("content")))
                 .studentClub(studentClub);
 
@@ -90,6 +97,58 @@ public class ExcelParsingService {
         return builder.build();
     }
 
+    private DateOrder validateDateOrder(List<Map<Integer, String>> allRows, ExcelColumnMappingDto config, Map<String, Integer> indexMap, int headerRow) {
+        List<String> rawDates = new ArrayList<>();
+        int dateColIdx = indexMap.get("date");
+        int scanLimit = Math.min(headerRow + 101, allRows.size());
+
+        for (int j = headerRow + 1; j < scanLimit; j++) {
+            rawDates.add(allRows.get(j).get(dateColIdx));
+        }
+
+        DateOrder suggestedOrder = null;
+        try {
+            if (config.getDateOrder() != null) {
+                suggestedOrder = DateOrder.valueOf(config.getDateOrder().toUpperCase());
+            }
+        } catch (IllegalArgumentException ignored) {}
+
+        DateOrder finalOrder = detectDateOrder(rawDates, suggestedOrder);
+        return finalOrder;
+    }
+
+    private DateOrder detectDateOrder(List<String> rawDates, DateOrder suggestedOrder) {
+        for (String rawDate : rawDates) {
+            if (rawDate == null || rawDate.isBlank()) continue;
+            if (rawDate.matches("^\\d{5}$")) continue;
+
+            String cleanDate = rawDate.replaceAll("\\d{1,2}:\\d{2}.*", "").replaceAll("[^0-9]+", "-").replaceAll("^-+|-+$", "");
+            String[] parts = cleanDate.split("-");
+
+            if (parts.length == 3) {
+                try {
+                    int part1 = Integer.parseInt(parts[0]);
+                    int part2 = Integer.parseInt(parts[1]);
+                    int part3 = Integer.parseInt(parts[2]);
+
+                    // 확실한 증거(13 이상)가 발견되면 AI의 의견을 무시하고 수학적 사실을 우선함
+                    if (part1 > 31 || (part1 >= 20 && part2 <= 12 && part3 <= 31)) return DateOrder.YMD;
+
+                    if (part3 > 31) {
+                        if (part2 > 12) return DateOrder.MDY;
+                        if (part1 > 12) return DateOrder.DMY;
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+        }
+
+        // 확실한 증거를 못 찾은 모호한 상황일 때 기존 결과를 신뢰
+        if (suggestedOrder != null) {
+            return suggestedOrder;
+        }
+        // default 값은 YMD
+        return DateOrder.YMD;
+    }
     // =========================================================================
     // 4. 활용 1: 미리보기 파싱 (Preview)
     // =========================================================================
@@ -213,52 +272,73 @@ public class ExcelParsingService {
                 .orElse(null);
     }
 
-    // "2026.04.02", "2026/04/02", "20260402" -> LocalDate 처리
-    private static Date parseDate(String val) {
+
+    // 날짜 파싱 메서드
+    private static Date parseDate(String val, DateOrder order) {
         if (val == null || val.isBlank()) return null;
         val = val.trim();
 
-        // 2. 시간 정보 제거 (예: "09:12", "14:33:00" 등이 포함된 경우 잘라냄)
-        val = val.replaceAll("\\d{1,2}:\\d{2}.*", "");
+        if (val.matches("^\\d{5}$")) {
+            LocalDate excelDate = LocalDate.of(1899, 12, 30).plusDays(Long.parseLong(val));
+            return Date.valueOf(excelDate);
+        }
 
-        // 3. 숫자 이외의 모든 문자(., /, 년, 월, 일 등)를 '-'로 변환
-        // 예: "2026년 4월 2일" -> "2026-4-2" / "03/02" -> "03-02"
-        val = val.replaceAll("[^0-9]+", "-").replaceAll("^-+|-+$", "");
-
-        // 4. '-'를 기준으로 연, 월, 일 토큰 분리
+        val = val.replaceAll("\\d{1,2}:\\d{2}.*", "").replaceAll("[^0-9]+", "-")
+                .replaceAll("^-+|-+$", "");
         String[] parts = val.split("-");
         LocalDate localDate;
 
         try {
             if (parts.length == 3) {
-                // Case 1: YYYY-MM-DD 또는 YY-MM-DD (예: "2026-4-2", "26-04-01")
-                int year = Integer.parseInt(parts[0]);
-                if (year < 100) year += 2000; // "26" -> 2026
-                localDate = LocalDate.of(year, Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
+                int p1 = Integer.parseInt(parts[0]);
+                int p2 = Integer.parseInt(parts[1]);
+                int p3 = Integer.parseInt(parts[2]);
+                int year, month, day;
 
-            } else if (parts.length == 2) {
-                // Case 2: MM-DD (예: "03-02")
-                int year = LocalDate.now().getYear(); // 연도 누락 시 올해 연도 삽입
-                localDate = LocalDate.of(year, Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
+                if (order == DateOrder.MDY) {
+                    year = p3 < 100 ? p3 + 2000 : p3; month = p1; day = p2;
+                } else if (order == DateOrder.DMY) {
+                    year = p3 < 100 ? p3 + 2000 : p3; month = p2; day = p1;
+                } else { // YMD
+                    year = p1 < 100 ? p1 + 2000 : p1; month = p2; day = p3;
+                }
+                localDate = LocalDate.of(year, month, day);
 
-            } else if (parts.length == 1) {
-                // Case 3: 구분자가 아예 없는 8자리(YYYYMMDD) 또는 6자리(YYMMDD)
+            } else if (parts.length == 2) { // MM-DD, DD-MM
+                int currentYear = LocalDate.now().getYear();
+                int month, day;
+
+                if (order == DateOrder.DMY) {
+                    month = Integer.parseInt(parts[1]);
+                    day = Integer.parseInt(parts[0]);
+                } else {
+                    month = Integer.parseInt(parts[0]);
+                    day = Integer.parseInt(parts[1]);
+                }
+
+                localDate = LocalDate.of(currentYear, month, day);
+
+                if (localDate.isAfter(LocalDate.now())) {
+                    localDate = localDate.minusYears(1);
+                }
+
+            } else if (parts.length == 1) { // yyyyMMdd, yyMMdd
                 if (parts[0].length() == 8) {
                     localDate = LocalDate.parse(parts[0], DateTimeFormatter.ofPattern("yyyyMMdd"));
                 } else if (parts[0].length() == 6) {
                     localDate = LocalDate.parse(parts[0], DateTimeFormatter.ofPattern("yyMMdd"));
                 } else {
-                    throw new IllegalArgumentException("지원하지 않는 날짜 길이: " + val);
+                    return null;
                 }
             } else {
-                throw new IllegalArgumentException("지원하지 않는 날짜 형식: " + val);
+                return null;
             }
 
             return Date.valueOf(localDate);
 
         } catch (Exception e) {
-            System.out.print(val+" "+e.getMessage());
-            return null; // 시스템을 터뜨리지 않고 해당 영수증의 날짜만 비워둠
+            log.debug("날짜 파싱 실패 ({}): {}", val, e.getMessage());
+            return null;
         }
     }
 

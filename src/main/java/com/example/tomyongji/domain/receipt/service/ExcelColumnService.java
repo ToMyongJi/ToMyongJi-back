@@ -27,6 +27,7 @@ public class ExcelColumnService {
     public ExcelColumnMappingDto toConfig(ExcelColumn entity) {
         return ExcelColumnMappingDto.builder()
                 .amountType(entity.getAmountType())
+                .dateOrder(entity.getDateOrder())
                 .date(entity.getDateColumnName())
                 .content(entity.getContentColumnName())
                 .deposit(entity.getDepositColumnName())
@@ -43,6 +44,7 @@ public class ExcelColumnService {
 
         excelColumn.setStudentClub(studentClub);
         excelColumn.setAmountType(finalResult.getAmountType());
+        excelColumn.setDateOrder(finalResult.getDateOrder());
         excelColumn.setDateColumnName(finalResult.getDate());
         excelColumn.setContentColumnName(finalResult.getContent());
         excelColumn.setDepositColumnName(finalResult.getDeposit());

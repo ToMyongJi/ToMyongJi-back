@@ -25,6 +25,9 @@ public class ExcelColumn {
     @Column(name = "amount_type", nullable = false)
     private String amountType;
 
+    @Column(name = "date_order")
+    private String dateOrder;
+
     @Column(name = "date_column_name")
     private String dateColumnName;
 

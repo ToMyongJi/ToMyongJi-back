@@ -38,8 +38,9 @@ public class ExcelAIService {
             validateAiResult(aiResult);
 
             log.info(
-                    "Excel AI 분석 결과 amountType={}, date={}, content={}, deposit={}, withdrawal={}, amount={}",
+                    "Excel AI 분석 결과 amountType={}, dateOrder={} ,date={}, content={}, deposit={}, withdrawal={}, amount={}",
                     aiResult.getAmountType(),
+                    aiResult.getDateOrder(),
                     aiResult.getDate(),
                     aiResult.getContent(),
                     aiResult.getDeposit(),
@@ -62,7 +63,11 @@ public class ExcelAIService {
                 1. amountType
                    - SPLIT: 입금/출금이 별도 컬럼으로 분리된 경우
                    - SINGLE: 하나의 금액 컬럼에 +/- 또는 절댓값으로 기록된 경우
-                2. columnMapping: 각 표준 필드에 해당하는 실제 Excel 컬럼명
+                2. dateOrder
+                   - YMD: 연-월-일 
+                   - MDY: 월-일-연 
+                   - DMY: 일-월-연
+                3. columnMapping: 각 표준 필드에 해당하는 실제 Excel 컬럼명
                    - date: 거래일자 컬럼명
                    - content: 사용처, 거래내용 컬럼명
                    - deposit: 입금 컬럼명 (SPLIT일 때, 없으면 빈 문자열)
@@ -75,7 +80,7 @@ public class ExcelAIService {
     private String buildUserPrompt(String excelSample) {
         return """
                 아래는 Excel 파일에서 추출한 일부 행 데이터다.
-                이 데이터에서 학생회 영수증 저장에 필요한 컬럼 매핑을 찾아라.
+                이 데이터에서 학생회 영수증 저장에 필요한 컬럼 매핑 및 날짜 파싱 형태를 찾아라.
 
                 Excel 샘플:
                 %s

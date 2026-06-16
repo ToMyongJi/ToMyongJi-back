@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ExcelColumnMappingDto {
     private String amountType;
-
+    private String dateOrder;
     private String date;
     private String content;
     private String deposit;

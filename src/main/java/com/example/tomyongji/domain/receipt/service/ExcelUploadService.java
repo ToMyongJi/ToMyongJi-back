@@ -57,14 +57,15 @@ public class ExcelUploadService {
             throw new CustomException(EXCEL_PARSE_ERROR, 400);
         }
 
-        List<ExcelPreviewItemDto> allPreviewData = excelAnalyzeService.convertToPreview(allRows, toDto(rule));
+        ExcelMappingRuleDto dto = toDto(rule);
+        ExcelAnalyzeService.ConvertResult convertResult = excelAnalyzeService.convertToPreview(allRows, dto);
+        List<ExcelPreviewItemDto> allPreviewData = convertResult.items();
 
         // 저장된 매핑 규칙과 파일 구조 불일치 감지
-        ExcelMappingRuleDto dto = toDto(rule);
         int dataStartIdx = (dto.getDataStartRow() != null ? dto.getDataStartRow() : 2) - 1;
-        int totalDataRows = Math.max(0, allRows.size() - dataStartIdx);
-        if (totalDataRows >= 3) {
-            double validRatio = (double) allPreviewData.size() / totalDataRows;
+        int totalRows = Math.max(0, allRows.size() - dataStartIdx);
+        if (totalRows >= 3) {
+            double validRatio = (double) allPreviewData.size() / totalRows;
             if (allPreviewData.isEmpty() || validRatio < 0.1) {
                 throw new CustomException(MAPPING_RULE_MISMATCH, 422);
             }
@@ -86,6 +87,8 @@ public class ExcelUploadService {
             .requestId(requestId)
             .status("COMPLETED")
             .previewData(previewSample)
+            .skippedRows(convertResult.skippedRows())
+            .totalRows(totalRows)
             .build();
     }
 

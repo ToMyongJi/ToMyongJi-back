@@ -16,4 +16,7 @@ public class ExcelStatusResponseDto {
     private String status;
     private List<ExcelPreviewItemDto> previewData;
     private String message;
+    private int skippedRows;
+    private int totalRows;
+    private String dateFormatDetected;
 }

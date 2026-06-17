@@ -21,19 +21,21 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ExcelAnalyzeService {
+
+    public record ConvertResult(List<ExcelPreviewItemDto> items, int skippedRows) {}
 
     private final UserRepository userRepository;
     private final StringRedisTemplate stringRedisTemplate;
@@ -87,7 +89,11 @@ public class ExcelAnalyzeService {
             ).text();
 
             ExcelMappingRuleDto rule = objectMapper.readValue(responseText, ExcelMappingRuleDto.class);
-            List<ExcelPreviewItemDto> allPreviewData = convertToPreview(allRows, rule);
+            ConvertResult convertResult = convertToPreview(allRows, rule);
+            List<ExcelPreviewItemDto> allPreviewData = convertResult.items();
+
+            int dataStartIdx = (rule.getDataStartRow() != null ? rule.getDataStartRow() : 2) - 1;
+            int totalRows = Math.max(0, allRows.size() - dataStartIdx);
 
             // confirm 시 전체 데이터 insert를 위해 Redis에는 전체 저장
             stringRedisTemplate.opsForValue().set(
@@ -104,6 +110,8 @@ public class ExcelAnalyzeService {
                 .requestId(requestId)
                 .status("COMPLETED")
                 .previewData(previewSample)
+                .skippedRows(convertResult.skippedRows())
+                .totalRows(totalRows)
                 .build();
 
         } catch (CustomException e) {
@@ -114,16 +122,20 @@ public class ExcelAnalyzeService {
         }
     }
 
-    List<ExcelPreviewItemDto> convertToPreview(List<Map<Integer, Object>> allRows, ExcelMappingRuleDto rule) {
+    ConvertResult convertToPreview(List<Map<Integer, Object>> allRows, ExcelMappingRuleDto rule) {
         List<ExcelPreviewItemDto> result = new ArrayList<>();
         int startIdx = (rule.getDataStartRow() != null ? rule.getDataStartRow() : 2) - 1;
+        int skippedRows = 0;
 
         for (int i = startIdx; i < allRows.size(); i++) {
             Map<Integer, Object> row = allRows.get(i);
             try {
-                Date date = parseDate(getString(row, columnNameToIndex(rule.getDateColumn())), rule.getDateFormat());
+                Date date = parseDate(getString(row, columnNameToIndex(rule.getDateColumn())));
                 String content = getString(row, columnNameToIndex(rule.getContentColumn()));
-                if (date == null || content == null || content.isBlank()) continue;
+                if (date == null || content == null || content.isBlank()) {
+                    skippedRows++;
+                    continue;
+                }
 
                 int deposit = 0, withdrawal = 0;
                 if ("split".equals(rule.getAmountType())) {
@@ -140,13 +152,16 @@ public class ExcelAnalyzeService {
                     }
                 }
 
-                if (deposit == 0 && withdrawal == 0) continue;
+                if (deposit == 0 && withdrawal == 0) {
+                    skippedRows++;
+                    continue;
+                }
 
                 result.add(ExcelPreviewItemDto.builder()
                     .date(date).content(content).deposit(deposit).withdrawal(withdrawal).build());
             } catch (Exception ignored) {}
         }
-        return result;
+        return new ConvertResult(result, skippedRows);
     }
 
     private String buildCsvText(List<Map<Integer, Object>> rows, int maxRows) {
@@ -189,10 +204,13 @@ public class ExcelAnalyzeService {
         return val != null ? val.toString().trim() : "";
     }
 
-    private Date parseDate(String value, String geminiFormat) {
+    Date parseDate(String value) {
         if (value == null || value.isBlank()) return null;
 
-        // 0. Excel serial date — EasyExcel이 날짜 셀을 Double로 읽은 경우
+        // ReDoS 방어: 30자 초과 입력 거부
+        if (value.length() > 30) return null;
+
+        // Step 1 — Excel serial: 숫자 파싱 후 1000 < serial < 100000
         try {
             double serial = Double.parseDouble(value.replaceAll(",", ""));
             if (serial > 1000 && serial < 100000) {
@@ -200,30 +218,76 @@ public class ExcelAnalyzeService {
             }
         } catch (NumberFormatException ignored) {}
 
-        // 1. Gemini가 추론한 포맷 우선 시도
-        if (geminiFormat != null && !geminiFormat.isBlank()) {
+        Matcher m;
+
+        // Step 2 — 한국어: yyyy년 M월 d일
+        m = Pattern.compile("(\\d{4})년\\s*(\\d{1,2})월\\s*(\\d{1,2})일").matcher(value);
+        if (m.find()) {
             try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(geminiFormat, Locale.KOREAN);
-                LocalDate localDate = LocalDate.parse(value.trim(), formatter);
+                LocalDate localDate = LocalDate.of(
+                    Integer.parseInt(m.group(1)),
+                    Integer.parseInt(m.group(2)),
+                    Integer.parseInt(m.group(3)));
                 return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
             } catch (Exception ignored) {}
         }
 
-        // 2. 정규식 전처리 후 포맷 배열 순차 시도
-        String normalized = normalizeDate(value.trim());
-        String[] formats = {"yyyy-MM-dd", "yyyy-M-d", "yyyyMMdd", "MM-dd-yyyy"};
-        for (String fmt : formats) {
-            try { return new SimpleDateFormat(fmt).parse(normalized); } catch (ParseException ignored) {}
+        // Step 3 — 연도 선두: yyyy.MM.dd / yyyy-MM-dd / yyyy/MM/dd
+        m = Pattern.compile("(\\d{4})[.\\-/](\\d{1,2})[.\\-/](\\d{1,2})").matcher(value);
+        if (m.find()) {
+            try {
+                LocalDate localDate = LocalDate.of(
+                    Integer.parseInt(m.group(1)),
+                    Integer.parseInt(m.group(2)),
+                    Integer.parseInt(m.group(3)));
+                return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            } catch (Exception ignored) {}
         }
-        return null;
-    }
 
-    private String normalizeDate(String value) {
-        // 한국어 형식: "2026년 8월 24일" → "2026-8-24"
-        value = value.replaceAll("(\\d{4})년\\s*(\\d{1,2})월\\s*(\\d{1,2})일", "$1-$2-$3");
-        // 숫자 사이의 "/" 또는 "." → "-" (구분자 통일)
-        value = value.replaceAll("(?<=\\d)[./](?=\\d)", "-");
-        return value;
+        // Step 4 — 8자리: yyyyMMdd
+        m = Pattern.compile("^\\d{8}$").matcher(value.trim());
+        if (m.matches()) {
+            try {
+                LocalDate localDate = LocalDate.parse(value.trim(), DateTimeFormatter.ofPattern("yyyyMMdd"));
+                return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            } catch (DateTimeParseException ignored) {}
+        }
+
+        // Step 5 — 연도 후미: MM/dd/yyyy 또는 dd/MM/yyyy (첫 번째 숫자 > 12이면 dd/MM)
+        m = Pattern.compile("(\\d{1,2})[.\\-/](\\d{1,2})[.\\-/](\\d{4})").matcher(value);
+        if (m.find()) {
+            try {
+                int first = Integer.parseInt(m.group(1));
+                int second = Integer.parseInt(m.group(2));
+                int year = Integer.parseInt(m.group(3));
+                int month, day;
+                if (first > 12) {
+                    // dd/MM/yyyy
+                    day = first;
+                    month = second;
+                } else {
+                    // MM/dd/yyyy
+                    month = first;
+                    day = second;
+                }
+                LocalDate localDate = LocalDate.of(year, month, day);
+                return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            } catch (Exception ignored) {}
+        }
+
+        // Step 6 — 부분 날짜: MM/dd (현재 연도 사용)
+        m = Pattern.compile("^(\\d{1,2})[.\\-/](\\d{1,2})$").matcher(value.trim());
+        if (m.matches()) {
+            try {
+                int month = Integer.parseInt(m.group(1));
+                int day = Integer.parseInt(m.group(2));
+                LocalDate localDate = LocalDate.of(LocalDate.now().getYear(), month, day);
+                return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            } catch (Exception ignored) {}
+        }
+
+        // Step 7 — 모두 실패 시 null 반환
+        return null;
     }
 
     private Date fromExcelSerial(double serial) {

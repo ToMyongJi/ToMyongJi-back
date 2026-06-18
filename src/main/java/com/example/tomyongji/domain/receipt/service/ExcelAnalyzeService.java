@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -130,7 +129,7 @@ public class ExcelAnalyzeService {
         for (int i = startIdx; i < allRows.size(); i++) {
             Map<Integer, Object> row = allRows.get(i);
             try {
-                Date date = parseDate(getString(row, columnNameToIndex(rule.getDateColumn())));
+                LocalDate date = parseDate(getString(row, columnNameToIndex(rule.getDateColumn())), rule.getDateFormat());
                 String content = getString(row, columnNameToIndex(rule.getContentColumn()));
                 if (date == null || content == null || content.isBlank()) {
                     skippedRows++;
@@ -204,11 +203,18 @@ public class ExcelAnalyzeService {
         return val != null ? val.toString().trim() : "";
     }
 
-    Date parseDate(String value) {
+    LocalDate parseDate(String value, String dateFormat) {
         if (value == null || value.isBlank()) return null;
 
         // ReDoS 방어: 30자 초과 입력 거부
         if (value.length() > 30) return null;
+
+        // Step 0 — Gemini가 감지한 포맷 우선 적용
+        if (dateFormat != null && !dateFormat.isBlank()) {
+            try {
+                return LocalDate.parse(value.trim(), DateTimeFormatter.ofPattern(dateFormat));
+            } catch (DateTimeParseException ignored) {}
+        }
 
         // Step 1 — Excel serial: 숫자 파싱 후 1000 < serial < 100000
         try {
@@ -220,15 +226,19 @@ public class ExcelAnalyzeService {
 
         Matcher m;
 
-        // Step 2 — 한국어: yyyy년 M월 d일
+        // Step 2a — 한국어 연도 선두: yyyy년 M월 d일
         m = Pattern.compile("(\\d{4})년\\s*(\\d{1,2})월\\s*(\\d{1,2})일").matcher(value);
         if (m.find()) {
             try {
-                LocalDate localDate = LocalDate.of(
-                    Integer.parseInt(m.group(1)),
-                    Integer.parseInt(m.group(2)),
-                    Integer.parseInt(m.group(3)));
-                return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                return LocalDate.of(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3)));
+            } catch (Exception ignored) {}
+        }
+
+        // Step 2b — 한국어 연도 후미: M월 d일 yyyy년
+        m = Pattern.compile("(\\d{1,2})월\\s*(\\d{1,2})일\\s*(\\d{4})년").matcher(value);
+        if (m.find()) {
+            try {
+                return LocalDate.of(Integer.parseInt(m.group(3)), Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)));
             } catch (Exception ignored) {}
         }
 
@@ -236,11 +246,7 @@ public class ExcelAnalyzeService {
         m = Pattern.compile("(\\d{4})[.\\-/](\\d{1,2})[.\\-/](\\d{1,2})").matcher(value);
         if (m.find()) {
             try {
-                LocalDate localDate = LocalDate.of(
-                    Integer.parseInt(m.group(1)),
-                    Integer.parseInt(m.group(2)),
-                    Integer.parseInt(m.group(3)));
-                return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                return LocalDate.of(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3)));
             } catch (Exception ignored) {}
         }
 
@@ -248,30 +254,25 @@ public class ExcelAnalyzeService {
         m = Pattern.compile("^\\d{8}$").matcher(value.trim());
         if (m.matches()) {
             try {
-                LocalDate localDate = LocalDate.parse(value.trim(), DateTimeFormatter.ofPattern("yyyyMMdd"));
-                return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                return LocalDate.parse(value.trim(), DateTimeFormatter.ofPattern("yyyyMMdd"));
             } catch (DateTimeParseException ignored) {}
         }
 
-        // Step 5 — 연도 후미: MM/dd/yyyy 또는 dd/MM/yyyy (첫 번째 숫자 > 12이면 dd/MM)
+        // Step 5 — 연도 후미: dd/MM/yyyy 또는 MM/dd/yyyy (첫 번째 숫자 > 12이면 dd 확정)
         m = Pattern.compile("(\\d{1,2})[.\\-/](\\d{1,2})[.\\-/](\\d{4})").matcher(value);
         if (m.find()) {
             try {
                 int first = Integer.parseInt(m.group(1));
                 int second = Integer.parseInt(m.group(2));
                 int year = Integer.parseInt(m.group(3));
-                int month, day;
+                // first > 12이면 dd/MM/yyyy, 아니면 dd/MM/yyyy 우선 (유럽 형식이 더 보편적)
+                int day = first, month = second;
                 if (first > 12) {
-                    // dd/MM/yyyy
-                    day = first;
-                    month = second;
-                } else {
-                    // MM/dd/yyyy
-                    month = first;
-                    day = second;
+                    day = first; month = second;
+                } else if (second > 12) {
+                    month = first; day = second;
                 }
-                LocalDate localDate = LocalDate.of(year, month, day);
-                return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                return LocalDate.of(year, month, day);
             } catch (Exception ignored) {}
         }
 
@@ -279,21 +280,16 @@ public class ExcelAnalyzeService {
         m = Pattern.compile("^(\\d{1,2})[.\\-/](\\d{1,2})$").matcher(value.trim());
         if (m.matches()) {
             try {
-                int month = Integer.parseInt(m.group(1));
-                int day = Integer.parseInt(m.group(2));
-                LocalDate localDate = LocalDate.of(LocalDate.now().getYear(), month, day);
-                return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+                return LocalDate.of(LocalDate.now().getYear(), Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)));
             } catch (Exception ignored) {}
         }
 
-        // Step 7 — 모두 실패 시 null 반환
         return null;
     }
 
-    private Date fromExcelSerial(double serial) {
+    private LocalDate fromExcelSerial(double serial) {
         // Excel serial: 1899-12-30 기준 일수 (1900 윤년 버그 보정)
-        LocalDate date = LocalDate.of(1899, 12, 30).plusDays((long) serial);
-        return Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        return LocalDate.of(1899, 12, 30).plusDays((long) serial);
     }
 
     private int parseAmount(String value) {

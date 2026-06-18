@@ -10,12 +10,8 @@ import com.example.tomyongji.domain.receipt.dto.ExcelStatusResponseDto;
 import com.example.tomyongji.domain.receipt.entity.StudentClub;
 import com.example.tomyongji.global.error.CustomException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.genai.Client;
-import com.google.genai.types.GenerateContentConfig;
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -32,22 +28,23 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class ExcelAnalyzeService {
 
     private final UserRepository userRepository;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
+    private final ChatClient chatClient;
 
-    @Value("${gemini.api-key}")
-    private String geminiApiKey;
-
-    private Client geminiClient;
     private static final long REDIS_TTL_MINUTES = 10;
 
-    @PostConstruct
-    private void initGeminiClient() {
-        geminiClient = Client.builder().apiKey(geminiApiKey).build();
+    public ExcelAnalyzeService(ChatClient.Builder chatClientBuilder,
+                                UserRepository userRepository,
+                                StringRedisTemplate stringRedisTemplate,
+                                ObjectMapper objectMapper) {
+        this.chatClient = chatClientBuilder.build();
+        this.userRepository = userRepository;
+        this.stringRedisTemplate = stringRedisTemplate;
+        this.objectMapper = objectMapper;
     }
 
     public ExcelStatusResponseDto analyze(MultipartFile file, UserDetails currentUser) {
@@ -78,18 +75,14 @@ public class ExcelAnalyzeService {
         try {
             String prompt = buildPrompt(csvPreviewText);
 
-            String responseText = geminiClient.models.generateContent(
-                "gemini-2.5-flash",
-                prompt,
-                GenerateContentConfig.builder()
-                    .responseMimeType("application/json")
-                    .build()
-            ).text();
+            String responseText = chatClient.prompt()
+                .user(prompt)
+                .call()
+                .content();
 
             ExcelMappingRuleDto rule = objectMapper.readValue(responseText, ExcelMappingRuleDto.class);
             List<ExcelPreviewItemDto> allPreviewData = convertToPreview(allRows, rule);
 
-            // confirm 시 전체 데이터 insert를 위해 Redis에는 전체 저장
             stringRedisTemplate.opsForValue().set(
                 "excel:preview:" + requestId,
                 objectMapper.writeValueAsString(allPreviewData),
@@ -109,7 +102,7 @@ public class ExcelAnalyzeService {
         } catch (CustomException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Gemini AI 분석 실패 - requestId: {}, error: {}", requestId, e.getMessage(), e);
+            log.error("Spring AI 분석 실패 - requestId: {}, error: {}", requestId, e.getMessage(), e);
             throw new CustomException(GEMINI_API_ERROR, 500);
         }
     }
@@ -189,7 +182,7 @@ public class ExcelAnalyzeService {
         return val != null ? val.toString().trim() : "";
     }
 
-    private Date parseDate(String value, String geminiFormat) {
+    private Date parseDate(String value, String aiFormat) {
         if (value == null || value.isBlank()) return null;
 
         // 0. Excel serial date — EasyExcel이 날짜 셀을 Double로 읽은 경우
@@ -200,10 +193,10 @@ public class ExcelAnalyzeService {
             }
         } catch (NumberFormatException ignored) {}
 
-        // 1. Gemini가 추론한 포맷 우선 시도
-        if (geminiFormat != null && !geminiFormat.isBlank()) {
+        // 1. AI가 추론한 포맷 우선 시도
+        if (aiFormat != null && !aiFormat.isBlank()) {
             try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(geminiFormat, Locale.KOREAN);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(aiFormat, Locale.KOREAN);
                 LocalDate localDate = LocalDate.parse(value.trim(), formatter);
                 return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
             } catch (Exception ignored) {}
@@ -219,15 +212,12 @@ public class ExcelAnalyzeService {
     }
 
     private String normalizeDate(String value) {
-        // 한국어 형식: "2026년 8월 24일" → "2026-8-24"
         value = value.replaceAll("(\\d{4})년\\s*(\\d{1,2})월\\s*(\\d{1,2})일", "$1-$2-$3");
-        // 숫자 사이의 "/" 또는 "." → "-" (구분자 통일)
         value = value.replaceAll("(?<=\\d)[./](?=\\d)", "-");
         return value;
     }
 
     private Date fromExcelSerial(double serial) {
-        // Excel serial: 1899-12-30 기준 일수 (1900 윤년 버그 보정)
         LocalDate date = LocalDate.of(1899, 12, 30).plusDays((long) serial);
         return Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }

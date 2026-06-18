@@ -63,6 +63,7 @@ configurations {
 
 repositories {
 	mavenCentral()
+	maven { url 'https://repo.spring.io/milestone' }
 }
 
 dependencies {
@@ -116,8 +117,8 @@ dependencies {
 	// excel
 	implementation 'com.alibaba:easyexcel:3.3.4'
 
-	// Google GenAI SDK (Gemini)
-	implementation 'com.google.genai:google-genai:1.0.0'
+	// Spring AI (Gemini OpenAI 호환 엔드포인트)
+	implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.0-M6'
 
 }
 

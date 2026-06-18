@@ -5,6 +5,11 @@
 
 ---
 
+### ADR-001: Spring AI 버전을 1.0.0-M6 Milestone으로 고정
+**결정**: `spring-ai-openai-spring-boot-starter:1.0.0-M6` + Spring Milestone 리포지토리 사용
+**이유**: Spring AI 1.0.0 GA가 Maven Central에 미등록 상태. Spring release repo는 401 인증 요구. M6가 인증 없이 접근 가능한 최신 안정 버전.
+**트레이드오프**: GA 대신 Milestone 버전 사용 → `ResponseFormat` 등 일부 API가 GA와 다름. 1.0.0 GA Maven Central 등록 후 버전 업그레이드 필요.
+
 <!-- 새 ADR 형식:
 ### ADR-001: {결정 사항}
 **결정**: {무엇을 선택했는지}

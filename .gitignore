@@ -36,7 +36,15 @@ out/
 ### VS Code ###
 .vscode/
 
+### Python ###
+__pycache__/
+*.py[cod]
+
+### OMC / Oh-My-Claude ###
+.omc/
+
 ### Claude Code ###
+.claude/skills/
 # 스킬, 레퍼런스 등 팀 공유 자산은 추적 (위 라인 제거)
 .claude/evidence/
 .claude/local-secrets.json

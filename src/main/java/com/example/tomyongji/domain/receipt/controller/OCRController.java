@@ -6,6 +6,7 @@ import com.example.tomyongji.domain.receipt.service.OCRService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Tag(name = "OCR api", description = "영수증 이미지를 OCR로 스캔하여 업로드하는 API들입니다.")
 @RestController
 @RequiredArgsConstructor
@@ -32,6 +34,7 @@ public class OCRController {
     @PostMapping("/upload/{userId}")
     public ResponseEntity<ApiResponse<OCRResultDto>> uploadImageAndExtractText(@RequestPart("file") MultipartFile file, @PathVariable("userId") String userId, @AuthenticationPrincipal
     UserDetails currentUser) {
+        log.info("[OCR_USAGE] userId={} filename={} event=request", userId, file.getOriginalFilename());
         OCRResultDto result = ocrService.processImage(file);
         ocrService.uploadOcrReceipt(result, userId, currentUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(

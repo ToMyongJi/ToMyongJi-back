@@ -8,8 +8,16 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import org.slf4j.LoggerFactory;
 
 import com.example.tomyongji.domain.auth.entity.User;
 import com.example.tomyongji.domain.auth.repository.UserRepository;
@@ -218,6 +226,93 @@ class OCRServiceTest {
     }
 
     @Nested
+    @DisplayName("processImage 실패 로그 검증")
+    class Describe_processImage_failureLogs {
+
+        @Nested
+        @DisplayName("sendOCRRequest 가 IOException 을 던지면")
+        class Context_when_io_exception {
+
+            @Test
+            @DisplayName("WARN 레벨로 [OCR_USAGE] result=failure reason=io_error 가 기록된다")
+            void processImage_logsIoError() throws Exception {
+                // given
+                org.springframework.web.multipart.MultipartFile brokenFile =
+                        mock(org.springframework.web.multipart.MultipartFile.class);
+                given(brokenFile.getOriginalFilename()).willReturn("test.jpg");
+                given(brokenFile.getBytes()).willThrow(new java.io.IOException("disk read fail"));
+
+                Logger ocrLogger = (Logger) LoggerFactory.getLogger(OCRService.class);
+                ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+                listAppender.start();
+                ocrLogger.addAppender(listAppender);
+                ocrLogger.setLevel(Level.WARN);
+
+                try {
+                    // when
+                    assertThatThrownBy(() -> ocrService.processImage(brokenFile))
+                            .isInstanceOf(com.example.tomyongji.global.error.CustomException.class);
+
+                    // then
+                    boolean hasFailureLog = listAppender.list.stream()
+                            .filter(event -> event.getLevel() == Level.WARN)
+                            .map(ILoggingEvent::getFormattedMessage)
+                            .anyMatch(msg -> msg.contains("[OCR_USAGE]")
+                                    && msg.contains("result=failure")
+                                    && msg.contains("reason=io_error"));
+
+                    assertThat(hasFailureLog)
+                            .as("IOException 발생 시 WARN 레벨로 [OCR_USAGE] result=failure reason=io_error 로그가 기록되어야 한다")
+                            .isTrue();
+                } finally {
+                    ocrLogger.detachAppender(listAppender);
+                }
+            }
+        }
+
+        @Nested
+        @DisplayName("sendOCRRequest 가 RuntimeException 을 던지면")
+        class Context_when_unknown_exception {
+
+            @Test
+            @DisplayName("WARN 레벨로 [OCR_USAGE] result=failure reason=unknown 이 기록된다")
+            void processImage_logsUnknownError() throws Exception {
+                // given
+                org.springframework.web.multipart.MultipartFile brokenFile =
+                        mock(org.springframework.web.multipart.MultipartFile.class);
+                given(brokenFile.getOriginalFilename()).willReturn("test.jpg");
+                given(brokenFile.getBytes()).willThrow(new RuntimeException("unexpected error"));
+
+                Logger ocrLogger = (Logger) LoggerFactory.getLogger(OCRService.class);
+                ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+                listAppender.start();
+                ocrLogger.addAppender(listAppender);
+                ocrLogger.setLevel(Level.WARN);
+
+                try {
+                    // when
+                    assertThatThrownBy(() -> ocrService.processImage(brokenFile))
+                            .isInstanceOf(com.example.tomyongji.global.error.CustomException.class);
+
+                    // then
+                    boolean hasFailureLog = listAppender.list.stream()
+                            .filter(event -> event.getLevel() == Level.WARN)
+                            .map(ILoggingEvent::getFormattedMessage)
+                            .anyMatch(msg -> msg.contains("[OCR_USAGE]")
+                                    && msg.contains("result=failure")
+                                    && msg.contains("reason=unknown"));
+
+                    assertThat(hasFailureLog)
+                            .as("RuntimeException 발생 시 WARN 레벨로 [OCR_USAGE] result=failure reason=unknown 로그가 기록되어야 한다")
+                            .isTrue();
+                } finally {
+                    ocrLogger.detachAppender(listAppender);
+                }
+            }
+        }
+    }
+
+    @Nested
     @DisplayName("uploadOcrReceipt 메서드는")
     class Describe_uploadOcrReceipt {
 
@@ -279,6 +374,151 @@ class OCRServiceTest {
 
                 then(userRepository).should().findByUserId(invalidUserId);
                 then(receiptService).should(never()).createReceipt(any(), any());
+            }
+        }
+
+        @Nested
+        @DisplayName("createReceipt 호출 성공 직후")
+        class Context_after_create_receipt_success {
+
+            @Test
+            @DisplayName("[OCR_USAGE] 로그에 userId, clubId, result=success 가 포함된다")
+            void uploadOcrReceipt_logsOcrUsageOnSuccess() {
+                // given
+                String userId = testUser.getUserId();
+                OCRResultDto ocrResultDto = createOCRResultDto(new Date(), "테스트 상점", 5000);
+
+                ReceiptDto receiptDto = ReceiptDto.builder()
+                        .content("테스트 상점")
+                        .withdrawal(5000)
+                        .build();
+
+                ReceiptCreateDto receiptCreateDto = ReceiptCreateDto.builder()
+                        .userId(userId)
+                        .content("테스트 상점")
+                        .withdrawal(5000)
+                        .build();
+
+                given(userRepository.findByUserId(userId)).willReturn(Optional.of(testUser));
+                given(receiptMapper.toReceiptDto(ocrResultDto)).willReturn(receiptDto);
+                given(receiptMapper.toReceiptCreateDto(receiptDto)).willReturn(receiptCreateDto);
+
+                // Logback ListAppender 로 OCRService 로거 캡처
+                Logger ocrLogger = (Logger) LoggerFactory.getLogger(OCRService.class);
+                ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+                listAppender.start();
+                ocrLogger.addAppender(listAppender);
+                ocrLogger.setLevel(Level.INFO);
+
+                try {
+                    // when
+                    ocrService.uploadOcrReceipt(ocrResultDto, userId, currentUser);
+
+                    // then
+                    boolean hasOcrUsageLog = listAppender.list.stream()
+                            .filter(event -> event.getLevel() == Level.INFO)
+                            .map(ILoggingEvent::getFormattedMessage)
+                            .anyMatch(msg -> msg.contains("[OCR_USAGE]") && msg.contains("result=success"));
+
+                    assertThat(hasOcrUsageLog)
+                            .as("createReceipt 성공 직후 [OCR_USAGE] ... result=success 로그가 기록되어야 한다")
+                            .isTrue();
+                } finally {
+                    ocrLogger.detachAppender(listAppender);
+                }
+            }
+
+            @Test
+            @DisplayName("[OCR_USAGE] 로그 메시지에 userId 값이 포함된다")
+            void uploadOcrReceipt_logsUserId() {
+                // given
+                String userId = testUser.getUserId();
+                OCRResultDto ocrResultDto = createOCRResultDto(new Date(), "테스트 상점", 5000);
+
+                ReceiptDto receiptDto = ReceiptDto.builder()
+                        .content("테스트 상점")
+                        .withdrawal(5000)
+                        .build();
+
+                ReceiptCreateDto receiptCreateDto = ReceiptCreateDto.builder()
+                        .userId(userId)
+                        .content("테스트 상점")
+                        .withdrawal(5000)
+                        .build();
+
+                given(userRepository.findByUserId(userId)).willReturn(Optional.of(testUser));
+                given(receiptMapper.toReceiptDto(ocrResultDto)).willReturn(receiptDto);
+                given(receiptMapper.toReceiptCreateDto(receiptDto)).willReturn(receiptCreateDto);
+
+                Logger ocrLogger = (Logger) LoggerFactory.getLogger(OCRService.class);
+                ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+                listAppender.start();
+                ocrLogger.addAppender(listAppender);
+                ocrLogger.setLevel(Level.INFO);
+
+                try {
+                    // when
+                    ocrService.uploadOcrReceipt(ocrResultDto, userId, currentUser);
+
+                    // then
+                    boolean hasUserIdInLog = listAppender.list.stream()
+                            .filter(event -> event.getLevel() == Level.INFO)
+                            .map(ILoggingEvent::getFormattedMessage)
+                            .anyMatch(msg -> msg.contains("[OCR_USAGE]") && msg.contains(userId));
+
+                    assertThat(hasUserIdInLog)
+                            .as("[OCR_USAGE] 로그에 userId=" + userId + " 가 포함되어야 한다")
+                            .isTrue();
+                } finally {
+                    ocrLogger.detachAppender(listAppender);
+                }
+            }
+
+            @Test
+            @DisplayName("[OCR_USAGE] 로그 메시지에 clubId 값이 포함된다")
+            void uploadOcrReceipt_logsClubId() {
+                // given
+                String userId = testUser.getUserId();
+                Long clubId = testUser.getStudentClub().getId();
+                OCRResultDto ocrResultDto = createOCRResultDto(new Date(), "테스트 상점", 5000);
+
+                ReceiptDto receiptDto = ReceiptDto.builder()
+                        .content("테스트 상점")
+                        .withdrawal(5000)
+                        .build();
+
+                ReceiptCreateDto receiptCreateDto = ReceiptCreateDto.builder()
+                        .userId(userId)
+                        .content("테스트 상점")
+                        .withdrawal(5000)
+                        .build();
+
+                given(userRepository.findByUserId(userId)).willReturn(Optional.of(testUser));
+                given(receiptMapper.toReceiptDto(ocrResultDto)).willReturn(receiptDto);
+                given(receiptMapper.toReceiptCreateDto(receiptDto)).willReturn(receiptCreateDto);
+
+                Logger ocrLogger = (Logger) LoggerFactory.getLogger(OCRService.class);
+                ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+                listAppender.start();
+                ocrLogger.addAppender(listAppender);
+                ocrLogger.setLevel(Level.INFO);
+
+                try {
+                    // when
+                    ocrService.uploadOcrReceipt(ocrResultDto, userId, currentUser);
+
+                    // then
+                    boolean hasClubIdInLog = listAppender.list.stream()
+                            .filter(event -> event.getLevel() == Level.INFO)
+                            .map(ILoggingEvent::getFormattedMessage)
+                            .anyMatch(msg -> msg.contains("[OCR_USAGE]") && msg.contains(String.valueOf(clubId)));
+
+                    assertThat(hasClubIdInLog)
+                            .as("[OCR_USAGE] 로그에 clubId=" + clubId + " 가 포함되어야 한다")
+                            .isTrue();
+                } finally {
+                    ocrLogger.detachAppender(listAppender);
+                }
             }
         }
     }

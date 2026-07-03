@@ -57,12 +57,15 @@ public class OCRService {
             return sendOCRRequest(file);
         } catch (IOException e) {
             log.error("OCR I/O 에러", e);
+            log.warn("[OCR_USAGE] result=failure reason=io_error");
             throw new CustomException("OCR 요청 중 I/O 오류가 발생했습니다.", 500);
         } catch (ParseException e) {
             log.error("날짜 파싱 오류", e);
+            log.warn("[OCR_USAGE] result=failure reason=parse_error");
             throw new CustomException("OCR 응답 날짜 파싱에 실패했습니다.", 500);
         } catch (Exception e) {
             log.error("OCR 처리 오류", e);
+            log.warn("[OCR_USAGE] result=failure reason=unknown");
             throw new CustomException("OCR 처리 중 예외가 발생했습니다.", 500);
         }
     }
@@ -79,7 +82,7 @@ public class OCRService {
         ReceiptCreateDto createDto = receiptMapper.toReceiptCreateDto(receiptDto);
         createDto.setUserId(userId);
         receiptService.createReceipt(createDto, currentUser);
-        
+        log.info("[OCR_USAGE] userId={} clubId={} result=success", userId, user.getStudentClub().getId());
         receiptService.checkAndUpdateVerificationStatus(user.getStudentClub().getId());
     }
 

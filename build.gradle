@@ -113,6 +113,12 @@ dependencies {
 	// redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+	// excel
+	implementation 'com.alibaba:easyexcel:3.3.4'
+
+	// Google GenAI SDK (Gemini)
+	implementation 'com.google.genai:google-genai:1.0.0'
+
 }
 
 tasks.named('test') {

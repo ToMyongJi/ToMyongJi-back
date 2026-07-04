@@ -79,7 +79,7 @@ public class ExcelConfirmService {
                 @Override
                 public void setValues(PreparedStatement ps, int i) throws SQLException {
                     ExcelPreviewItemDto item = previewData.get(i);
-                    ps.setDate(1, new java.sql.Date(item.getDate().getTime()));
+                    ps.setObject(1, item.getDate());
                     ps.setString(2, item.getContent());
                     ps.setInt(3, item.getDeposit());
                     ps.setInt(4, item.getWithdrawal());

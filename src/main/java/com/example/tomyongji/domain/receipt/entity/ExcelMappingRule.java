@@ -45,6 +45,9 @@ public class ExcelMappingRule {
     @Column(name = "data_start_row")
     private Integer dataStartRow;
 
+    @Column(name = "date_format", length = 30)
+    private String dateFormat;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

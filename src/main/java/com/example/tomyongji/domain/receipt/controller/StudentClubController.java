@@ -2,7 +2,10 @@ package com.example.tomyongji.domain.receipt.controller;
 
 import com.example.tomyongji.domain.receipt.dto.ClubMemberResponseDto;
 import com.example.tomyongji.domain.receipt.dto.ClubTransferRequestDto;
+import com.example.tomyongji.global.annotation.ApiErrorExample;
+import com.example.tomyongji.global.annotation.ApiErrorExamples;
 import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.global.error.ErrorMsg;
 import com.example.tomyongji.domain.admin.dto.PresidentDto;
 import com.example.tomyongji.domain.receipt.dto.ClubDto;
 import com.example.tomyongji.domain.receipt.dto.TransferDto;
@@ -44,6 +47,11 @@ public class StudentClubController {
     }
 
     @Operation(summary = "학생회 소속 인원 전체 조회 api", description = "특정 학생회에 속한 모든 인원의 학번 및 이름을 가나다순 조회합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB),
+        @ApiErrorExample(status = 403, message = ErrorMsg.NO_AUTHORIZATION_ROLE)
+    })
     @GetMapping("api/club/members")
     public ResponseEntity<ApiResponse<List<ClubMemberResponseDto>>> getClubMembers(@AuthenticationPrincipal UserDetails currentUser) {
         List<ClubMemberResponseDto> members = studentClubService.getClubMemberList(currentUser);
@@ -51,6 +59,11 @@ public class StudentClubController {
     }
 
     @Operation(summary = "학생회 이월/이전 api", description = "학생회 정보를 이월 합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB),
+        @ApiErrorExample(status = 403, message = ErrorMsg.NO_AUTHORIZATION_ROLE)
+    })
     @PostMapping("api/club/transfer")
     public ResponseEntity<ApiResponse<TransferDto>> transferStudentClub(
         @RequestBody(required = false) PresidentDto request,
@@ -64,6 +77,13 @@ public class StudentClubController {
     }
 
     @Operation(summary = "학생회 이월/이전 및 잔류인원 저장 api", description = "학생회 영수증 정보 및 학생회장 잔류인원 정보를 이월 합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB),
+        @ApiErrorExample(status = 400, message = ErrorMsg.CANNOT_RE_ELECT_PRESIDENT),
+        @ApiErrorExample(status = 400, message = ErrorMsg.ALREADY_BELONGING_USER),
+        @ApiErrorExample(status = 403, message = ErrorMsg.NO_AUTHORIZATION_ROLE)
+    })
     @PostMapping("api/club/transfer-and-user")
     public ResponseEntity<ApiResponse<TransferDto>> transferStudentClubUser(
             @RequestBody(required = false) ClubTransferRequestDto request,

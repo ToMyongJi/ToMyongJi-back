@@ -1,6 +1,8 @@
 package com.example.tomyongji.domain.auth.controller;
 
+import com.example.tomyongji.global.annotation.ApiErrorExample;
 import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.global.error.ErrorMsg;
 import com.example.tomyongji.domain.auth.dto.EmailDto;
 import com.example.tomyongji.domain.auth.dto.VerifyDto;
 import com.example.tomyongji.domain.auth.service.EmailService;
@@ -21,6 +23,7 @@ public class EmailController {
     private final EmailService emailService;
 
     @Operation(summary = "이메일 전송 api", description = "인증번호를 이메일로 발송합니다.")
+    @ApiErrorExample(status = 400, message = ErrorMsg.ERROR_SEND_EMAIL)
     @PostMapping("/emailCheck")
     public ResponseEntity<ApiResponse<Void>> emailCheck(@RequestBody EmailDto emailDTO) throws MessagingException {
         emailService.sendSimpleMessage(emailDTO.getEmail());
@@ -29,6 +32,7 @@ public class EmailController {
     }
     
     @Operation(summary = "이메일 인증코드 확인 api", description = "사용자가 적은 인증코드를 비교합니다")
+    @ApiErrorExample(status = 401, message = "인증 코드가 일치하지 않습니다.")
     @ResponseBody
     @PostMapping("/verifyCode")
     public ResponseEntity<ApiResponse<Boolean>> verifyCode(@RequestBody VerifyDto verifyDto) {

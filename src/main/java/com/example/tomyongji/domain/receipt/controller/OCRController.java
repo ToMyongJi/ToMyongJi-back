@@ -1,6 +1,9 @@
 package com.example.tomyongji.domain.receipt.controller;
 
+import com.example.tomyongji.global.annotation.ApiErrorExample;
+import com.example.tomyongji.global.annotation.ApiErrorExamples;
 import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.global.error.ErrorMsg;
 import com.example.tomyongji.domain.receipt.dto.OCRResultDto;
 import com.example.tomyongji.domain.receipt.service.OCRService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,6 +33,15 @@ public class OCRController {
 
 
     @Operation(summary = "영수증 업로드 api", description = "유저 아이디를 통해 특정 학생회의 영수증을 ocr 스캔을 통해 업로드합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = "지원하지 않는 파일 형식입니다."),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 500, message = "OCR 요청 중 I/O 오류가 발생했습니다."),
+        @ApiErrorExample(status = 500, message = "OCR 응답 날짜 파싱에 실패했습니다."),
+        @ApiErrorExample(status = 500, message = "OCR 처리 중 예외가 발생했습니다."),
+        @ApiErrorExample(status = 500, message = "OCR 처리 결과 금액이 0입니다."),
+        @ApiErrorExample(status = 502, message = "OCR API 호출 실패")
+    })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/upload/{userId}")
     public ResponseEntity<ApiResponse<OCRResultDto>> uploadImageAndExtractText(@RequestPart("file") MultipartFile file, @PathVariable("userId") String userId, @AuthenticationPrincipal

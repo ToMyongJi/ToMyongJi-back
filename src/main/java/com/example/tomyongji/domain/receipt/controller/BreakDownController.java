@@ -1,6 +1,9 @@
 package com.example.tomyongji.domain.receipt.controller;
 
+import com.example.tomyongji.global.annotation.ApiErrorExample;
+import com.example.tomyongji.global.annotation.ApiErrorExamples;
 import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.global.error.ErrorMsg;
 import com.example.tomyongji.domain.receipt.dto.BreakDownDto;
 import com.example.tomyongji.domain.receipt.dto.ReceiptDto;
 import com.example.tomyongji.domain.receipt.service.BreakDownService;
@@ -25,6 +28,13 @@ public class BreakDownController {
     private final BreakDownService breakDownService;
 
     @Operation(summary = "PDF 거래내역서 파싱 api", description = "PDF 파일을 업로드하여 거래내역을 파싱합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB),
+        @ApiErrorExample(status = 400, message = ErrorMsg.EMPTY_FILE),
+        @ApiErrorExample(status = 403, message = ErrorMsg.NO_AUTHORIZATION_BELONGING),
+        @ApiErrorExample(status = 500, message = ErrorMsg.PARSING_ERROR)
+    })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/parse")
     public ResponseEntity<ApiResponse<List<ReceiptDto>>> parsePdfFile(

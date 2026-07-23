@@ -1,6 +1,9 @@
 package com.example.tomyongji.domain.receipt.controller;
 
+import com.example.tomyongji.global.annotation.ApiErrorExample;
+import com.example.tomyongji.global.annotation.ApiErrorExamples;
 import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.global.error.ErrorMsg;
 import com.example.tomyongji.domain.receipt.service.ReceiptService;
 import com.example.tomyongji.domain.receipt.dto.PagingReceiptDto;
 import com.example.tomyongji.domain.receipt.dto.ReceiptByStudentClubDto;
@@ -35,6 +38,12 @@ public class ReceiptController {
     private final ReceiptService receiptService;
 
     @Operation(summary = "영수증 작성 api", description = "유저 아이디를 통해 특정 학생회의 영수증을 작성합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NO_AUTHORIZATION_BELONGING),
+        @ApiErrorExample(status = 400, message = ErrorMsg.DUPLICATED_FLOW),
+        @ApiErrorExample(status = 400, message = ErrorMsg.EMPTY_CONTENT)
+    })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping //특정 학생회의 영수증 작성
     public ResponseEntity<ApiResponse<ReceiptDto>> createReceipt(@RequestBody ReceiptCreateDto receiptCreateDto, @AuthenticationPrincipal UserDetails currentUser) {
@@ -53,6 +62,10 @@ public class ReceiptController {
 
 
     @Operation(summary = "특정 학생회 영수증 조회 api", description = "학생회 아이디를 통해 특정 학생회의 영수증을 조회합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NO_AUTHORIZATION_BELONGING)
+    })
     @GetMapping("/club/{id}") //특정 학생회 영수증 조회
     public ResponseEntity<ApiResponse<ReceiptByStudentClubDto>> getReceiptsByClub(@PathVariable("id") Long id, @AuthenticationPrincipal UserDetails currentUser) {
         ReceiptByStudentClubDto receipts = receiptService.getReceiptsByClub(id, currentUser);
@@ -61,6 +74,7 @@ public class ReceiptController {
     }
 
     @Operation(summary = "특정 학생회 영수증 조회 일반 학생용 api", description = "학생회 아이디를 통해 특정 학생회의 영수증을 조회합니다.")
+    @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB)
     @GetMapping("/club/{clubId}/student") //특정 학생회 영수증 조회
     public ResponseEntity<ApiResponse<List<ReceiptDto>>> getReceiptsByClubForStudent(@PathVariable("clubId") Long clubId) {
         List<ReceiptDto> receipts = receiptService.getReceiptsByClubForStudent(clubId);
@@ -69,6 +83,10 @@ public class ReceiptController {
     }
 
     @Operation(summary = "특정 학생회 영수증 페이지별 조회 일반 학생용 api", description = "학생회 아이디와 페이지 정보, 영수증 수를 통해 특정 학생회의 영수증을 조회합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB),
+        @ApiErrorExample(status = 400, message = ErrorMsg.INVALID_DATE_SEARCH)
+    })
     @GetMapping("/club/{clubId}/paging")
     public ResponseEntity<ApiResponse<PagingReceiptDto>> getReceiptsByClubPaging(
         @PathVariable("clubId") Long clubId,
@@ -96,6 +114,7 @@ public class ReceiptController {
     }
 
     @Operation(summary = "특정 영수증 조회 api", description = "영수증 아이디를 통해 특정 영수증을 조회합니다.")
+    @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_RECEIPT)
     @GetMapping("/{receiptId}") //특정 영수증 조회
     public ResponseEntity<ApiResponse<ReceiptDto>> getReceiptById(@PathVariable("receiptId") Long receiptId) {
         ReceiptDto receipt = receiptService.getReceiptById(receiptId);
@@ -107,6 +126,11 @@ public class ReceiptController {
 
 
     @Operation(summary = "영수증 삭제 api", description = "영수증 아이디를 통해 특정 영수증을 삭제합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_RECEIPT),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NO_AUTHORIZATION_BELONGING),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB)
+    })
     @DeleteMapping("/{receiptId}") //특정 영수증 삭제
     public ResponseEntity<ApiResponse<ReceiptDto>> deleteReceipt(@PathVariable("receiptId") Long receiptId, @AuthenticationPrincipal UserDetails currentUser) {
         ReceiptDto receipt = receiptService.deleteReceipt(receiptId, currentUser);
@@ -115,6 +139,12 @@ public class ReceiptController {
     }
 
     @Operation(summary = "영수증 수정 api", description = "영수증 아이디를 통해 특정 영수증을 수정합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_RECEIPT),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NO_AUTHORIZATION_BELONGING),
+        @ApiErrorExample(status = 400, message = ErrorMsg.DUPLICATED_FLOW),
+        @ApiErrorExample(status = 400, message = ErrorMsg.EMPTY_CONTENT)
+    })
     @PutMapping //특정 영수증 수정
     public ResponseEntity<ApiResponse<ReceiptDto>> updateReceipt(@RequestBody ReceiptDto receiptDto, @AuthenticationPrincipal UserDetails currentUser) {
         ReceiptDto updatedReceipt = receiptService.updateReceipt(receiptDto, currentUser);
@@ -123,6 +153,10 @@ public class ReceiptController {
     }
 
     @Operation(summary = "영수증 검색 api", description = "두 글자 이상의 검색어를 통해 특정 영수증을 조회합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.INVALID_KEYWORD)
+    })
     @GetMapping("/keyword") //특정 영수증 수정
     public ResponseEntity<ApiResponse<List<ReceiptDto>>> searchReceiptByKeyword(@RequestParam String keyword, @AuthenticationPrincipal UserDetails currentUser) {
         List<ReceiptDto> receipts = receiptService.searchReceiptByKeyword(keyword, currentUser);

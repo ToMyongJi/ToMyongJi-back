@@ -50,6 +50,7 @@ __pycache__/
 .claude/local-secrets.json
 .claude/settings.json
 .claude/settings.local.json
+.claude/docs/ADR.md
 var/log/tomyongji/*.log
 LOG_PATH_IS_UNDEFINED/*.log
 .env
@@ -87,6 +88,9 @@ application-local.yml
 application-dev.yml
 application-prod.yml
 application-test.yml
+
+# OMC logs
+.omc/
 
 # Log files
 *.log

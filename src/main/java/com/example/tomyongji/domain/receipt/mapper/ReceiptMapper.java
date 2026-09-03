@@ -1,6 +1,5 @@
 package com.example.tomyongji.domain.receipt.mapper;
 
-import com.example.tomyongji.domain.receipt.dto.OCRResultDto;
 import com.example.tomyongji.domain.receipt.dto.ReceiptCreateDto;
 import com.example.tomyongji.domain.receipt.dto.ReceiptDto;
 import com.example.tomyongji.domain.receipt.dto.ReceiptUpdateDto;
@@ -26,9 +25,6 @@ public interface ReceiptMapper {
     // Receipt Entity to Receipt Dto
     @Mapping(source = "id", target = "receiptId")
     ReceiptDto toReceiptDto(Receipt receipt);
-
-    // OCRResultDto to Receipt Dto
-    ReceiptDto toReceiptDto(OCRResultDto ocrResultDto);
 
     // ReceiptDto to ReceiptCreateDto
     ReceiptCreateDto toReceiptCreateDto(ReceiptDto receiptDto);

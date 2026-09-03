@@ -1,6 +1,9 @@
 package com.example.tomyongji.domain.auth.controller;
 
+import com.example.tomyongji.global.annotation.ApiErrorExample;
+import com.example.tomyongji.global.annotation.ApiErrorExamples;
 import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.global.error.ErrorMsg;
 import com.example.tomyongji.domain.auth.dto.ClubVerifyRequestDto;
 import com.example.tomyongji.domain.auth.dto.FindIdRequestDto;
 import com.example.tomyongji.domain.auth.dto.LoginRequestDto;
@@ -27,6 +30,14 @@ public class UserController {
     private final UserService userService;
 
     @Operation(summary = "회원가입 api", description = "사용자가 회원가입하면, 유효성검사후 회원가입합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_COLLEGE),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_HAVE_STUDENT_CLUB),
+        @ApiErrorExample(status = 400, message = ErrorMsg.EXISTING_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_VERIFY_EMAIL),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_VERIFY_CLUB)
+    })
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<Long>> signUp(@Valid @RequestBody UserRequestDto userRequestDto){
         Long id = userService.signUp(userRequestDto);
@@ -36,6 +47,7 @@ public class UserController {
     }
 
     @Operation(summary = "유저 아이디 중복 검사 api", description = "사용자가 ID 중복검사를 누르면 중복 검사합니다. ")
+    @ApiErrorExample(status = 409, message = "이미 존재하는 아이디입니다.")
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse<Boolean>> checkUserIdDuplicate(@PathVariable("userId") String userId){
         boolean isDuplicate = userService.checkUserIdDuplicate(userId);
@@ -57,6 +69,7 @@ public class UserController {
     }
 
     @Operation(summary = "아이디 찾기 API", description = "이메일을 넣으면 ID를 찾아줍니다.")
+    @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER_EMAIL)
     @PostMapping("/find-id")
     public ResponseEntity<ApiResponse<String>> findUserIdByEmail(@RequestBody FindIdRequestDto findIdRequest){
         String id = userService.findUserIdByEmail(findIdRequest.getEmail());
@@ -64,6 +77,12 @@ public class UserController {
     }
 
     @Operation(summary = "소속 인증 API", description = "사용자 id와 학생회 id를 넣으면 소속인증을 합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_MEMBER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_PRESIDENT),
+        @ApiErrorExample(status = 400, message = ErrorMsg.INCORRECT_ROLE_VALUE)
+    })
     @PostMapping("/clubVerify")
     public ResponseEntity<ApiResponse<Boolean>> VerifyClub(@RequestBody ClubVerifyRequestDto clubVerifyDto) {
         boolean isClubVerify = userService.verifyClub(clubVerifyDto);
@@ -71,6 +90,7 @@ public class UserController {
     }
 
     @Operation(summary = "회원탈퇴 API", description = "사용자가 회원탈퇴를 합니다.")
+    @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER)
     @DeleteMapping("/delete")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@AuthenticationPrincipal UserDetails currentUser) {
         String userId = currentUser.getUsername();

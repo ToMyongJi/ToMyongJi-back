@@ -1,6 +1,9 @@
 package com.example.tomyongji.domain.admin.controller;
 
+import com.example.tomyongji.global.annotation.ApiErrorExample;
+import com.example.tomyongji.global.annotation.ApiErrorExamples;
 import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.global.error.ErrorMsg;
 import com.example.tomyongji.domain.admin.dto.MemberDto;
 import com.example.tomyongji.domain.admin.dto.PresidentDto;
 import com.example.tomyongji.domain.admin.service.AdminService;
@@ -23,6 +26,10 @@ public class AdminController {
     private final AdminService adminService;
 
     @Operation(summary = "학생회장 조회 api", description = "학생회 아이디를 통해 특정 학생회의 회장을 조회합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_PRESIDENT)
+    })
     @GetMapping("/president/{clubId}")
     public ResponseEntity<ApiResponse<PresidentDto>> getPresident(@PathVariable("clubId") Long clubId) {
         PresidentDto presidentDto = adminService.getPresident(clubId);
@@ -31,6 +38,10 @@ public class AdminController {
     }
 
     @Operation(summary = "학생회장 저장 api", description = "학생회 아이디와 학번, 이름을 통해 특정 학생회의 회장 정보를 저장합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.EXISTING_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB)
+    })
     @PostMapping("/president")
     public ResponseEntity<ApiResponse<PresidentDto>> savePresident(@RequestBody PresidentDto presidentDto) {
         PresidentDto response = adminService.savePresident(presidentDto);
@@ -39,6 +50,7 @@ public class AdminController {
     }
 
     @Operation(summary = "학생회장 수정 api", description = "학생회 아이디와 학번, 이름을 통해 특정 학생회의 회장 정보를 수정합니다.")
+    @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB)
     @PatchMapping("/president")
     public ResponseEntity<ApiResponse<PresidentDto>> updatePresident(@RequestBody PresidentDto presidentDto) {
         PresidentDto response = adminService.updatePresident(presidentDto);
@@ -46,6 +58,7 @@ public class AdminController {
     }
 
     @Operation(summary = "소속 부원 조회 api", description = "학생회 아이디로 소속 부원을 조회합니다.")
+    @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB)
     @GetMapping("/member/{clubId}")
     public ResponseEntity<ApiResponse<List<MemberDto>>> getMembers(@PathVariable("clubId") Long clubId) {
         List<MemberDto> users = adminService.getMembers(clubId);
@@ -53,6 +66,10 @@ public class AdminController {
     }
 
     @Operation(summary = "소속 부원 저장 api", description = "학생회 아이디로 소속 부원 정보를 저장합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.EXISTING_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB)
+    })
     @PostMapping("/member")
     public ResponseEntity<ApiResponse<MemberDto>> saveMember(@RequestBody AdminSaveMemberDto memberDto) {
         MemberDto response = adminService.saveMember(memberDto);
@@ -60,6 +77,7 @@ public class AdminController {
     }
 
     @Operation(summary = "소속 부원 삭제 api", description = "소속 부원 아이디로 소속 부원을 삭제합니다.")
+    @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_MEMBER)
     @DeleteMapping("/member/{memberId}")
     public ResponseEntity<ApiResponse<MemberDto>> deleteMember(@PathVariable("memberId") Long memberId) {
         MemberDto memberDto = adminService.deleteMember(memberId);

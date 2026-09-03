@@ -1,7 +1,10 @@
 package com.example.tomyongji.domain.my.controller;
 
 import com.example.tomyongji.domain.my.dto.CollegeAndClubResponseDto;
+import com.example.tomyongji.global.annotation.ApiErrorExample;
+import com.example.tomyongji.global.annotation.ApiErrorExamples;
 import com.example.tomyongji.global.common.response.ApiResponse;
+import com.example.tomyongji.global.error.ErrorMsg;
 import com.example.tomyongji.domain.admin.dto.MemberDto;
 import com.example.tomyongji.domain.my.dto.MyDto;
 import com.example.tomyongji.domain.my.dto.SaveMemberDto;
@@ -34,6 +37,11 @@ public class MyController {
 
 
     @Operation(summary = "내 정보 조회 api", description = "유저 아이디를 통해 유저 정보를 조회합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.MISMATCHED_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB)
+    })
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<MyDto>> getMyInfo(
         @PathVariable("id") Long id,
@@ -46,6 +54,10 @@ public class MyController {
 
 
     @Operation(summary = "내 소속 대학 및 학생회 조회 api", description = "현재 로그인한 유저의 소속 대학과 학생회를 조회합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB)
+    })
     @GetMapping("college-and-club")
     public ResponseEntity<ApiResponse<CollegeAndClubResponseDto>> getMyCollegeAndClub(@AuthenticationPrincipal UserDetails currentUser) {
         CollegeAndClubResponseDto myCollegeAndClub = myService.getMyCollegeAndClub(currentUser);
@@ -59,6 +71,10 @@ public class MyController {
 //    }
 
     @Operation(summary = "소속 부원 조회 api", description = "회장이 소속 부원들을 조회합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.MISMATCHED_USER)
+    })
     @GetMapping("members/{id}") //자신의 아이디로 자기가 속한 학생회 조회
     public ResponseEntity<ApiResponse<List<MemberDto>>> getMembers(
         @PathVariable("id") Long id,
@@ -70,6 +86,12 @@ public class MyController {
     }
 
     @Operation(summary = "소속 부원 추가 api", description = "회장이 소속 부원 정보를 추가합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.MISMATCHED_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.EXISTING_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_STUDENT_CLUB)
+    })
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("members") //회장이 자신의 유저 아이디로 자기가 속한 학생회 조회
     public ResponseEntity<ApiResponse<MemberDto>> saveMember(
@@ -81,6 +103,11 @@ public class MyController {
     }
 
     @Operation(summary = "소속 부원 삭제 api", description = "회장이 소속 부원과 그 정보를 삭제합니다.")
+    @ApiErrorExamples({
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_MEMBER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NOT_FOUND_USER),
+        @ApiErrorExample(status = 400, message = ErrorMsg.NO_AUTHORIZATION_BELONGING)
+    })
     @DeleteMapping("members/{deletedStudentNum}") //삭제할 멤버 아이디를 통한 삭제
     public ResponseEntity<ApiResponse<MemberDto>> deleteMember(
         @PathVariable("deletedStudentNum") String deletedStudentNum,

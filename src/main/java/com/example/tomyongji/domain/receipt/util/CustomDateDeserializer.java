@@ -15,6 +15,11 @@ public class CustomDateDeserializer extends JsonDeserializer<Date> {
 
     @Override
     public Date deserialize(JsonParser jsonParser, DeserializationContext context) throws IOException, JsonProcessingException {
+        // Redis에서 timestamp 숫자로 역직렬화되는 경우 처리
+        if (jsonParser.currentToken() == com.fasterxml.jackson.core.JsonToken.VALUE_NUMBER_INT) {
+            return new Date(jsonParser.getLongValue());
+        }
+
         String dateString = jsonParser.getText().trim();
 
         if (dateString.isEmpty()) {

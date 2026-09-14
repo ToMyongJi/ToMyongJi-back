@@ -96,18 +96,27 @@ jobs:
           COMPOSE_FILE=$(cat ./config/docker-compose.yml)
           NGINX_FILE=$(cat ./${{ steps.vars.outputs.CONFIG_PATH }}/nginx.conf)
           ALLOY_CONFIG=$(cat ./config/config.alloy)
-                    
+          PROMETHEUS_CONFIG=$(cat ./config/prometheus.yml)
+          # grafana/provisioning은 하위 디렉터리가 여러 개라 tar+base64로 한 번에 옮긴다.
+          GRAFANA_PROVISIONING_B64=$(tar -C ./config/grafana -czf - provisioning | base64 -w0)
+
           echo "compose_file<<EOF" >> $GITHUB_OUTPUT
           echo "$COMPOSE_FILE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-          
+
           echo "nginx_file<<EOF" >> $GITHUB_OUTPUT
           echo "$NGINX_FILE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-          
+
           echo "alloy_config<<EOF" >> $GITHUB_OUTPUT
           echo "$ALLOY_CONFIG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "prometheus_config<<EOF" >> $GITHUB_OUTPUT
+          echo "$PROMETHEUS_CONFIG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "grafana_provisioning_b64=$GRAFANA_PROVISIONING_B64" >> $GITHUB_OUTPUT
 
       - name: Create and Deploy to EC2
         if: github.event_name == 'push'
@@ -137,7 +146,17 @@ jobs:
             cat <<'EOF' > ./config.alloy
             ${{ steps.deploy_files.outputs.alloy_config }}
             EOF
-            
+
+            # prometheus.yml 파일 생성 (self-hosted-monitoring profile용)
+            cat <<'EOF' > ./prometheus.yml
+            ${{ steps.deploy_files.outputs.prometheus_config }}
+            EOF
+
+            # grafana/provisioning 디렉터리 복원 (tar+base64로 전달됨)
+            # docker-compose.yml이 ./grafana/provisioning을 마운트하므로 ./grafana 아래로 풀어야 함
+            mkdir -p ./grafana
+            echo "${{ steps.deploy_files.outputs.grafana_provisioning_b64 }}" | base64 -d | tar -C ./grafana -xzf -
+
             # 디버깅
             echo "--- [Debug] Current directory and permissions ---"
             pwd && ls -la
@@ -157,6 +176,8 @@ jobs:
             REDIS_HOST=redis
             REDIS_PORT=6379
             COMPOSE_PROFILES=monitoring
+            # self-hosted-monitoring(Grafana) 관리자 계정 — 시크릿 미설정 시 compose의 기본값(changeme)으로 대체됨
+            GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
             EOF
 
             # application.properties 파일 생성

@@ -1,0 +1,263 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: tomyongji-red
+    folder: ToMyongJi Alerts
+    interval: 1m
+    rules:
+      - uid: tomyongji-red-error-rate
+        title: "[RED] 핵심 API 5xx 에러율 5% 초과"
+        condition: C
+        for: 5m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: warning
+          category: red
+        annotations:
+          summary: "핵심 API 5xx 에러율이 5%를 초과했습니다"
+          description: "임계치 근거는 THRESHOLDS.md 참고"
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: >-
+                100 * sum(rate(http_server_requests_seconds_count{status=~"5..",uri=~"^(/api/users/login|/receipt/club/{clubId}/paging|/receipt/{receiptId}|/api/collegesAndClubs)$"}[5m]))
+                / sum(rate(http_server_requests_seconds_count{uri=~"^(/api/users/login|/receipt/club/{clubId}/paging|/receipt/{receiptId}|/api/collegesAndClubs)$"}[5m]))
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [ 5 ] }
+
+      - uid: tomyongji-red-latency-p99
+        title: "[RED] 핵심 API 응답시간 p99 2초 초과"
+        condition: C
+        for: 5m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: warning
+          category: red
+        annotations:
+          summary: "핵심 API p99 응답시간이 2초를 초과했습니다"
+          description: "임계치 근거는 THRESHOLDS.md 참고"
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: >-
+                histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{uri=~"^(/api/users/login|/receipt/club/{clubId}/paging|/receipt/{receiptId}|/api/collegesAndClubs)$"}[5m])))
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [ 2 ] }
+
+      - uid: tomyongji-use-memory-critical
+        title: "[USE] 가용 메모리 100MiB 미만 (OOM 위험)"
+        condition: C
+        for: 2m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: critical
+          category: use
+        annotations:
+          summary: "EC2 가용 메모리가 100MiB 미만입니다 — OOM 위험"
+          description: "임계치 근거는 THRESHOLDS.md 참고"
+        data:
+          - refId: A
+            relativeTimeRange: { from: 120, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: "node_memory_MemAvailable_bytes / 1024 / 1024"
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: lt, params: [ 100 ] }
+
+      - uid: tomyongji-use-swap-warning
+        title: "[USE] Swap 사용량 2GiB 초과"
+        condition: C
+        for: 5m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: warning
+          category: use
+        annotations:
+          summary: "Swap 사용량이 2GiB(전체 3GiB 중)를 초과했습니다"
+          description: "임계치 근거는 THRESHOLDS.md 참고"
+        data:
+          - refId: A
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: "(node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes) / 1024 / 1024 / 1024"
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [ 2 ] }
+
+      - uid: tomyongji-use-cpu-high
+        title: "[USE] CPU 사용률 90% 초과"
+        condition: C
+        for: 10m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: warning
+          category: use
+        annotations:
+          summary: "CPU 사용률이 10분 이상 90%를 초과했습니다"
+          description: "임계치 근거는 THRESHOLDS.md 참고"
+        data:
+          - refId: A
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: '100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[10m])) * 100)'
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [ 90 ] }
+
+      - uid: tomyongji-use-disk-high
+        title: "[USE] 디스크 사용률 80% 초과"
+        condition: C
+        for: 10m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: warning
+          category: use
+        annotations:
+          summary: "루트 디스크 사용률이 80%를 초과했습니다"
+          description: "임계치 근거는 THRESHOLDS.md 참고 (server-status 커맨드의 기존 80% 관행과 동일)"
+        data:
+          - refId: A
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: >-
+                100 * (1 - node_filesystem_avail_bytes{mountpoint="/rootfs"} / node_filesystem_size_bytes{mountpoint="/rootfs"})
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [ 80 ] }
+
+      - uid: tomyongji-use-hikari-pending
+        title: "[USE] HikariCP 커넥션 대기 발생"
+        condition: C
+        for: 2m
+        noDataState: NoData
+        execErrState: Error
+        labels:
+          severity: warning
+          category: use
+        annotations:
+          summary: "HikariCP 풀에서 커넥션 대기(pending)가 발생했습니다"
+          description: "임계치 근거는 THRESHOLDS.md 참고"
+        data:
+          - refId: A
+            relativeTimeRange: { from: 120, to: 0 }
+            datasourceUid: prometheus
+            model:
+              refId: A
+              instant: true
+              expr: "max(hikaricp_connections_pending)"
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator: { type: gt, params: [ 0 ] }

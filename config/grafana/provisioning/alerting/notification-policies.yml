@@ -1,0 +1,17 @@
+apiVersion: 1
+
+policies:
+  - orgId: 1
+    receiver: default-placeholder
+    group_by: [ "category" ]
+    routes:
+      - receiver: default-placeholder
+        object_matchers:
+          - [ "severity", "=", "critical" ]
+        group_wait: 10s
+        repeat_interval: 15m
+      - receiver: default-placeholder
+        object_matchers:
+          - [ "severity", "=", "warning" ]
+        group_wait: 30s
+        repeat_interval: 1h

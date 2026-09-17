@@ -165,8 +165,12 @@ services:
     image: prom/mysqld-exporter:v0.15.1
     profiles: [ "self-hosted-monitoring" ]
     container_name: ${APP_NAME}${ENV_SUFFIX}-mysqld-exporter
+    # v0.15.0부터 DATA_SOURCE_NAME 환경변수가 제거됨 → 플래그 + MYSQLD_EXPORTER_PASSWORD로 접속 정보 전달
+    command:
+      - '--mysqld.address=db:3306'
+      - '--mysqld.username=root'
     environment:
-      - DATA_SOURCE_NAME=root:${DB_PASSWORD}@(db:3306)/
+      - MYSQLD_EXPORTER_PASSWORD=${DB_PASSWORD}
     restart: unless-stopped
     networks:
       - app_network
@@ -222,8 +226,9 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=5d'
       - '--web.listen-address=0.0.0.0:9090'
+    # 인증이 없으므로 외부에 열지 않는다 (docker 포트는 ufw를 우회함). 접속은 SSH 터널로.
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     restart: unless-stopped
     networks:
       - app_network
@@ -243,8 +248,9 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning
+    # 외부 노출하지 않고 SSH 터널(-L 3000:localhost:3000)로 접속
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       - prometheus
     restart: unless-stopped

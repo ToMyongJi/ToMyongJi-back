@@ -10,7 +10,7 @@ groups:
         title: "[RED] 핵심 API 5xx 에러율 5% 초과"
         condition: C
         for: 5m
-        noDataState: NoData
+        noDataState: OK  # 트래픽이 없으면 에러/지연도 없음 (dev 평상시 오탐 방지)
         execErrState: Error
         labels:
           severity: warning
@@ -26,8 +26,8 @@ groups:
               refId: A
               instant: true
               expr: >-
-                100 * sum(rate(http_server_requests_seconds_count{status=~"5..",uri=~"^(/api/users/login|/receipt/club/{clubId}/paging|/receipt/{receiptId}|/api/collegesAndClubs)$"}[5m]))
-                / sum(rate(http_server_requests_seconds_count{uri=~"^(/api/users/login|/receipt/club/{clubId}/paging|/receipt/{receiptId}|/api/collegesAndClubs)$"}[5m]))
+                100 * (sum(rate(http_server_requests_seconds_count{status=~"5..",uri=~"^(/api/users/login|/api/receipt/club/{clubId}/paging|/api/receipt/{receiptId}|/api/collegesAndClubs)$"}[5m])) or vector(0))
+                / sum(rate(http_server_requests_seconds_count{uri=~"^(/api/users/login|/api/receipt/club/{clubId}/paging|/api/receipt/{receiptId}|/api/collegesAndClubs)$"}[5m]))
           - refId: B
             datasourceUid: __expr__
             model:
@@ -48,7 +48,7 @@ groups:
         title: "[RED] 핵심 API 응답시간 p99 2초 초과"
         condition: C
         for: 5m
-        noDataState: NoData
+        noDataState: OK  # 트래픽이 없으면 에러/지연도 없음 (dev 평상시 오탐 방지)
         execErrState: Error
         labels:
           severity: warning
@@ -64,7 +64,7 @@ groups:
               refId: A
               instant: true
               expr: >-
-                histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{uri=~"^(/api/users/login|/receipt/club/{clubId}/paging|/receipt/{receiptId}|/api/collegesAndClubs)$"}[5m])))
+                histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{uri=~"^(/api/users/login|/api/receipt/club/{clubId}/paging|/api/receipt/{receiptId}|/api/collegesAndClubs)$"}[5m])))
           - refId: B
             datasourceUid: __expr__
             model:
@@ -209,7 +209,7 @@ groups:
               refId: A
               instant: true
               expr: >-
-                100 * (1 - node_filesystem_avail_bytes{mountpoint="/rootfs"} / node_filesystem_size_bytes{mountpoint="/rootfs"})
+                100 * (1 - node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})
           - refId: B
             datasourceUid: __expr__
             model:

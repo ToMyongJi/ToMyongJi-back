@@ -1,6 +1,8 @@
 # Self-hosted Prometheus 설정.
 # scrape 대상은 기존 config/config.alloy에 정의돼 있던 것과 동일하게 맞춤:
-#   - Spring Boot(/actuator/prometheus), MySQL exporter, Redis exporter, cAdvisor
+#   - Spring Boot(/actuator/prometheus), MySQL exporter, Redis exporter
+#   - cAdvisor는 제외: v0.49.1이 Docker API 1.44 미만이라 컨테이너 라벨을 못 붙이고,
+#     64M limit에서 OOM 직전까지 차며, 대시보드/알림 어디에서도 container_* 지표를 쓰지 않음 (#413 dev 검증)
 #   - node-exporter는 USE(자원) 대시보드를 위해 신규 추가
 #
 # docker-compose.yml의 app_network 안에서는 서비스명(app/db/redis 등)으로
@@ -9,7 +11,7 @@
 
 # Alerting은 별도 Alertmanager 컨테이너 없이 Grafana Alerting(unified alerting)으로
 # 처리한다 (config/grafana/provisioning/alerting/) — t3.micro 메모리 여유가 없어서
-# 컨테이너를 하나 더 늘리지 않기 위한 선택. 자세한 이유는 THRESHOLDS.md 참고.
+# 컨테이너를 하나 더 늘리지 않기 위한 선택. 자세한 이유는 config/grafana/THRESHOLDS.md 참고.
 
 global:
   scrape_interval: 30s
@@ -31,16 +33,6 @@ scrape_configs:
   - job_name: 'redis'
     static_configs:
       - targets: [ 'redis-exporter:9121' ]
-
-  # D. 컨테이너 자원 (cAdvisor)
-  - job_name: 'cadvisor'
-    static_configs:
-      - targets: [ 'cadvisor-v2:8080' ]
-    metric_relabel_configs:
-      - source_labels: [ container_label_com_docker_compose_service ]
-        target_label: container
-      - action: labeldrop
-        regex: '(id|image|name|endpoint|instance|container_label_.*)'
 
   # E. 호스트 자원 (node-exporter) — USE 대시보드용, 기존 Alloy 파이프라인엔 없던 대상
   - job_name: 'node-exporter'

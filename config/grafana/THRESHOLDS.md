@@ -50,6 +50,11 @@
 ## 아직 안 한 것 / 알아야 할 제약
 - Alertmanager 컨테이너를 추가하지 않고 Grafana 자체 Alerting(unified alerting)으로 처리했다 —
   t3.micro 메모리 여유가 없어서 컨테이너를 하나 더 늘리지 않기 위한 선택.
-- `contact-points.yml`의 수신 주소는 placeholder다. 실제로 알림을 받으려면 사람이
-  주소를 바꾸고 Grafana 컨테이너에 `GF_SMTP_*` 환경변수를 추가해야 한다 (앱이 쓰는 Gmail SMTP
-  계정과는 별개로 Grafana 자체 SMTP 설정이 필요함). 이 PR은 "규칙 정의"까지만 다룬다.
+- 알림은 Gmail SMTP(`GF_SMTP_*`)로 발송하고, 수신 주소는 `GRAFANA_ALERT_EMAIL` 환경변수로 주입한다
+  (public 레포라 주소를 코드에 두지 않음). 필요한 GitHub Secrets: `GRAFANA_SMTP_USER`,
+  `GRAFANA_SMTP_PASSWORD`(Gmail 앱 비밀번호), `GRAFANA_ALERT_EMAIL`.
+- RED 규칙 2개는 `noDataState: OK`다. dev는 평상시 트래픽이 없어 쿼리 결과가 비는데, 이를 NoData 알림으로
+  보내면 메일이 계속 온다. 반대로 USE 규칙은 NoData = exporter/수집 중단이므로 NoData 그대로 둔다.
+- 5xx 에러율 식은 분자에 `or vector(0)`을 붙였다. 5xx가 한 건도 없으면 분자가 빈 벡터가 되어
+  식 전체가 NoData가 되기 때문 (#413 dev 검증에서 배포 1분 만에 NoData 알림이 발송된 원인).
+- 이 파일은 provisioning/alerting 밖에 둔다. 안에 있으면 Grafana가 매번 `invalid suffix` 경고를 남긴다.

@@ -193,27 +193,6 @@ services:
         limits:
           memory: 20M
 
-  cadvisor-v2:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
-    profiles: [ "self-hosted-monitoring" ]
-    container_name: ${APP_NAME}${ENV_SUFFIX}-cadvisor-v2
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    devices:
-      - /dev/kmsg
-    privileged: true
-    restart: unless-stopped
-    networks:
-      - app_network
-    deploy:
-      resources:
-        limits:
-          memory: 64M
-
   prometheus:
     image: prom/prometheus:v2.53.0
     profiles: [ "self-hosted-monitoring" ]
@@ -245,6 +224,15 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-changeme}
       - GF_USERS_ALLOW_SIGN_UP=false
+      # 알림 메일 발송 (Gmail SMTP). 값은 모두 GitHub Secrets → .env 로 주입
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=smtp.gmail.com:587
+      - GF_SMTP_USER=${GRAFANA_SMTP_USER:-}
+      - GF_SMTP_PASSWORD=${GRAFANA_SMTP_PASSWORD:-}
+      - GF_SMTP_FROM_ADDRESS=${GRAFANA_SMTP_USER:-}
+      - GF_SMTP_FROM_NAME=ToMyongJi Grafana
+      # contact-points.yml에서 참조하는 알림 수신 주소 (public 레포라 주소를 코드에 두지 않음)
+      - GRAFANA_ALERT_EMAIL=${GRAFANA_ALERT_EMAIL:-}
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning

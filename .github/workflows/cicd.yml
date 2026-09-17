@@ -182,6 +182,10 @@ jobs:
             COMPOSE_PROFILES=monitoring
             # self-hosted-monitoring(Grafana) 관리자 계정 — 시크릿 미설정 시 compose의 기본값(changeme)으로 대체됨
             GRAFANA_ADMIN_PASSWORD=${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+            # Grafana 알림 메일 (Gmail SMTP 앱 비밀번호 / 수신 주소)
+            GRAFANA_SMTP_USER=${{ secrets.GRAFANA_SMTP_USER }}
+            GRAFANA_SMTP_PASSWORD=${{ secrets.GRAFANA_SMTP_PASSWORD }}
+            GRAFANA_ALERT_EMAIL=${{ secrets.GRAFANA_ALERT_EMAIL }}
             EOF
 
             # application.properties 파일 생성

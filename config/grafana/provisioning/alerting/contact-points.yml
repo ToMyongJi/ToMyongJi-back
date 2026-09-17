@@ -1,18 +1,16 @@
-# TODO(사람이 채워야 함): 아래 email 주소는 placeholder입니다.
-# 실제로 알림을 받으려면:
-#   1) 이 주소를 실제 수신 주소로 바꾸거나 Slack/Discord webhook contact point로 교체
-#   2) grafana 서비스에 GF_SMTP_* 환경변수(host/user/password)를 추가해야 이메일 발송이 동작함
-#      (앱이 쓰는 Gmail SMTP 계정과는 별개로, Grafana 자체 SMTP 설정이 필요)
-# 이 PR 범위에서는 "알림 규칙 정의"까지만 하고 실제 발송 채널 연결은 하지 않음.
+# 알림 메일 수신처.
+# - 발송: grafana 서비스의 GF_SMTP_* (Gmail SMTP, docker-compose.yml)
+# - 수신 주소: 컨테이너 환경변수 GRAFANA_ALERT_EMAIL (GitHub Secret → .env → compose)
+#   public 레포라 실제 주소를 이 파일에 적지 않는다. Grafana provisioning은 $VAR 치환을 지원함.
 apiVersion: 1
 
 contactPoints:
   - orgId: 1
-    name: default-placeholder
+    name: email-alert
     receivers:
-      - uid: default-placeholder-email
+      - uid: email-alert
         type: email
         settings:
-          addresses: "CHANGE_ME@example.com"
+          addresses: $GRAFANA_ALERT_EMAIL
           singleEmail: true
         disableResolveMessage: false

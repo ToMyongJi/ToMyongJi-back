@@ -29,15 +29,17 @@ jobs:
             echo "DOCKER_PASSWORD_SECRET=${{ secrets.PROD_DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
             echo "HOST=${{ secrets.PROD_EC2_HOST }}" >> $GITHUB_OUTPUT
             echo "APP_DIR=/home/ubuntu/tomyongji-prod" >> $GITHUB_OUTPUT
+            KEY_DELIM=$(openssl rand -hex 16)
             {
-              echo 'KEY<<EOF'
+              echo "KEY<<$KEY_DELIM"
               echo "${{ secrets.PROD_SSH_KEY }}"
-              echo 'EOF'
+              echo "$KEY_DELIM"
             } >> $GITHUB_OUTPUT
+            PROPS_DELIM=$(openssl rand -hex 16)
             {
-              echo 'PROPERTIES_SECRET<<EOF'
+              echo "PROPERTIES_SECRET<<$PROPS_DELIM"
               echo "${{ secrets.PROD_APPLICATION_PROPERTIES }}"
-              echo 'EOF'
+              echo "$PROPS_DELIM"
             } >> $GITHUB_OUTPUT
             echo "PROMTAIL_API_KEY=${{ secrets.PROMTAIL_API_KEY }}" >> $GITHUB_OUTPUT
             echo "DB_NAME=${{ secrets.PROD_DB_NAME }}" >> $GITHUB_OUTPUT
@@ -51,15 +53,17 @@ jobs:
             echo "DOCKER_PASSWORD_SECRET=${{ secrets.DEV_DOCKER_PASSWORD }}" >> $GITHUB_OUTPUT
             echo "HOST=${{ secrets.DEV_EC2_HOST }}" >> $GITHUB_OUTPUT
             echo "APP_DIR=/home/ubuntu/tomyongji-dev" >> $GITHUB_OUTPUT
+            KEY_DELIM=$(openssl rand -hex 16)
             {
-              echo 'KEY<<EOF'
+              echo "KEY<<$KEY_DELIM"
               echo "${{ secrets.DEV_SSH_KEY }}"
-              echo 'EOF'
+              echo "$KEY_DELIM"
             } >> $GITHUB_OUTPUT
+            PROPS_DELIM=$(openssl rand -hex 16)
             {
-              echo 'PROPERTIES_SECRET<<EOF'
+              echo "PROPERTIES_SECRET<<$PROPS_DELIM"
               echo "${{ secrets.DEV_APPLICATION_PROPERTIES }}"
-              echo 'EOF'
+              echo "$PROPS_DELIM"
             } >> $GITHUB_OUTPUT
             echo "PROMTAIL_API_KEY=${{ secrets.PROMTAIL_API_KEY }}" >> $GITHUB_OUTPUT
             echo "DB_NAME=${{ secrets.DEV_DB_NAME }}" >> $GITHUB_OUTPUT

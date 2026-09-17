@@ -137,8 +137,134 @@ services:
         limits:
           memory: 80M
 
+  # ---- self-hosted-monitoring: Alloy/Grafana Cloud를 대체할 신규 스택 ----
+  # 기존 monitoring profile(alloy, cadvisor)과 별도 profile로 병행 가능하게 분리.
+  # 컷오버 전까지는 두 profile을 독립적으로 켜고 끌 수 있어야 함.
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    profiles: [ "self-hosted-monitoring" ]
+    container_name: ${APP_NAME}${ENV_SUFFIX}-node-exporter
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    restart: unless-stopped
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 30M
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter:v0.15.1
+    profiles: [ "self-hosted-monitoring" ]
+    container_name: ${APP_NAME}${ENV_SUFFIX}-mysqld-exporter
+    # v0.15.0부터 DATA_SOURCE_NAME 환경변수가 제거됨 → 플래그 + MYSQLD_EXPORTER_PASSWORD로 접속 정보 전달
+    command:
+      - '--mysqld.address=db:3306'
+      - '--mysqld.username=root'
+    environment:
+      - MYSQLD_EXPORTER_PASSWORD=${DB_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 24M
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.62.0
+    profiles: [ "self-hosted-monitoring" ]
+    container_name: ${APP_NAME}${ENV_SUFFIX}-redis-exporter
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+    restart: unless-stopped
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 20M
+
+  cadvisor-v2:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    profiles: [ "self-hosted-monitoring" ]
+    container_name: ${APP_NAME}${ENV_SUFFIX}-cadvisor-v2
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg
+    privileged: true
+    restart: unless-stopped
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    profiles: [ "self-hosted-monitoring" ]
+    container_name: ${APP_NAME}${ENV_SUFFIX}-prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=5d'
+      - '--web.listen-address=0.0.0.0:9090'
+    # 인증이 없으므로 외부에 열지 않는다 (docker 포트는 ufw를 우회함). 접속은 SSH 터널로.
+    ports:
+      - "127.0.0.1:9090:9090"
+    restart: unless-stopped
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    profiles: [ "self-hosted-monitoring" ]
+    container_name: ${APP_NAME}${ENV_SUFFIX}-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-changeme}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    # 외부 노출하지 않고 SSH 터널(-L 3000:localhost:3000)로 접속
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+
 networks:
   app_network:
     driver: bridge
 volumes:
   alloy-data:
+  prometheus-data:
+  grafana-data:

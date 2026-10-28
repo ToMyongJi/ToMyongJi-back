@@ -78,7 +78,8 @@ services:
           sleep 5;
         done;
         echo 'Certificate found! Starting Nginx...';
-        nginx -g 'daemon off;'
+        (while :; do sleep 7d; nginx -s reload; done) &
+        exec nginx -g 'daemon off;'
       "
     networks:
       - app_network
